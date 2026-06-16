@@ -1266,7 +1266,7 @@ select { -webkit-appearance: auto; }
                 <col style="width:110px;"><!-- 수업일수 -->
                 <col style="width:120px;"><!-- 원비/등록일 -->
                 <col style="width:70px;"> <!-- 상태 -->
-                <col style="width:200px;"><!-- 관리 -->
+                <col style="width:170px;"><!-- 관리 -->
               </colgroup>
               <thead><tr>
                 <th>이름</th><th>연락처</th><th>학년/나이</th><th>수강과정</th><th>수업일수</th><th>원비/등록일</th><th>상태</th><th style="text-align:center;">관리</th>
@@ -1463,7 +1463,7 @@ select { -webkit-appearance: auto; }
                 <button id="btnAttPresent" class="btn btn-xs btn-ghost" onclick="setAllAtt('present')" style="color:var(--teal);border-color:var(--teal);">✓ 전체 출석</button>
                 <button id="btnAttAbsent" class="btn btn-xs btn-ghost" onclick="setAllAtt('absent')" style="color:var(--coral);border-color:var(--coral);">✗ 전체 결석</button>
                 <button id="btnAttSave" class="btn btn-xs btn-success" onclick="saveAtt()">저장</button>
-                <span style="font-size:11px;color:var(--muted);margin-left:4px;" id="attStatsMonthLabel"></span>
+                
               </div>
             </div>
             <!-- 컬럼 헤더 -->
@@ -4149,9 +4149,9 @@ function renderMembers() {
       </td>
       <td>${statusBadge}</td>
       <td style="text-align:center;white-space:nowrap;">
-        <button class="btn btn-sm btn-ghost" onclick="openMemberDetailModal('${m.id}')">상세</button>
-        ${hasPerm('members') ? `<button class="btn btn-sm btn-outline" onclick="openMemberModal('${m.id}')" style="margin-left:3px;">수정</button>
-        <button class="btn btn-sm btn-danger" onclick="deleteMember('${m.id}')" style="margin-left:3px;">삭제</button>` : ''}
+        <button class="btn btn-sm btn-ghost" onclick="openMemberDetailModal('${m.id}')" style="padding:3px 8px;font-size:11.5px;">상세</button>
+        ${hasPerm('members') ? `<button class="btn btn-sm btn-outline" onclick="openMemberModal('${m.id}')" style="margin-left:3px;padding:3px 8px;font-size:11.5px;">수정</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteMember('${m.id}')" style="margin-left:3px;padding:3px 8px;font-size:11.5px;">삭제</button>` : ''}
       </td>
     </tr>`;
   }).join('');
@@ -4981,7 +4981,7 @@ function renderAttendance(){
 
   // 이달 통계 계산
   const thisMonth=dv?dv.slice(0,7):kstMonthStr();
-  document.getElementById('attStatsMonthLabel').textContent=thisMonth.replace('-','년 ')+'월';
+  document.getElementById('attStatsMonthLabel').textContent='';
   const days=Object.keys(db.attendance).filter(d=>d.startsWith(thisMonth));
   const stats={};
   active.forEach(m=>{stats[m.id]={present:0,late:0,absent:0};});
