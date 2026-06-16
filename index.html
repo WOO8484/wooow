@@ -1234,21 +1234,25 @@ select { -webkit-appearance: auto; }
       <div id="page-members" class="page">
         <div class="card">
           <div class="card-header">
-            <div>
-              <div class="card-title">회원 목록</div>
-              <div class="card-subtitle" id="memberSubtitle"></div>
+            <!-- 왼쪽: 제목 + 인원수 + 등록버튼 -->
+            <div class="flex-center gap-10 flex-wrap">
+              <div>
+                <div class="card-title">회원 목록</div>
+                <div class="card-subtitle" id="memberSubtitle"></div>
+              </div>
+              <button id="btnRegMember" class="btn btn-primary btn-sm" onclick="openMemberModal()">+ 회원 등록</button>
             </div>
+            <!-- 오른쪽: 검색 + 필터 -->
             <div class="flex-center gap-8 flex-wrap">
               <div class="search-wrap" style="position:relative;">
                 <span class="ti ti-search" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:16px;color:var(--muted-2);pointer-events:none;line-height:1;z-index:1;"><svg viewBox="0 0 24 24"><circle cx="10" cy="10" r="7"/><path d="m21 21-6-6"/></svg></span>
-                <input class="form-input" style="width:200px;padding-left:36px;" type="text" id="memberSearch" placeholder="이름 · 연락처 · 수강과정 · 메모" oninput="renderMembers()">
+                <input class="form-input" style="width:200px;padding-left:36px;" type="text" id="memberSearch" placeholder="이름 · 연락처 · 수강과정" oninput="renderMembers()">
               </div>
-              <select class="form-input" id="memberStatusFilter" onchange="renderMembers()" style="width:100px;">
+              <select class="form-input" id="memberStatusFilter" onchange="renderMembers()" style="width:90px;">
                 <option value="">전체</option>
                 <option value="active">재원</option>
                 <option value="withdrawn">탈퇴</option>
               </select>
-              <button id="btnRegMember" class="btn btn-primary btn-sm" onclick="openMemberModal()">+ 회원 등록</button>
             </div>
           </div>
           <div class="table-wrap">
@@ -1278,17 +1282,17 @@ select { -webkit-appearance: auto; }
       <div id="page-tuition" class="page">
         <!-- 월 네비 + 탭 헤더 -->
         <div class="flex-between mb-12 flex-wrap gap-8">
+          <!-- 왼쪽: 탭 -->
+          <div class="tuition-tabs">
+            <button class="tuition-tab active" id="ttab-payment" onclick="switchTuitionTab('payment')"><span class="ti ti-layout-grid"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span> 납부 현황</button>
+            <button class="tuition-tab" id="ttab-unpaid" onclick="switchTuitionTab('unpaid')"><span class="ti ti-alert-circle"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg></span> 미납 내역</button>
+            <button class="tuition-tab" id="ttab-settle" onclick="switchTuitionTab('settle')"><span class="ti ti-report-money"><svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/><path d="M14 12a2 2 0 1 0-4 0v1a2 2 0 0 0 4 0v-1"/><path d="M10 16h4"/></svg></span> 월 결산</button>
+          </div>
+          <!-- 오른쪽: 월 네비 -->
           <div class="month-nav">
             <button class="month-nav-btn" onclick="changeMonth(-1)"><span class="ti ti-chevron-left"><svg viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg></span></button>
             <span class="month-nav-label" id="tuitionMonth"></span>
             <button class="month-nav-btn" onclick="changeMonth(1)"><span class="ti ti-chevron-right"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></span></button>
-          </div>
-          <div class="flex-center gap-8">
-            <div class="tuition-tabs">
-              <button class="tuition-tab active" id="ttab-payment" onclick="switchTuitionTab('payment')"><span class="ti ti-layout-grid"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span> 납부 현황</button>
-              <button class="tuition-tab" id="ttab-unpaid" onclick="switchTuitionTab('unpaid')"><span class="ti ti-alert-circle"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg></span> 미납 내역</button>
-              <button class="tuition-tab" id="ttab-settle" onclick="switchTuitionTab('settle')"><span class="ti ti-report-money"><svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/><path d="M14 12a2 2 0 1 0-4 0v1a2 2 0 0 0 4 0v-1"/><path d="M10 16h4"/></svg></span> 월 결산</button>
-            </div>
           </div>
         </div>
 
@@ -1353,8 +1357,16 @@ select { -webkit-appearance: auto; }
       <!-- ══ MATERIALS ══ -->
       <div id="page-materials" class="page">
         <div class="flex-between mb-12 flex-wrap gap-8">
+          <!-- 왼쪽: 탭 + 자재등록 -->
           <div class="flex-center gap-8 flex-wrap">
+            <div class="tuition-tabs">
+              <button class="tuition-tab active" id="mtab-stock" onclick="switchMatTab('stock')"><span class="ti ti-package"><svg viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/><path d="M8 5.25l8 4.5"/></svg></span> 재고 현황</button>
+              <button class="tuition-tab" id="mtab-log" onclick="switchMatTab('log')"><span class="ti ti-list-details"><svg viewBox="0 0 24 24"><path d="M13 5h8M13 9h6M13 13h8M13 17h6"/><rect x="3" y="4" width="6" height="6" rx="1"/><rect x="3" y="14" width="6" height="6" rx="1"/></svg></span> 입출고 이력</button>
+            </div>
             <button id="btnRegMat" class="btn btn-primary btn-sm" onclick="openMaterialModal()">+ 자재 등록</button>
+          </div>
+          <!-- 오른쪽: 카테고리 필터 + 검색 -->
+          <div class="flex-center gap-8 flex-wrap">
             <select class="form-input" id="matCategoryFilter" onchange="renderMaterials()" style="width:130px;">
               <option value="">전체 카테고리</option>
               <option value="물감">물감</option><option value="붓">붓</option>
@@ -1364,10 +1376,6 @@ select { -webkit-appearance: auto; }
               <span class="ti ti-search" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:16px;color:var(--muted-2);pointer-events:none;line-height:1;z-index:1;"><svg viewBox="0 0 24 24"><circle cx="10" cy="10" r="7"/><path d="m21 21-6-6"/></svg></span>
               <input class="form-input" style="width:190px;padding-left:36px;" type="text" id="matSearch" placeholder="자재명 검색" oninput="renderMaterials()">
             </div>
-          </div>
-          <div class="tuition-tabs">
-            <button class="tuition-tab active" id="mtab-stock" onclick="switchMatTab('stock')"><span class="ti ti-package"><svg viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/><path d="M8 5.25l8 4.5"/></svg></span> 재고 현황</button>
-            <button class="tuition-tab" id="mtab-log" onclick="switchMatTab('log')"><span class="ti ti-list-details"><svg viewBox="0 0 24 24"><path d="M13 5h8M13 9h6M13 13h8M13 17h6"/><rect x="3" y="4" width="6" height="6" rx="1"/><rect x="3" y="14" width="6" height="6" rx="1"/></svg></span> 입출고 이력</button>
           </div>
         </div>
 
@@ -5190,27 +5198,28 @@ function renderMatCatSummary() {
           </div>
           <div style="position:relative;height:5px;background:var(--border);border-radius:99px;overflow:visible;">
             <div style="height:100%;width:${pct}%;background:${barClr};border-radius:99px;transition:width 0.4s;"></div>
-            ${m.minQty > 0 ? `<div style="position:absolute;top:-2px;left:${minPct}%;width:2px;height:9px;background:var(--muted-2);border-radius:1px;"></div>` : ''}
+            ${m.minQty > 0 ? `<div style="position:absolute;top:-3px;left:${minPct}%;transform:translateX(-50%);width:3px;height:11px;background:var(--ink);border-radius:2px;opacity:0.5;"></div>` : ''}
           </div>
         </div>`;
     }).join('');
 
+    // 품절 자재 이름 목록
+    const emptyNames = v.items.filter(m => m.qty === 0).map(m => m.name).join(', ');
+    const lowNames   = v.items.filter(m => m.qty > 0 && m.qty <= m.minQty).map(m => m.name).join(', ');
+    const detailBadge = v.empty > 0
+      ? `<span style="font-size:10px;font-weight:700;color:var(--coral);background:var(--coral-bg);padding:2px 8px;border-radius:99px;" title="${emptyNames}">품절 · ${emptyNames}</span>`
+      : v.low > 0
+      ? `<span style="font-size:10px;font-weight:700;color:var(--amber);background:var(--amber-bg);padding:2px 8px;border-radius:99px;" title="${lowNames}">부족 · ${lowNames}</span>`
+      : `<span style="font-size:10px;font-weight:700;color:var(--teal);background:var(--teal-bg);padding:2px 8px;border-radius:99px;">정상</span>`;
+
     return `
     <div style="background:var(--surface);border:1.5px solid ${borderClr};border-radius:var(--r-md);padding:12px 14px;min-width:180px;flex:1;">
       <!-- 카테고리 헤더 -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
         <span style="font-size:13px;font-weight:700;color:var(--ink);">${cat}</span>
-        ${statusTxt}
+        ${detailBadge}
       </div>
-      <!-- 자재 수 -->
-      <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">자재 ${v.total}종</div>
-      <!-- 전체 요약 바 -->
-      <div style="display:flex;height:6px;border-radius:99px;overflow:hidden;background:var(--border);margin-bottom:8px;">
-        <div style="width:${v.total>0?Math.round(v.normal/v.total*100):0}%;background:var(--teal);"></div>
-        <div style="width:${v.total>0?Math.round(v.low/v.total*100):0}%;background:var(--amber);"></div>
-        <div style="width:${v.total>0?Math.round(v.empty/v.total*100):0}%;background:var(--coral);"></div>
-      </div>
-      <!-- 자재별 재고 바 -->
+      <!-- 자재별 재고 바만 표시 -->
       ${itemBars}
     </div>`;
   }).join('');
