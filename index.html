@@ -401,6 +401,7 @@ td {
   padding: 11px 14px;
   border-bottom: 1px solid var(--border);
   font-size: 13px; vertical-align: middle;
+  overflow: hidden;
 }
 tr:last-child td { border-bottom: none; }
 tbody tr { transition: background 0.1s; }
@@ -632,17 +633,36 @@ tbody tr:hover td { background: var(--bg); }
 }
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-#toast {
-  position: fixed; bottom: 28px; right: 28px;
-  background: var(--ink); color: #fff;
-  padding: 12px 20px; border-radius: var(--r-md);
-  font-size: 13px; font-weight: 500;
-  z-index: 9998; opacity: 0;
-  transform: translateY(10px);
-  transition: all 0.25s;
+/* ── Toast 오버레이 (화면 중앙 팝업) ── */
+#toastOverlay {
+  display: none;
+  position: fixed; inset: 0;
+  z-index: 99999;
+  align-items: center; justify-content: center;
   pointer-events: none;
 }
-#toast.show { opacity: 1; transform: translateY(0); }
+#toastOverlay.show { display: flex; }
+#toast {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--ink);
+  padding: 18px 32px;
+  border-radius: var(--r-xl);
+  font-size: 14px; font-weight: 600;
+  text-align: center;
+  max-width: none;
+  box-shadow: 0 8px 40px rgba(26,22,37,0.18);
+  opacity: 0;
+  transform: scale(0.9);
+  transition: opacity 0.18s, transform 0.18s;
+  line-height: 1.6;
+  display: flex; align-items: center; gap: 10px;
+  white-space: nowrap;
+}
+#toastOverlay.show #toast { opacity: 1; transform: scale(1); }
+#toastIcon {
+  font-size: 20px; flex-shrink: 0; line-height: 1;
+}
 
 /* PERMISSION CHECKBOX */
 .perm-checkbox-row {
@@ -1082,7 +1102,7 @@ select { -webkit-appearance: auto; }
     <button class="login-btn" onclick="doLogin()">로그인</button>
     <div id="loginDefaultHint" style="display:none;text-align:center;margin-top:12px;padding:8px 12px;background:#f5f3ff;border-radius:8px;font-size:11.5px;color:#6E4FD0;">🔑 초기 계정: <strong>admin</strong> / <strong>1234</strong></div>
     <!-- 임시 버전 표기 (확인용) -->
-    <div style="text-align:center;margin-top:16px;font-size:11px;color:var(--muted-2);">v1.0 · build 0.7</div>
+    <div style="text-align:center;margin-top:16px;font-size:11px;color:var(--muted-2);">v1.0 · build 0.8</div>
 
   </div>
 </div>
@@ -1229,7 +1249,17 @@ select { -webkit-appearance: auto; }
             </div>
           </div>
           <div class="table-wrap">
-            <table>
+            <table style="table-layout:fixed;width:100%;">
+              <colgroup>
+                <col style="width:16%;"><!-- 이름 -->
+                <col style="width:12%;"><!-- 연락처 -->
+                <col style="width:8%;"> <!-- 학년/나이 -->
+                <col style="width:10%;"><!-- 수강과정 -->
+                <col style="width:10%;"><!-- 수업일수 -->
+                <col style="width:12%;"><!-- 원비/등록일 -->
+                <col style="width:7%;"> <!-- 상태 -->
+                <col style="width:25%;"><!-- 관리 -->
+              </colgroup>
               <thead><tr>
                 <th>이름</th><th>연락처</th><th>학년/나이</th><th>수강과정</th><th>수업일수</th><th>원비/등록일</th><th>상태</th><th style="text-align:center;">관리</th>
               </tr></thead>
@@ -1339,13 +1369,22 @@ select { -webkit-appearance: auto; }
         <!-- 탭: 재고현황 -->
         <div id="mat-tab-stock">
           <div class="card" style="margin-bottom:14px;" id="matCatSummaryCard">
-            <div class="card-header"><div class="card-title">카테고리별 재고 금액</div><div class="card-subtitle" id="matTotalValSub"></div></div>
+            <div class="card-header"><div class="card-title">카테고리별 재고 현황</div><div class="card-subtitle" id="matTotalValSub"></div></div>
             <div id="matCatSummary" style="display:flex;flex-wrap:wrap;gap:10px;padding-top:4px;"></div>
           </div>
           <div class="card">
             <div class="card-header"><div class="card-title">자재 재고 현황</div><button class="btn btn-sm btn-ghost" onclick="copyOrderList()" id="copyOrderBtn" style="display:none;color:var(--amber);border-color:var(--amber);">📋 발주 목록 복사</button></div>
             <div class="table-wrap">
-              <table>
+              <table style="table-layout:fixed;width:100%;">
+                <colgroup>
+                  <col style="width:140px;"><!-- 자재명 -->
+                  <col style="width:100px;"><!-- 카테고리 -->
+                  <col style="width:120px;"><!-- 재고 -->
+                  <col style="width:100px;"><!-- 최소재고 -->
+                  <col style="width:90px;"> <!-- 단가 -->
+                  <col style="width:70px;"> <!-- 상태 -->
+                  <col style="width:220px;"><!-- 관리 -->
+                </colgroup>
                 <thead><tr><th>자재명</th><th>카테고리</th><th>재고</th><th>최소재고</th><th>단가</th><th>상태</th><th style="text-align:center;">관리</th></tr></thead>
                 <tbody id="materialTableBody"></tbody>
               </table>
@@ -1394,36 +1433,33 @@ select { -webkit-appearance: auto; }
           <button class="tuition-tab" id="atab-bulk" onclick="switchAttTab('bulk')">📋 날짜 범위 일괄</button>
         </div>
         <div id="att-tab-daily">
-        <div style="display:grid;grid-template-columns:3fr 2fr;gap:16px;align-items:stretch;">
-          <!-- 출석 체크 -->
-          <div class="card" style="display:flex;flex-direction:column;">
-            <div class="card-header" style="flex-direction:column;align-items:flex-start;gap:8px;">
-              <div style="display:flex;align-items:center;justify-content:space-between;width:100%;gap:8px;flex-wrap:wrap;">
+          <!-- 통합 카드: 출석체크 + 이달 수업현황 -->
+          <div class="card">
+            <div class="card-header" style="flex-wrap:wrap;gap:10px;">
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
                 <div class="card-title">출석 체크</div>
                 <div class="month-nav" style="gap:4px;">
                   <button class="month-nav-btn" onclick="changeAttDate(-1)"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;"><path d="m15 6-6 6 6 6"/></svg></button>
-                  <input type="date" class="form-input" id="attDate" onchange="renderAttendance()" style="width:120px;text-align:center;font-size:12px;padding:5px 4px;min-height:0;height:32px;">
+                  <input type="date" class="form-input" id="attDate" onchange="renderAttendance()" style="width:130px;text-align:center;font-size:12px;padding:5px 4px;min-height:0;height:32px;">
                   <button class="month-nav-btn" onclick="changeAttDate(1)"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;"><path d="m9 6 6 6-6 6"/></svg></button>
                 </div>
               </div>
-              <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
                 <button id="btnAttPresent" class="btn btn-xs btn-ghost" onclick="setAllAtt('present')" style="color:var(--teal);border-color:var(--teal);">✓ 전체 출석</button>
                 <button id="btnAttAbsent" class="btn btn-xs btn-ghost" onclick="setAllAtt('absent')" style="color:var(--coral);border-color:var(--coral);">✗ 전체 결석</button>
-                <button id="btnAttReset" class="btn btn-xs btn-ghost" onclick="setAllAtt(null)">초기화</button>
                 <button id="btnAttSave" class="btn btn-xs btn-success" onclick="saveAtt()">저장</button>
+                <span style="font-size:11px;color:var(--muted);margin-left:4px;" id="attStatsMonthLabel"></span>
               </div>
             </div>
-            <div id="attList" style="flex:1;overflow-y:auto;"></div>
-          </div>
-          <!-- 이달 수업 현황 -->
-          <div class="card" style="display:flex;flex-direction:column;">
-            <div class="card-header">
-              <div class="card-title">이달 수업 현황</div>
-              <div class="card-subtitle" id="attStatsMonthLabel"></div>
+            <!-- 컬럼 헤더 -->
+            <div style="display:flex;align-items:center;padding:7px 4px;border-bottom:1.5px solid var(--border);margin-bottom:2px;gap:10px;">
+              <span style="font-size:11px;font-weight:600;color:var(--muted);letter-spacing:0.3px;width:190px;flex-shrink:0;">회원</span>
+              <span style="font-size:11px;font-weight:600;color:var(--muted);letter-spacing:0.3px;width:190px;flex-shrink:0;text-align:center;">출결</span>
+              <span style="font-size:11px;font-weight:600;color:var(--muted);letter-spacing:0.3px;flex:1;">이달 수업 현황</span>
             </div>
-            <div id="attStats" style="flex:1;overflow-y:auto;"></div>
+            <div id="attList"></div>
+            <div id="attStats" style="display:none;"></div>
           </div>
-        </div><!-- /grid -->
         </div><!-- /att-tab-daily -->
         <!-- 달력 뷰 -->
         <div id="att-tab-calendar" style="display:none;">
@@ -1680,7 +1716,7 @@ select { -webkit-appearance: auto; }
                 <strong>프로그램 버전</strong>
                 <span style="display:flex;align-items:center;gap:6px;margin-top:3px;">
                   <span style="background:var(--purple);color:#fff;padding:2px 9px;border-radius:99px;font-size:11px;font-weight:700;">v1.0</span>
-                  <span style="background:var(--bg-2);color:var(--muted);padding:2px 7px;border-radius:99px;font-size:10.5px;font-weight:600;">build 0.7</span>
+                  <span style="background:var(--bg-2);color:var(--muted);padding:2px 7px;border-radius:99px;font-size:10.5px;font-weight:600;">build 0.8</span>
                 </span>
               </div>
               <button class="btn btn-sm btn-outline" onclick="openUpdateHistoryModal()" style="flex-shrink:0;">📋 업데이트 이력</button>
@@ -2062,7 +2098,7 @@ select { -webkit-appearance: auto; }
     <!-- 버전 배지 -->
     <div style="display:flex;align-items:center;gap:10px;padding:0 0 16px;flex-shrink:0;border-bottom:1px solid var(--border);">
       <span style="background:var(--purple);color:#fff;padding:4px 14px;border-radius:99px;font-size:13px;font-weight:700;">v1.0</span>
-      <span style="background:var(--bg-2);color:var(--muted);padding:3px 10px;border-radius:99px;font-size:11.5px;font-weight:600;">build 0.7</span>
+      <span style="background:var(--bg-2);color:var(--muted);padding:3px 10px;border-radius:99px;font-size:11.5px;font-weight:600;">build 0.8</span>
       <span style="font-size:12px;color:var(--muted);margin-left:auto;">루크미술학원 관리프로그램</span>
     </div>
 
@@ -2084,10 +2120,10 @@ select { -webkit-appearance: auto; }
       <!-- ── 탭1: 업데이트 이력 ── -->
       <div id="uhPanel1">
 
-        <!-- build 0.7 -->
+        <!-- build 0.8 -->
         <div style="padding:14px 0;border-bottom:1px solid var(--border);">
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-            <span style="background:var(--purple);color:#fff;padding:3px 11px;border-radius:99px;font-size:11.5px;font-weight:700;">v1.0 · build 0.7</span>
+            <span style="background:var(--purple);color:#fff;padding:3px 11px;border-radius:99px;font-size:11.5px;font-weight:700;">v1.0 · build 0.8</span>
             <span style="font-size:12px;color:var(--muted);">2026년 06월 16일</span>
             <span style="background:var(--teal-bg);color:var(--teal);padding:2px 8px;border-radius:99px;font-size:10.5px;font-weight:600;">최신</span>
           </div>
@@ -2101,7 +2137,7 @@ select { -webkit-appearance: auto; }
 
         <!-- build 0.6 -->
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
-            <span style="background:var(--purple);color:#fff;padding:3px 11px;border-radius:99px;font-size:11.5px;font-weight:700;">v1.0 · build 0.7</span>
+            <span style="background:var(--purple);color:#fff;padding:3px 11px;border-radius:99px;font-size:11.5px;font-weight:700;">v1.0 · build 0.8</span>
             <span style="font-size:12px;color:var(--muted);">2026년 06월 15일</span>
             <span style="background:var(--teal-bg);color:var(--teal);padding:2px 8px;border-radius:99px;font-size:10.5px;font-weight:600;">최초 출시</span>
           </div>
@@ -2400,9 +2436,6 @@ select { -webkit-appearance: auto; }
         <div class="modal-title" id="ccmTitle">확인</div>
         <div class="card-subtitle" id="ccmDesc" style="margin-top:4px;white-space:pre-line;line-height:1.6;"></div>
       </div>
-      <button type="button" class="modal-close" onclick="closeConfirmModal()">
-        <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;"><path d="M18 6 6 18M6 6l12 12"/></svg>
-      </button>
     </div>
     <div class="modal-footer" style="margin-top:8px;padding-top:14px;border-top:1px solid var(--border);">
       <button type="button" class="btn btn-ghost" onclick="closeConfirmModal()">취소</button>
@@ -2412,7 +2445,12 @@ select { -webkit-appearance: auto; }
 </div>
 
 <!-- TOAST -->
-<div id="toast"></div>
+<div id="toastOverlay">
+  <div id="toast">
+    <span id="toastIcon"></span>
+    <span id="toastMsg"></span>
+  </div>
+</div>
 
 <!-- ════ MODALS ════ -->
 
@@ -3857,12 +3895,26 @@ function closeConfirmModal() {
 
 let toastTimer;
 function toast(msg, isError) {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.style.background = isError ? 'var(--coral)' : 'var(--ink)';
-  el.classList.add('show');
+  const overlay = document.getElementById('toastOverlay');
+  const msgEl   = document.getElementById('toastMsg');
+  const iconEl  = document.getElementById('toastIcon');
+  const box     = document.getElementById('toast');
+  msgEl.textContent = msg;
+  if (isError) {
+    iconEl.textContent = '⚠️';
+    box.style.borderColor = 'var(--coral)';
+    box.style.color = 'var(--coral)';
+  } else {
+    iconEl.textContent = '✓';
+    box.style.borderColor = 'var(--teal)';
+    box.style.color = 'var(--ink)';
+  }
+  box.style.setProperty('--icon-color', isError ? 'var(--coral)' : 'var(--teal)');
+  const iconBox = document.getElementById('toastIcon');
+  iconBox.style.color = isError ? 'var(--coral)' : 'var(--teal)';
+  overlay.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+  toastTimer = setTimeout(() => overlay.classList.remove('show'), 2200);
 }
 
 // ═══════════════════════════════════
@@ -4124,14 +4176,23 @@ function renderMembers() {
     }
     const unpaidBadge = unpaidMonths>0 ? `<span class="badge badge-coral" style="font-size:9px;padding:1px 5px;margin-left:4px;">미납 ${unpaidMonths}개월</span>` : '';
     return `<tr style="${rowStyle}">
-      <td><div class="td-name">${m.name}${isWithdrawn?'<span style="font-size:10px;color:var(--coral);margin-left:5px;font-weight:400;">[탈퇴]</span>':''}${unpaidBadge}</div><div class="td-sub">${m.memo||''}</div></td>
+      <td>
+        <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
+          <span class="td-name">${m.name}${isWithdrawn?'<span style="font-size:10px;color:var(--coral);margin-left:4px;font-weight:400;">[탈퇴]</span>':''}</span>
+          ${unpaidBadge}
+        </div>
+        ${m.memo?`<div class="td-sub">${m.memo}</div>`:''}
+      </td>
       <td style="font-size:13px;color:var(--muted);">${m.phone||'-'}</td>
       <td style="font-size:13px;">${m.grade||'-'}</td>
       <td><span class="badge badge-purple">${m.course}</span></td>
-      <td style="text-align:center;"><span class="class-chip">${(()=>{try{return classLabel(m)}catch(e){return '-'}})()}</span><div style="font-size:10.5px;color:var(--muted);margin-top:3px;">월 약 ${(()=>{try{return getMonthlyTarget(m)}catch(e){return 0}})()}회</div></td>
-      <td style="font-size:13px;font-weight:600;text-align:center;">
-        <div>${(m.fee||0).toLocaleString()}원</div>
-        <div style="font-size:11px;color:var(--muted);font-weight:400;margin-top:2px;">${m.startDate||'-'}</div>
+      <td style="white-space:nowrap;">
+        <span class="class-chip" style="font-size:11px;">${(()=>{try{return classLabel(m)}catch(e){return '-'}})()}</span>
+        <span style="font-size:11px;color:var(--muted);margin-left:5px;">월 ${(()=>{try{return getMonthlyTarget(m)}catch(e){return 0}})()}회</span>
+      </td>
+      <td style="white-space:nowrap;">
+        <span style="font-size:13px;font-weight:600;">${(m.fee||0).toLocaleString()}원</span>
+        <span style="font-size:11px;color:var(--muted);margin-left:5px;">${m.startDate||'-'}</span>
       </td>
       <td>${statusBadge}</td>
       <td style="text-align:center;white-space:nowrap;">
@@ -4908,25 +4969,55 @@ function renderAttendance(){
     return;
   }
 
-  // 출석 체크 리스트
+  // 이달 통계 먼저 계산 (행 렌더에 필요)
+  const thisMonthPre = dv ? dv.slice(0,7) : kstMonthStr();
+  const daysPre = Object.keys(db.attendance).filter(d=>d.startsWith(thisMonthPre));
+  const statsPre = {};
+  active.forEach(m=>{ statsPre[m.id]={present:0,late:0,absent:0}; });
+  daysPre.forEach(d=>{
+    Object.entries(db.attendance[d]||{}).forEach(([mid,s])=>{
+      if(mid.includes('_')) return;
+      if(statsPre[mid]) statsPre[mid][s]=(statsPre[mid][s]||0)+1;
+    });
+  });
+
+  // 통합 렌더링: 출석버튼 + 이달 수업현황 한 행에
   try {
     attEl.innerHTML=active.map(m=>{
       const s=att[m.id]||'none';
       const cl = (type) => `btn btn-sm att-btn ${s===type?(type==='present'?'btn-success':type==='late'?'btn-primary':'btn-danger'):'btn-ghost'}`;
       const lbl = (()=>{try{return classLabel(m)}catch(e){return '-'}})();
-      return `<div class="att-row" data-mid="${m.id}">
-        <div class="flex-center gap-6" style="flex-wrap:wrap;">
-          <div class="att-name">${m.name}</div>
-          <span class="att-course-tag">${m.course}</span>
-          <span class="class-chip">${lbl}</span>
-          ${s==='present'?'<span class="badge badge-teal" style="font-size:10px;">출석</span>':s==='late'?'<span class="badge badge-amber" style="font-size:10px;">지각</span>':s==='absent'?'<span class="badge badge-coral" style="font-size:10px;">결석</span>':''}
+      const st = statsPre[m.id]||{present:0,late:0,absent:0};
+      const done = st.present+st.late;
+      const target = getMonthlyTarget(m);
+      const pct = target>0 ? Math.min(100,Math.round(done/target*100)) : 0;
+      const barClr = pct>=80?'var(--teal)':pct>=50?'var(--amber)':'var(--coral)';
+      const statusBadge = s==='present'?'<span class="badge badge-teal" style="font-size:10px;padding:1px 6px;">출석</span>'
+        :s==='late'?'<span class="badge badge-amber" style="font-size:10px;padding:1px 6px;">지각</span>'
+        :s==='absent'?'<span class="badge badge-coral" style="font-size:10px;padding:1px 6px;">결석</span>':'';
+      return `<div style="display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid var(--border-2);">
+        <!-- 회원정보: 고정폭, 뱃지 제거 (버튼 색으로 상태 표시) -->
+        <div style="width:190px;flex-shrink:0;display:flex;align-items:center;gap:5px;overflow:hidden;">
+          <span class="att-name" style="white-space:nowrap;flex-shrink:0;">${m.name}</span>
+          <span class="att-course-tag" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${m.course}</span>
+          <span class="class-chip" style="font-size:10.5px;white-space:nowrap;flex-shrink:0;">${lbl}</span>
         </div>
-        <div class="att-btns">
+        <!-- 출결 버튼 + 저장 -->
+        <div style="flex-shrink:0;display:flex;align-items:center;gap:6px;">
           ${(hasPerm('attendance') || _currentUser?.role==='admin') ? `
-          <button data-status="present" onclick="setAtt('${dv}','${m.id}','present')" class="${cl('present')}">출석</button>
-          <button data-status="late"    onclick="setAtt('${dv}','${m.id}','late')"    class="${cl('late')}">지각</button>
-          <button data-status="absent"  onclick="setAtt('${dv}','${m.id}','absent')"  class="${cl('absent')}">결석</button>
+          <button data-status="present" onclick="setAtt('${dv}','${m.id}','present')" class="${cl('present')}" style="padding:4px 12px;font-size:12px;border-radius:7px;">출석</button>
+          <button data-status="late"    onclick="setAtt('${dv}','${m.id}','late')"    class="${cl('late')}"    style="padding:4px 12px;font-size:12px;border-radius:7px;">지각</button>
+          <button data-status="absent"  onclick="setAtt('${dv}','${m.id}','absent')"  class="${cl('absent')}"  style="padding:4px 12px;font-size:12px;border-radius:7px;">결석</button>
+          <button onclick="saveAttSingle('${dv}','${m.id}')" class="btn btn-xs btn-success" style="padding:4px 11px;font-size:12px;border-radius:7px;">저장</button>
           ` : `<span style="font-size:11px;color:var(--muted-2);">${s||'미입력'}</span>`}
+        </div>
+        <!-- 이달 수업현황: flex:1 -->
+        <div style="flex:1;min-width:0;display:flex;align-items:center;gap:8px;">
+          <span style="font-size:11px;color:var(--muted);white-space:nowrap;">출 ${st.present}·지 ${st.late}·결 ${st.absent}</span>
+          <div style="flex:1;height:5px;background:var(--border);border-radius:99px;overflow:hidden;">
+            <div style="height:100%;width:${pct}%;background:${barClr};border-radius:99px;transition:width 0.3s;"></div>
+          </div>
+          <span style="font-size:12px;font-weight:700;color:${barClr};white-space:nowrap;">${done}<span style="font-size:10.5px;font-weight:400;color:var(--muted);">/${target}회</span></span>
         </div>
       </div>`;
     }).join('');
@@ -4982,37 +5073,7 @@ function renderAttendance(){
       <div class="stat-sub">목표 50% 미만</div>
     </div>`;
 
-  // 수업일수 진행률 카드
-  document.getElementById('attStats').innerHTML=
-    active.map(m=>{
-      const st=stats[m.id]||{present:0,late:0,absent:0};
-      const done=st.present+st.late;
-      const target=getMonthlyTarget(m);
-      const pct=target>0?Math.min(100,Math.round(done/target*100)):0;
-      const barClr=pct>=80?'var(--teal)':pct>=50?'var(--amber)':'var(--coral)';
-      const statusTxt=done>=target?'<span style="font-size:10px;color:var(--teal);font-weight:600;">✓ 목표달성</span>':
-        done===0?'<span style="font-size:10px;color:var(--muted);">미출석</span>':'';
-      return `<div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border);">
-        <div class="flex-between" style="margin-bottom:5px;">
-          <div style="display:flex;align-items:center;gap:6px;">
-            <span style="font-size:13px;font-weight:600;">${m.name}</span>
-            <span class="class-chip"><span class="ti ti-calendar-repeat" style="font-size:10px;"><svg viewBox="0 0 24 24"><path d="M4 13v-2a8 8 0 0 1 8-8 8 8 0 0 1 8 8v2"/><path d="M4 11l3-3-3-3M20 11l-3 3 3 3"/><path d="M4 19v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg></span>${(()=>{try{return classLabel(m)}catch(e){return '-'}})()}</span>
-            ${statusTxt}
-          </div>
-          <div style="text-align:right;">
-            <span style="font-size:13px;font-weight:700;color:${barClr};">${done}</span>
-            <span style="font-size:11px;color:var(--muted);">/${target}회</span>
-          </div>
-        </div>
-        <div class="att-progress-wrap">
-          <div class="att-progress-bar" style="width:${pct}%;background:${barClr};"></div>
-        </div>
-        <div style="display:flex;justify-content:space-between;margin-top:4px;">
-          <span style="font-size:10.5px;color:var(--muted);">출 ${st.present} · 지 ${st.late} · 결 ${st.absent}</span>
-          <span style="font-size:10.5px;color:var(--muted);">${pct}%</span>
-        </div>
-      </div>`;
-    }).join('');
+  // 수업현황은 attList 행에 통합됨 — 별도 렌더 불필요
   } catch(statErr) { console.error('attStats 오류:', statErr); }
 }
 function setAtt(date,mid,status){
@@ -5121,31 +5182,93 @@ function copyUnpaidMsg(mid) {
 }
 
 // ═══════════════════════════════════
-// 자재 카테고리별 금액 렌더
+// 자재 카테고리별 재고 현황 렌더
 // ═══════════════════════════════════
 function renderMatCatSummary() {
   const el = document.getElementById('matCatSummary');
   const subEl = document.getElementById('matTotalValSub');
   if (!el) return;
+
+  // 카테고리별 집계 (재고량 합산 포함)
   const catMap = {};
   db.materials.forEach(m => {
     const cat = m.category || '기타';
-    if (!catMap[cat]) catMap[cat] = { count: 0, val: 0, lowCount: 0 };
-    catMap[cat].count++;
-    catMap[cat].val += (m.price || 0) * (m.qty || 0);
-    if (m.qty <= m.minQty) catMap[cat].lowCount++;
+    if (!catMap[cat]) catMap[cat] = { items: [], total: 0, normal: 0, low: 0, empty: 0, totalQty: 0, maxQty: 0 };
+    catMap[cat].items.push(m);
+    catMap[cat].total++;
+    catMap[cat].totalQty += (m.qty || 0);
+    // 최대 재고 기준: minQty * 3 또는 현재 재고 중 큰 값 (기준선)
+    catMap[cat].maxQty += Math.max(m.qty || 0, (m.minQty || 0) * 3, 1);
+    if (m.qty === 0)            catMap[cat].empty++;
+    else if (m.qty <= m.minQty) catMap[cat].low++;
+    else                        catMap[cat].normal++;
   });
-  const totalVal = Object.values(catMap).reduce((s, c) => s + c.val, 0);
-  if (subEl) subEl.textContent = '총 ' + totalVal.toLocaleString() + '원';
-  const colors = ['var(--purple)', 'var(--teal)', 'var(--amber)', 'var(--coral)', 'var(--muted)'];
-  el.innerHTML = Object.entries(catMap).length === 0
-    ? '<div style="color:var(--muted);font-size:13px;padding:8px 0;">등록된 자재가 없습니다</div>'
-    : Object.entries(catMap).map(([cat, v], i) => `
-      <div style="flex:1;min-width:120px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);padding:10px 14px;">
-        <div style="font-size:11px;color:var(--muted);font-weight:600;margin-bottom:4px;">${cat}</div>
-        <div style="font-size:16px;font-weight:700;color:${colors[i % colors.length]};">${v.val.toLocaleString()}<span style="font-size:11px;font-weight:400;">원</span></div>
-        <div style="font-size:10.5px;color:var(--muted);margin-top:2px;">${v.count}종${v.lowCount > 0 ? ' · <span style="color:var(--coral);">부족 ' + v.lowCount + '개</span>' : ''}</div>
-      </div>`).join('');
+
+  const totalMat   = db.materials.length;
+  const totalLow   = db.materials.filter(m => m.qty > 0 && m.qty <= m.minQty).length;
+  const totalEmpty = db.materials.filter(m => m.qty === 0).length;
+  const totalNormal= totalMat - totalLow - totalEmpty;
+  if (subEl) subEl.innerHTML =
+    `전체 <b>${totalMat}</b>종 &nbsp;·&nbsp; <span style="color:var(--teal);">정상 ${totalNormal}</span> &nbsp;·&nbsp; <span style="color:var(--amber);">부족 ${totalLow}</span> &nbsp;·&nbsp; <span style="color:var(--coral);">품절 ${totalEmpty}</span>`;
+
+  if (Object.entries(catMap).length === 0) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0;">등록된 자재가 없습니다</div>';
+    return;
+  }
+
+  // 카테고리별 카드 + 자재별 재고 바
+  el.innerHTML = Object.entries(catMap).map(([cat, v]) => {
+    const borderClr = v.empty > 0 ? 'var(--coral)' : v.low > 0 ? 'var(--amber)' : 'var(--teal)';
+    const bgClr     = v.empty > 0 ? 'var(--coral-bg)' : v.low > 0 ? 'var(--amber-bg)' : 'var(--teal-bg)';
+    const statusTxt = v.empty > 0
+      ? `<span style="font-size:10px;font-weight:700;color:var(--coral);background:var(--coral-bg);padding:1px 7px;border-radius:99px;">품절 ${v.empty}종</span>`
+      : v.low > 0
+      ? `<span style="font-size:10px;font-weight:700;color:var(--amber);background:var(--amber-bg);padding:1px 7px;border-radius:99px;">부족 ${v.low}종</span>`
+      : `<span style="font-size:10px;font-weight:700;color:var(--teal);background:var(--teal-bg);padding:1px 7px;border-radius:99px;">정상</span>`;
+
+    // 자재별 재고 바 (카테고리 내 개별 자재)
+    const itemBars = v.items.map(m => {
+      const maxRef  = Math.max(m.qty || 0, (m.minQty || 0) * 3, 1);
+      const pct     = Math.min(100, Math.round((m.qty || 0) / maxRef * 100));
+      const minPct  = Math.min(100, Math.round((m.minQty || 0) / maxRef * 100));
+      const barClr  = m.qty === 0 ? 'var(--coral)' : m.qty <= m.minQty ? 'var(--amber)' : 'var(--teal)';
+      const qtyTxt  = m.qty === 0
+        ? `<span style="color:var(--coral);font-weight:700;">품절</span>`
+        : m.qty <= m.minQty
+        ? `<span style="color:var(--amber);font-weight:700;">${m.qty}${m.unit||''}</span>`
+        : `<span style="color:var(--teal);font-weight:600;">${m.qty}${m.unit||''}</span>`;
+      return `
+        <div style="margin-top:6px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
+            <span style="font-size:11.5px;font-weight:500;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px;">${m.name}</span>
+            <span style="font-size:11px;font-weight:600;color:${barClr};flex-shrink:0;">${m.qty}${m.unit||''}<span style="font-weight:400;color:var(--muted);">/${m.minQty||0}</span></span>
+          </div>
+          <div style="position:relative;height:5px;background:var(--border);border-radius:99px;overflow:visible;">
+            <div style="height:100%;width:${pct}%;background:${barClr};border-radius:99px;transition:width 0.4s;"></div>
+            ${m.minQty > 0 ? `<div style="position:absolute;top:-2px;left:${minPct}%;width:2px;height:9px;background:var(--muted-2);border-radius:1px;"></div>` : ''}
+          </div>
+        </div>`;
+    }).join('');
+
+    return `
+    <div style="background:var(--surface);border:1.5px solid ${borderClr};border-radius:var(--r-md);padding:12px 14px;min-width:180px;flex:1;">
+      <!-- 카테고리 헤더 -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+        <span style="font-size:13px;font-weight:700;color:var(--ink);">${cat}</span>
+        ${statusTxt}
+      </div>
+      <!-- 자재 수 -->
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">자재 ${v.total}종</div>
+      <!-- 전체 요약 바 -->
+      <div style="display:flex;height:6px;border-radius:99px;overflow:hidden;background:var(--border);margin-bottom:8px;">
+        <div style="width:${v.total>0?Math.round(v.normal/v.total*100):0}%;background:var(--teal);"></div>
+        <div style="width:${v.total>0?Math.round(v.low/v.total*100):0}%;background:var(--amber);"></div>
+        <div style="width:${v.total>0?Math.round(v.empty/v.total*100):0}%;background:var(--coral);"></div>
+      </div>
+      <!-- 자재별 재고 바 -->
+      ${itemBars}
+    </div>`;
+  }).join('');
 }
 
 // ═══════════════════════════════════
@@ -5652,6 +5775,16 @@ function saveAtt(){
   logActivity('출결 저장', document.getElementById('attDate')?.value || kstDateStr());
   markDirty('attendance');
   saveDb();toast('출석 정보가 저장되었습니다.');
+}
+function saveAttSingle(date, mid){
+  if (!hasPerm('attendance') && _currentUser?.role !== 'admin') { toast('권한이 없습니다.', true); return; }
+  const m = db.members.find(x => x.id === mid);
+  const s = (db.attendance[date] || {})[mid] || 'none';
+  const statusMap = { present:'출석', late:'지각', absent:'결석', none:'미입력' };
+  logActivity('출결 저장', `${m?.name||mid} · ${date} · ${statusMap[s]||s}`);
+  markDirty('attendance');
+  saveDb();
+  toast(`${m?.name||mid} 저장되었습니다.`);
 }
 
 // ═══════════════════════════════════
@@ -6168,7 +6301,7 @@ function _deleteAccountActual(id) {
 //    불일치 시 무한 새로고침(reload loop) 발생 가능
 //    버전 변경 시 index.html과 sw.js 두 곳 동시 수정 필수
 // ══════════════════════════════════════════
-const CURRENT_SW_VERSION = 'v1.0-build0.7';
+const CURRENT_SW_VERSION = 'v1.0-build0.8';
 
 async function checkVersionAndReload() {
   // ── 무한 새로고침 방지: 10초 내 이미 reload 했으면 건너뜀
