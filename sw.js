@@ -6,7 +6,7 @@
 //   CACHE_VERSION 뒷부분(build1.X) → 마이너 패치 시 변경
 //   index.html의 CURRENT_SW_VERSION과 항상 동일하게 유지
 // ══════════════════════════════════════════════════════
-const CACHE_VERSION = 'v1.0-build0.8';
+const CACHE_VERSION = 'v1.0-build0.9';
 const CACHE_FILES = [
   './',
   './index.html',
