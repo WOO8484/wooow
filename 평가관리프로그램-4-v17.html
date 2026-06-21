@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>수명평가 관리</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FAFBFC;
+    --surface:#FFFFFF;
+    --sidebar:#FFFFFF;
+    --sidebar-hover:#F1F6F6;
+    --sidebar-active:#0E9488;
+    --border:#EAEEF1;
+    --ink:#202B36;
+    --muted:#8B97A3;
+    --teal:#0E9488;
+    --teal-soft:#E8F6F4;
+    --amber:#C2760C;
+    --amber-soft:#FBF1E3;
+    --green:#1A9A5C;
+    --green-soft:#E9F8EF;
+    --red:#D6483F;
+    --red-soft:#FCEEEC;
+    --slate:#5B6877;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'IBM Plex Sans KR',sans-serif;background:var(--bg);color:var(--ink);}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  #app{display:flex;min-height:100vh;}
+
+  /* Sidebar */
+  .sidebar{width:216px;background:var(--sidebar);border-right:1px solid var(--border);flex-shrink:0;display:flex;flex-direction:column;padding:22px 14px;position:sticky;top:0;height:100vh;}
+  .brand{color:var(--ink);font-weight:700;font-size:15px;letter-spacing:.3px;padding:0 10px 22px;border-bottom:1px solid var(--border);margin-bottom:18px;}
+  .brand small{display:block;color:var(--muted);font-weight:400;font-size:11px;margin-top:4px;font-family:'IBM Plex Mono',monospace;letter-spacing:.5px;}
+  .nav-item{display:flex;align-items:center;gap:10px;color:var(--slate);padding:11px 12px;border-radius:9px;cursor:pointer;font-size:14px;font-weight:500;margin-bottom:2px;transition:background .15s, color .15s;}
+  .nav-item:hover{background:var(--sidebar-hover);color:var(--ink);}
+  .nav-item.active{background:var(--teal-soft);color:var(--teal);font-weight:600;}
+  .nav-icon{width:18px;height:18px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+  .sidebar-foot{margin-top:auto;color:var(--muted);font-size:11px;padding:0 12px;font-family:'IBM Plex Mono',monospace;}
+
+  /* Main */
+  .main{flex:1;padding:28px 36px;max-width:1320px;}
+  .page-header{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:22px;}
+  .page-title{font-size:21px;font-weight:700;}
+  .page-date{color:var(--muted);font-size:12.5px;font-family:'IBM Plex Mono',monospace;}
+
+  /* Cards */
+  .grid-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;position:relative;overflow:hidden;box-shadow:0 1px 2px rgba(20,30,40,.03);}
+  .stat-card .bar{position:absolute;left:0;top:0;bottom:0;width:3px;opacity:.8;}
+  .stat-label{font-size:12px;color:var(--muted);font-weight:500;margin-bottom:6px;}
+  .stat-value{font-size:30px;font-weight:700;font-family:'IBM Plex Mono',monospace;}
+  .stat-sub{font-size:11.5px;color:var(--muted);margin-top:3px;}
+
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;margin-bottom:18px;box-shadow:0 1px 2px rgba(20,30,40,.03);}
+  .panel-head{display:flex;align-items:center;justify-content:space-between;padding:15px 20px;border-bottom:1px solid var(--border);}
+  .panel-title{font-size:14px;font-weight:600;}
+  .panel-count{font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',monospace;}
+  .panel-body{padding:6px 0;}
+  .grid-two{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+
+  .row-item{display:flex;align-items:center;gap:12px;padding:11px 20px;border-bottom:1px solid #F2F4F6;font-size:13px;}
+  .row-item:last-child{border-bottom:none;}
+  .row-item .rno{font-family:'IBM Plex Mono',monospace;color:var(--muted);font-size:11.5px;width:24px;}
+  .row-item .rmain{flex:1;font-weight:500;}
+  .row-item .rmeta{color:var(--muted);font-size:11.5px;}
+  .empty-row{padding:24px 20px;color:var(--muted);font-size:13px;text-align:center;}
+
+  .pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:100px;font-size:11.5px;font-weight:600;}
+  .pill-wait{background:#EEF1F4;color:var(--slate);}
+  .pill-progress{background:var(--teal-soft);color:var(--teal);}
+  .pill-done{background:var(--green-soft);color:var(--green);}
+  .pill-miss{background:var(--red-soft);color:var(--red);}
+  .dot{width:6px;height:6px;border-radius:50%;display:inline-block;}
+
+  /* Buttons */
+  .btn{border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:opacity .15s;}
+  .btn:hover{opacity:.88;}
+  .btn-primary{background:var(--teal);color:#fff;}
+  .btn-outline{background:#fff;border:1px solid var(--border);color:var(--ink);}
+  .btn-ghost{background:transparent;color:var(--muted);padding:6px 8px;}
+  .btn-danger{background:var(--red-soft);color:var(--red);}
+  .btn-sm{padding:5px 10px;font-size:12px;}
+
+  /* Forms */
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:20px;}
+  .field{display:flex;flex-direction:column;gap:6px;}
+  .field label{font-size:12.5px;font-weight:600;color:var(--slate);}
+  .field input, .field select, .field textarea{
+    border:1px solid var(--border);border-radius:8px;padding:9px 11px;font-size:13.5px;font-family:inherit;background:#fff;color:var(--ink);
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{outline:2px solid var(--teal);outline-offset:-1px;border-color:var(--teal);}
+  .field-full{grid-column:1/-1;}
+  .form-actions{display:flex;justify-content:flex-end;gap:10px;padding:0 20px 20px;}
+  .section-label{padding:16px 20px 0;font-size:13px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.4px;}
+
+  /* Table */
+  .table-wrap{overflow:auto;border:1px solid var(--border);border-radius:10px;background:#fff;}
+  table{width:100%;border-collapse:collapse;font-size:13px;min-width:600px;}
+  th{background:#F8F9FB;text-align:left;padding:10px 14px;font-size:11.5px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.3px;border-bottom:1px solid var(--border);white-space:nowrap;}
+  td{padding:10px 14px;border-bottom:1px solid #F0F2F5;white-space:nowrap;}
+  tr:last-child td{border-bottom:none;}
+  tr:hover td{background:#FAFBFC;}
+  .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:12px;}
+  .toolbar input[type=text]{border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;width:240px;}
+  .icon-btn{cursor:pointer;color:var(--red);background:none;border:none;font-size:12px;font-weight:600;}
+
+  /* Settings */
+  .settings-tabs{display:flex;gap:6px;margin-bottom:16px;}
+  .settings-tab{padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);}
+  .settings-tab.active{background:var(--teal-soft);color:var(--teal);}
+  .order-btns{display:flex;gap:2px;}
+  .order-btns button{border:1px solid var(--border);background:#fff;border-radius:6px;width:22px;height:22px;cursor:pointer;font-size:11px;color:var(--slate);}
+  .order-btns button:disabled{opacity:.3;cursor:default;}
+  .toggle{position:relative;width:34px;height:19px;border-radius:100px;background:#D9DEE4;cursor:pointer;display:inline-block;transition:background .15s;}
+  .toggle.on{background:var(--teal);}
+  .toggle .knob{position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;background:#fff;transition:left .15s;}
+  .toggle.on .knob{left:17px;}
+  .badge-type{font-size:10.5px;padding:2px 7px;border-radius:5px;background:#EEF1F4;color:var(--slate);font-weight:600;}
+  .add-field-row{background:#FAFBFC;border:1px dashed var(--border);border-radius:10px;padding:16px;margin-bottom:18px;}
+  .inline-fields{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;}
+  .inline-fields .field{min-width:140px;}
+  .helptext{font-size:11.5px;color:var(--muted);margin-top:4px;}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* ---------------- 상태 ---------------- */
+let state = {
+  page: 'main',
+  columns: [],
+  records: [],
+  nextNo: 1,
+  loaded: false,
+  allowDuplicateAdditions: false   // 중복 항목 추가 허용 여부 (설정에서 토글)
+};
+
+const FIXED_DEFAULT = [
+  {id:'requester', kind:'fixed', label:'의뢰자', dataType:'text', visible:true, order:1},
+  {id:'evaluator', kind:'fixed', label:'평가담당자', dataType:'text', visible:true, order:2},
+  {id:'equipment', kind:'fixed', label:'설비', dataType:'text', visible:true, order:3},
+  {id:'channel', kind:'fixed', label:'채널', dataType:'text', visible:true, order:4},
+  {id:'startDate', kind:'fixed', label:'시작일', dataType:'date', visible:true, order:5},
+  {id:'endDate', kind:'fixed', label:'종료예정일', dataType:'date', visible:true, order:6},
+  {id:'status', kind:'fixed', label:'상태', dataType:'select', options:['대기','진행중','완료'], visible:true, order:7},
+  {id:'note', kind:'fixed', label:'비고', dataType:'text', visible:true, order:8},
+];
+const NO_COLUMN = {id:'no', kind:'fixed', label:'No', dataType:'number', visible:true, order:0};
+
+/* ---------------- 유틸 ---------------- */
+function uid(){ return 'c'+Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function fmtDate(d){ const p=n=>String(n).padStart(2,'0'); return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()); }
+function todayStr(){ return fmtDate(new Date()); }
+function tomorrowStr(){ const d=new Date(); d.setDate(d.getDate()+1); return fmtDate(d); }
+function weekRange(){
+  const d=new Date(); const day=d.getDay(); // 0=일
+  const monday=new Date(d); monday.setDate(d.getDate()-((day+6)%7));
+  const sunday=new Date(monday); sunday.setDate(monday.getDate()+6);
+  return [fmtDate(monday), fmtDate(sunday)];
+}
+function escapeHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function visibleColumns(){
+  return [NO_COLUMN, ...state.columns].filter(c=>c.visible).sort((a,b)=>a.order-b.order);
+}
+function allColumnsSorted(){
+  return [NO_COLUMN, ...state.columns].sort((a,b)=>a.order-b.order);
+}
+function statusOf(rec){ return rec.values['status'] || '대기'; }
+
+/* ---------------- 저장/로드 (여러 환경 대응: sandbox iframe, localStorage 차단 등) ---------------- */
+let storage;
+
+try {
+  if (window.storage) {
+    storage = window.storage;
+  } else if (typeof localStorage !== 'undefined') {
+    storage = {
+      async get(key) {
+        const val = localStorage.getItem(key);
+        return val ? { value: val } : null;
+      },
+      async set(key, value) {
+        localStorage.setItem(key, value);
+      }
+    };
+  }
+} catch(e) {
+  console.warn('Storage 접근이 차단되어 메모리에서만 동작합니다.');
+}
+
+if (!storage) {
+  const memoryStore = {};
+  storage = {
+    async get(key) {
+      return memoryStore[key] ? { value: memoryStore[key] } : null;
+    },
+    async set(key, value) {
+      memoryStore[key] = value;
+    }
+  };
+}
+
+async function loadState(){
+  try{
+    const cfg = await storage.get('fieldColumns');
+    state.columns = cfg ? JSON.parse(cfg.value) : JSON.parse(JSON.stringify(FIXED_DEFAULT));
+  }catch(e){ state.columns = JSON.parse(JSON.stringify(FIXED_DEFAULT)); }
+  try{
+    const recs = await storage.get('evalRecords');
+    state.records = recs ? JSON.parse(recs.value) : [];
+  }catch(e){ state.records = []; }
+  try{
+    const n = await storage.get('nextNo');
+    state.nextNo = n ? JSON.parse(n.value) : 1;
+  }catch(e){ state.nextNo = 1; }
+
+  // 중복 추가 허용 설정 로드
+  try{
+    const dupSetting = await storage.get('allowDuplicateAdditions');
+    if (dupSetting && dupSetting.value !== null) {
+      state.allowDuplicateAdditions = JSON.parse(dupSetting.value);
+    }
+  }catch(e){ state.allowDuplicateAdditions = false; }
+
+  state.loaded = true;
+}
+async function saveColumns(){ try{ await storage.set('fieldColumns', JSON.stringify(state.columns)); }catch(e){ console.error(e); } }
+async function saveRecords(){ try{ await storage.set('evalRecords', JSON.stringify(state.records)); }catch(e){ console.error(e); } }
+async function saveNextNo(){ try{ await storage.set('nextNo', JSON.stringify(state.nextNo)); }catch(e){ console.error(e); } }
+async function saveAllowDuplicateSetting(){ 
+  try{ 
+    await storage.set('allowDuplicateAdditions', JSON.stringify(state.allowDuplicateAdditions)); 
+  }catch(e){ console.error(e); } 
+}
+
+/* ---------------- 렌더 루트 ---------------- */
+function render(){
+  const app = document.getElementById('app');
+  if(!state.loaded){ app.innerHTML = '<div style="padding:60px;color:#6B7785;font-family:IBM Plex Sans KR">불러오는 중…</div>'; return; }
+  app.innerHTML = `
+    <div class="sidebar">
+      <div class="brand">수명평가 관리<small>LIFE TEST OPS</small></div>
+      ${navItem('main','메인','◧')}
+      ${navItem('register','평가 등록','＋')}
+      ${navItem('status','평가 현황','▤')}
+      ${navItem('settings','설정','⚙')}
+      <div class="sidebar-foot" style="font-weight:700; color:#0E9488; font-size:12.5px;">v17 · ${todayStr()}</div>
+    </div>
+    <div class="main" id="main-content"></div>
+  `;
+  document.querySelectorAll('.nav-item').forEach(el=>{
+    el.addEventListener('click', ()=>{ state.page = el.dataset.page; render(); });
+  });
+  const content = document.getElementById('main-content');
+  if(state.page==='main') content.innerHTML = renderMainPage();
+  if(state.page==='register') content.innerHTML = renderRegisterPage();
+  if(state.page==='status') content.innerHTML = renderStatusPage();
+  if(state.page==='settings') content.innerHTML = renderSettingsPage();
+
+  if(state.page==='main') bindMainPage();
+  if(state.page==='register') bindRegisterPage();
+  if(state.page==='status') bindStatusPage();
+  if(state.page==='settings') bindSettingsPage();
+}
+function navItem(page, label, icon){
+  return `<div class="nav-item ${state.page===page?'active':''}" data-page="${page}">
+    <span class="nav-icon">${icon}</span>${label}
+  </div>`;
+}
+
+/* ============================================================
+   메인 페이지
+   ============================================================ */
+function renderMainPage(){
+  const recs = state.records;
+  const waiting = recs.filter(r=>statusOf(r)==='대기');
+  const progress = recs.filter(r=>statusOf(r)==='진행중');
+  const done = recs.filter(r=>statusOf(r)==='완료');
+  const today = todayStr(), tomorrow = tomorrowStr();
+  const [wkStart, wkEnd] = weekRange();
+
+  const todayList = recs.filter(r=> statusOf(r)!=='완료' && r.values.startDate && r.values.endDate && r.values.startDate<=today && r.values.endDate>=today);
+  const tomorrowList = recs.filter(r=> statusOf(r)!=='완료' && r.values.startDate && r.values.endDate && r.values.startDate<=tomorrow && r.values.endDate>=tomorrow);
+  const weekList = recs.filter(r=> statusOf(r)!=='완료' && r.values.startDate && r.values.startDate>=wkStart && r.values.startDate<=wkEnd);
+  const missedList = recs.filter(r=> statusOf(r)!=='완료' && r.values.endDate && r.values.endDate < today);
+
+  const rowTpl = (r, metaFn) => `
+    <div class="row-item">
+      <span class="rno mono">#${escapeHtml(r.no)}</span>
+      <span class="rmain">${escapeHtml(r.values.equipment||'(설비 미입력)')} · ${escapeHtml(r.values.channel||'-')}</span>
+      <span class="rmeta">${metaFn(r)}</span>
+      ${statusPill(statusOf(r))}
+    </div>`;
+
+  return `
+    <div class="page-header">
+      <div class="page-title">메인 대시보드</div>
+      <div class="page-date mono">${todayStr()}</div>
+    </div>
+
+    <div class="grid-stats">
+      <div class="stat-card"><div class="bar" style="background:var(--slate)"></div>
+        <div class="stat-label">대기</div><div class="stat-value">${waiting.length}</div><div class="stat-sub">평가 시작 전</div></div>
+      <div class="stat-card"><div class="bar" style="background:var(--teal)"></div>
+        <div class="stat-label">진행</div><div class="stat-value">${progress.length}</div><div class="stat-sub">평가 진행 중</div></div>
+      <div class="stat-card"><div class="bar" style="background:var(--green)"></div>
+        <div class="stat-label">완료</div><div class="stat-value">${done.length}</div><div class="stat-sub">평가 완료</div></div>
+      <div class="stat-card"><div class="bar" style="background:var(--amber)"></div>
+        <div class="stat-label">금주 예정</div><div class="stat-value">${weekList.length}</div><div class="stat-sub">${wkStart} ~ ${wkEnd}</div></div>
+    </div>
+
+    <div class="grid-two">
+      <div class="panel">
+        <div class="panel-head"><span class="panel-title">금일 평가 진행</span><span class="panel-count mono">${todayList.length}건</span></div>
+        <div class="panel-body">
+          ${todayList.length? todayList.map(r=>rowTpl(r, r=>`${r.values.evaluator||'-'} · ~${r.values.endDate||'-'}`)).join('') : '<div class="empty-row">금일 진행 예정 평가가 없습니다.</div>'}
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><span class="panel-title">내일 평가 진행</span><span class="panel-count mono">${tomorrowList.length}건</span></div>
+        <div class="panel-body">
+          ${tomorrowList.length? tomorrowList.map(r=>rowTpl(r, r=>`${r.values.evaluator||'-'} · ~${r.values.endDate||'-'}`)).join('') : '<div class="empty-row">내일 진행 예정 평가가 없습니다.</div>'}
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">금주 평가 예정</span><span class="panel-count mono">${weekList.length}건 · ${wkStart} ~ ${wkEnd}</span></div>
+      <div class="panel-body">
+        ${weekList.length? weekList.map(r=>rowTpl(r, r=>`시작 ${r.values.startDate||'-'} · 담당 ${r.values.evaluator||'-'}`)).join('') : '<div class="empty-row">이번 주 예정된 평가가 없습니다.</div>'}
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">평가 누락</span><span class="panel-count mono" style="color:var(--red)">${missedList.length}건</span></div>
+      <div class="panel-body">
+        ${missedList.length? missedList.map(r=>rowTpl(r, r=>`종료예정 ${r.values.endDate} 경과 · 담당 ${r.values.evaluator||'-'}`)).join('') : '<div class="empty-row">누락된 평가가 없습니다.</div>'}
+      </div>
+    </div>
+  `;
+}
+function statusPill(s){
+  if(s==='완료') return `<span class="pill pill-done"><span class="dot" style="background:var(--green)"></span>완료</span>`;
+  if(s==='진행중') return `<span class="pill pill-progress"><span class="dot" style="background:var(--teal)"></span>진행중</span>`;
+  return `<span class="pill pill-wait"><span class="dot" style="background:var(--slate)"></span>대기</span>`;
+}
+function bindMainPage(){}
+
+/* ============================================================
+   평가 등록 페이지
+   ============================================================ */
+function renderRegisterPage(){
+  const cols = visibleColumns().filter(c => c.id !== 'no');
+  const fieldHtml = cols.map(c=>{
+    const req = (c.id==='evaluator'||c.id==='equipment');
+    if(c.dataType==='select'){
+      const opts = (c.options||[]).map(o=>`<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`).join('');
+      return `<div class="field"><label>${escapeHtml(c.label)}</label>
+        <select data-field="${c.id}">${c.id==='status'?'':'<option value="">선택</option>'}${opts}</select></div>`;
+    }
+    if(c.dataType==='date') return `<div class="field"><label>${escapeHtml(c.label)}</label><input type="date" data-field="${c.id}" value="${escapeHtml(c.defaultValue||'')}"></div>`;
+    if(c.dataType==='number') return `<div class="field"><label>${escapeHtml(c.label)}</label><input type="number" step="any" data-field="${c.id}" placeholder="숫자 입력" value="${escapeHtml(c.defaultValue||'')}"></div>`;
+    return `<div class="field${c.id==='note'?' field-full':''}"><label>${escapeHtml(c.label)}</label><input type="text" data-field="${c.id}" placeholder="${escapeHtml(c.label)} 입력" value="${escapeHtml(c.defaultValue||'')}"></div>`;
+  }).join('');
+
+  return `
+    <div class="page-header">
+      <div class="page-title">평가 등록</div>
+      <div class="page-date mono">신규 평가 항목을 작성하여 평가 현황에 등록합니다</div>
+    </div>
+    <div class="panel">
+      <div class="form-grid" id="register-form">${fieldHtml}</div>
+      <div class="form-actions">
+        <button class="btn btn-outline" id="reg-reset">초기화</button>
+        <button class="btn btn-primary" id="reg-submit">평가 등록</button>
+      </div>
+    </div>
+    <div id="reg-toast"></div>
+  `;
+}
+function bindRegisterPage(){
+  document.getElementById('reg-reset').addEventListener('click', ()=>{ render(); });
+  document.getElementById('reg-submit').addEventListener('click', async ()=>{
+    const values = {};
+    document.querySelectorAll('#register-form [data-field]').forEach(el=>{ values[el.dataset.field]=el.value; });
+    if(!values.status) values.status='대기';
+    if(!values.evaluator || !values.equipment){
+      const toast = document.getElementById('reg-toast');
+      toast.innerHTML = `<div style="padding:0 4px;color:var(--red);font-size:12.5px;margin-top:-4px">평가담당자와 설비는 필수 입력 항목입니다.</div>`;
+      return;
+    }
+    const rec = { id: uid(), no: state.nextNo, values };
+    state.records.push(rec);
+    state.nextNo += 1;
+    await saveRecords(); await saveNextNo();
+    state.page='status';
+    render();
+  });
+}
+
+/* ============================================================
+   평가 현황 페이지
+   ============================================================ */
+function renderStatusPage(){
+  const cols = visibleColumns();
+  return `
+    <div class="page-header">
+      <div class="page-title">평가 현황</div>
+      <div class="page-date mono">전체 ${state.records.length}건</div>
+    </div>
+    <div class="toolbar">
+      <input type="text" id="status-search" placeholder="설비, 담당자, 의뢰자 검색">
+      <button class="btn btn-primary" id="goto-register">+ 평가 등록</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>${cols.map(c=>`<th>${escapeHtml(c.label)}</th>`).join('')}<th></th></tr></thead>
+        <tbody id="status-tbody"></tbody>
+      </table>
+    </div>
+  `;
+}
+function statusRows(filterText){
+  const cols = visibleColumns();
+  let recs = state.records;
+  if(filterText){
+    const f = filterText.toLowerCase();
+    recs = recs.filter(r => ['evaluator','equipment','requester'].some(k => (r.values[k]||'').toLowerCase().includes(f)));
+  }
+  if(!recs.length) return `<tr><td colspan="${cols.length+1}" class="empty-row">등록된 평가 데이터가 없습니다.</td></tr>`;
+  return recs.map(r=>{
+    const cells = cols.map(c=>{
+      if(c.id==='no') return `<td class="mono">${escapeHtml(r.no)}</td>`;
+      if(c.id==='status') return `<td>${statusPill(statusOf(r))}</td>`;
+      return `<td>${escapeHtml(r.values[c.id]||'-')}</td>`;
+    }).join('');
+    return `<tr>${cells}<td><button class="icon-btn" data-del="${r.id}">삭제</button></td></tr>`;
+  }).join('');
+}
+function bindStatusPage(){
+  const tbody = document.getElementById('status-tbody');
+  tbody.innerHTML = statusRows('');
+  document.getElementById('status-search').addEventListener('input', (e)=>{ tbody.innerHTML = statusRows(e.target.value); attachDelete(); });
+  document.getElementById('goto-register').addEventListener('click', ()=>{ state.page='register'; render(); });
+  attachDelete();
+  function attachDelete(){
+    tbody.querySelectorAll('[data-del]').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        state.records = state.records.filter(r=>r.id!==btn.dataset.del);
+        await saveRecords();
+        render();
+      });
+    });
+  }
+}
+
+/* ============================================================
+   설정 페이지
+   ============================================================ */
+let settingsTab = 'fixed';
+function renderSettingsPage(){
+  return `
+    <div class="page-header">
+      <div class="page-title">설정 <span style="font-size:13px; color:#0E9488; font-weight:700;">(v17)</span></div>
+      <div class="page-date mono">평가 현황에 노출되는 항목과 순서를 관리합니다</div>
+    </div>
+    <div class="settings-tabs">
+      <div class="settings-tab ${settingsTab==='fixed'?'active':''}" data-tab="fixed">전체 항목 관리</div>
+      <div class="settings-tab ${settingsTab==='dynamic'?'active':''}" data-tab="dynamic">항목 추가</div>
+    </div>
+    <div id="settings-body"></div>
+  `;
+}
+function bindSettingsPage(){
+  document.querySelectorAll('.settings-tab').forEach(el=>{
+    el.addEventListener('click', ()=>{ settingsTab = el.dataset.tab; render(); });
+  });
+  const body = document.getElementById('settings-body');
+  body.innerHTML = settingsTab==='fixed' ? renderFixedSettings() : renderDynamicSettings();
+  if(settingsTab==='fixed') bindFixedSettings(); else bindDynamicSettings();
+}
+
+function renderFixedSettings(){
+  // 고정 항목 + 사용자가 추가한 항목을 함께 보여줌 (순서 관리 목적)
+  const cols = state.columns.sort((a,b)=>a.order-b.order);
+  return `
+    <div class="panel">
+      <div class="panel-head">
+        <span class="panel-title">전체 항목 관리 (고정 + 추가 항목)</span>
+        <span class="panel-count mono">${cols.length}개</span>
+        <button class="btn btn-outline btn-sm" id="reset-order-btn" style="margin-left:auto; padding:4px 12px; font-size:12px;">순서 초기화</button>
+      </div>
+
+      <!-- 중복 추가 허용 토글 (전체 항목 관리 탭) -->
+      <div class="row-item" style="background:#F8FAFB; padding:12px 20px; border-bottom:1px solid #E5E9EF;">
+        <span class="rmain" style="font-weight:600;">중복 항목 추가 허용</span>
+        <div style="margin-left:auto; display:flex; align-items:center; gap:8px;">
+          <span style="font-size:12px; color:#8B97A3;">${state.allowDuplicateAdditions ? '허용' : '차단'}</span>
+          <div class="toggle ${state.allowDuplicateAdditions ? 'on' : ''}" id="toggle-duplicate-mgmt" style="cursor:pointer;">
+            <span class="knob"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-body">
+        ${cols.map((c,i)=>`
+          <div class="row-item">
+            <span class="order-btns">
+              <button data-up="${c.id}" ${i===0?'disabled':''}>▲</button>
+              <button data-down="${c.id}" ${i===cols.length-1?'disabled':''}>▼</button>
+            </span>
+            <span class="rmeta mono" style="min-width:22px;text-align:right;">#${i+1}</span>
+            <span class="rmain">${escapeHtml(c.label)}</span>
+            <span class="badge-type">${typeLabel(c.dataType)}</span>
+            ${c.kind === 'dynamic' ? `<span class="badge-type" style="background:#E8F6F4;color:#0E9488;">추가 항목</span>` : ''}
+            <span class="toggle ${c.visible?'on':''}" data-toggle="${c.id}"><span class="knob"></span></span>
+            ${c.kind === 'dynamic' ? `<button class="icon-btn" data-del="${c.id}">삭제</button>` : ''}
+          </div>`).join('')}
+      </div>
+    </div>
+    <div style="margin-top:12px; font-size:12px; color:#8B97A3;">
+      ※ 사용자가 추가한 항목은 위 목록에서 순서를 자유롭게 조정할 수 있습니다. 새 항목 추가는 오른쪽 탭에서 해주세요.
+    </div>
+  `;
+}
+function bindFixedSettings(){
+  document.querySelectorAll('[data-toggle]').forEach(el=>{
+    el.addEventListener('click', async ()=>{
+      const col = state.columns.find(c=>c.id===el.dataset.toggle);
+      if(col){ col.visible = !col.visible; }
+      await saveColumns(); render();
+    });
+  });
+
+  // 동적 항목 삭제 버튼 (전체 항목 관리 탭에서 동작)
+  document.querySelectorAll('[data-del]').forEach(el=>{
+    el.addEventListener('click', async ()=>{
+      if(!confirm('이 추가 항목을 삭제하시겠습니까?')) return;
+      state.columns = state.columns.filter(c=>c.id!==el.dataset.del);
+      await saveColumns(); render();
+    });
+  });
+
+  // 순서 초기화 버튼
+  const resetBtn = document.getElementById('reset-order-btn');
+  if(resetBtn){
+    resetBtn.addEventListener('click', async () => {
+      if(!confirm('모든 항목의 순서를 초기화하시겠습니까?\n(고정 항목이 먼저 오고, 추가 항목이 뒤로 이동합니다)')) return;
+
+      let newOrder = 0;
+      const fixed = state.columns.filter(c => c.kind === 'fixed').sort((a,b) => a.order - b.order);
+      const dynamic = state.columns.filter(c => c.kind === 'dynamic').sort((a,b) => a.order - b.order);
+
+      fixed.forEach(c => c.order = newOrder++);
+      dynamic.forEach(c => c.order = newOrder++);
+
+      await saveColumns();
+      render();
+      showToast('순서가 초기화되었습니다.');
+    });
+  }
+
+  // 중복 추가 허용 토글
+  const dupToggle = document.getElementById('toggle-duplicate');
+  if(dupToggle){
+    dupToggle.addEventListener('click', async () => {
+      state.allowDuplicateAdditions = !state.allowDuplicateAdditions;
+      await saveAllowDuplicateSetting();
+      render(); // 토글 상태 즉시 반영
+    });
+  }
+
+  bindOrderButtons();
+}
+
+function renderDynamicSettings(){
+  const cols = state.columns.filter(c=>c.kind==='dynamic').sort((a,b)=>a.order-b.order);
+
+  // 대분류 기준으로 그룹핑 (대분류가 같으면 같은 그룹으로 묶음)
+  const groups = {};
+  cols.forEach(c => {
+    const key = c.major || '(대분류 없음)';
+    if (!groups[key]) groups[key] = { items: [] };
+    groups[key].items.push(c);
+  });
+  const groupEntries = Object.entries(groups);
+
+  return `
+    <div class="add-field-row">
+      <div class="inline-fields">
+        <div class="field"><label>대분류</label><input type="text" id="new-major" placeholder="예: 전압"></div>
+        <div class="field"><label>중분류</label><input type="text" id="new-minor" placeholder="예: 기준"></div>
+        <div class="field" style="min-width:380px; flex: 1.6;">
+          <label>소분류 (기본 2칸, + 버튼으로 추가)</label>
+          <div id="subminor-container" style="display:flex; gap:8px; align-items:center; flex-wrap: wrap;">
+            <div class="sub-item" style="display:flex; gap:4px; align-items:center;">
+              <input type="text" class="sub-input" placeholder="소분류1" style="width:105px; padding:8px 10px; border:1px solid #EAEEF1; border-radius:8px; font-size:13.5px;">
+              <button type="button" class="btn btn-ghost btn-sm sub-remove" style="padding:2px 7px; font-size:13px; color:#9AA5B1;">×</button>
+            </div>
+            <div class="sub-item" style="display:flex; gap:4px; align-items:center;">
+              <input type="text" class="sub-input" placeholder="소분류2" style="width:105px; padding:8px 10px; border:1px solid #EAEEF1; border-radius:8px; font-size:13.5px;">
+              <button type="button" class="btn btn-ghost btn-sm sub-remove" style="padding:2px 7px; font-size:13px; color:#9AA5B1;">×</button>
+            </div>
+            <button type="button" id="add-sub-btn" class="btn btn-outline btn-sm" style="white-space:nowrap; padding:7px 14px; font-size:12.5px; border-radius:8px;">+ 소분류 추가</button>
+          </div>
+        </div>
+        <div class="field"><label>데이터 항목</label>
+          <select id="new-datatype">
+            <option value="number">숫자</option>
+            <option value="text">텍스트</option>
+            <option value="date">날짜</option>
+            <option value="select">스크롤 메뉴</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" id="add-field-btn" style="align-self:flex-end;">필드 추가</button>
+      </div>
+      <div class="helptext">그룹 헤더는 대분류, 하위 항목은 "대분류 - 중분류 - 소분류" 전체 경로로 표시됩니다. 같은 대분류 + 중분류 + 소분류 조합은 중복 추가가 불가능합니다.</div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">추가된 평가 항목 목록</span><span class="panel-count mono">${cols.length}개</span></div>
+
+      <!-- 중복 추가 허용 토글 (항목 추가 탭) -->
+      <div class="row-item" style="background:#F8FAFB; padding:10px 20px; border-bottom:1px solid #E5E9EF;">
+        <span class="rmain" style="font-weight:600; font-size:13px;">중복 항목 추가 허용</span>
+        <div style="margin-left:auto; display:flex; align-items:center; gap:8px;">
+          <span style="font-size:12px; color:#8B97A3;">${state.allowDuplicateAdditions ? '허용' : '차단'}</span>
+          <div class="toggle ${state.allowDuplicateAdditions ? 'on' : ''}" id="toggle-duplicate" style="cursor:pointer;">
+            <span class="knob"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-body">
+        ${groupEntries.length ? groupEntries.map(([major, group]) => {
+          return `
+            <!-- 그룹 헤더: 대분류 -->
+            <div class="row-item" style="background:#F0F7F6; font-weight:700; border-bottom:1px solid #D1E8E4;">
+              <span style="width:24px;"></span>
+              <span class="rmain" style="color:#0E9488; font-size:14.5px;">${escapeHtml(major)}</span>
+              <span class="badge-type" style="background:#E8F6F4;color:#0E9488;">${group.items.length}개 항목</span>
+            </div>
+            <!-- 그룹 내 항목들 -->
+            ${group.items.map((c, i) => {
+              const globalIdx = cols.indexOf(c);
+              // 하위 라벨: 대분류 - 중분류 - 소분류 전체 경로 표시 (사용자 요청)
+              let parts = [c.major];
+              if (c.minor) parts.push(c.minor);
+              if (c.sub) parts.push(c.sub);
+              let subLabel = parts.filter(Boolean).join(' - ');
+              return `
+                <div class="row-item" style="padding-left:42px; border-bottom:1px solid #F2F4F6;">
+                  <span class="order-btns">
+                    <button data-up="${c.id}" ${globalIdx===0?'disabled':''}>▲</button>
+                    <button data-down="${c.id}" ${globalIdx===cols.length-1?'disabled':''}>▼</button>
+                  </span>
+                  <span class="rmain" style="padding-left:8px; color:#5B6877;">
+                    ${escapeHtml(subLabel)}
+                  </span>
+                  <span class="badge-type">${typeLabel(c.dataType)}</span>
+                  ${c.dataType==='select'
+                    ? `<span class="badge-type" style="background:var(--teal-soft);color:var(--teal)">선택항목 · ${escapeHtml((c.options||[]).join('/'))}</span>`
+                    : (c.defaultValue!==undefined && c.defaultValue!=='' ? `<span class="badge-type" style="background:var(--amber-soft);color:var(--amber)">기준값 · ${escapeHtml(c.defaultValue)}</span>` : '')}
+                  <span class="toggle ${c.visible?'on':''}" data-toggle="${c.id}"><span class="knob"></span></span>
+                  <button class="icon-btn" data-del="${c.id}">삭제</button>
+                </div>`;
+            }).join('')}
+          `;
+        }).join('') : '<div class="empty-row">등록된 평가 항목이 없습니다. 위에서 항목을 추가하세요.</div>'}
+      </div>
+    </div>
+  `;
+}
+function typeLabel(t){ return {text:'텍스트',number:'숫자',date:'날짜',select:'스크롤 메뉴'}[t] || t; }
+
+function bindDynamicSettings(){
+  // 소분류 추가 버튼
+  const addSubBtn = document.getElementById('add-sub-btn');
+  if(addSubBtn){
+    addSubBtn.addEventListener('click', ()=>{
+      const container = document.getElementById('subminor-container');
+      if(!container) return;
+      const div = document.createElement('div');
+      div.className = 'sub-item';
+      div.style.cssText = 'display:flex;gap:4px;align-items:center;';
+      div.innerHTML = `
+        <input type="text" class="sub-input" placeholder="소분류" style="width:110px;">
+        <button type="button" class="btn btn-ghost btn-sm sub-remove" style="padding:2px 6px;font-size:11px;color:#aaa;">×</button>
+      `;
+      container.appendChild(div);
+      // attach remove listener to new button
+      const rem = div.querySelector('.sub-remove');
+      if(rem) rem.addEventListener('click', ()=> div.remove());
+    });
+  }
+
+  // 기존 소분류 remove 버튼들 (초기 2개)
+  document.querySelectorAll('.sub-remove').forEach(btn=>{
+    btn.addEventListener('click', function(){ 
+      const item = btn.closest('.sub-item'); 
+      if(item) item.remove(); 
+    });
+  });
+
+  // 필드 추가 버튼 (새 로직)
+  const addBtn = document.getElementById('add-field-btn');
+  if(addBtn){
+    addBtn.addEventListener('click', async ()=>{
+      const major = (document.getElementById('new-major')||{}).value.trim();
+      const minor = (document.getElementById('new-minor')||{}).value.trim();
+      const dataType = (document.getElementById('new-datatype')||{}).value;
+      const subInputs = document.querySelectorAll('#subminor-container .sub-input');
+      const subs = Array.from(subInputs).map(inp=>inp.value.trim()).filter(Boolean);
+
+      if(!major){
+        alert('대분류는 필수로 입력해주세요.');
+        return;
+      }
+      // 중분류와 소분류는 비어 있어도 등록 가능 (사용자 요청)
+      if(dataType === 'select' && subs.length === 0){
+        alert('스크롤 메뉴 방식은 소분류(선택 항목)를 1개 이상 입력해주세요.');
+        return;
+      }
+
+      // 중복 체크 (설정에서 허용하지 않은 경우에만 막기)
+      if (!state.allowDuplicateAdditions) {
+        const existingDynamic = state.columns.filter(c => c.kind === 'dynamic');
+        let hasDuplicate = false;
+        const checkSubs = subs.length > 0 ? subs : [null];
+
+        for (const sub of checkSubs) {
+          const duplicate = existingDynamic.find(c =>
+            c.major === major &&
+            (c.minor || '') === (minor || '') &&
+            (c.sub || '') === (sub || '')
+          );
+          if (duplicate) {
+            hasDuplicate = true;
+            break;
+          }
+        }
+
+        if (hasDuplicate) {
+          alert('이미 동일한 대분류 + 중분류 + 소분류 조합이 존재합니다.\n중복 추가는 허용되지 않습니다. (설정에서 허용 가능)');
+          return;
+        }
+      }
+
+      // 라벨을 항상 "대분류 - 중분류 - 소분류" 전체 경로로 생성 (평가 현황 테이블 헤더도 깔끔하게 표시하기 위함)
+      let labelParts = [major];
+      if (minor) labelParts.push(minor);
+      const baseLabel = labelParts.join(' - ');
+      const maxOrder = Math.max(0, ...state.columns.map(c=>c.order || 0));
+
+      if(dataType === 'select'){
+        // 스크롤 메뉴: 소분류 값들을 옵션으로 하는 1개 컬럼 생성
+        const col = {
+          id: uid(),
+          kind: 'dynamic',
+          label: baseLabel,
+          dataType: 'select',
+          options: subs,
+          visible: true,
+          order: maxOrder + 1,
+          major: major,
+          minor: minor,
+          sub: null
+        };
+        state.columns.push(col);
+      } else {
+        // 그 외: 소분류가 없으면 대분류(또는 대분류/중분류)만으로 1개 컬럼 생성
+        if (subs.length === 0) {
+          const col = {
+            id: uid(),
+            kind: 'dynamic',
+            label: baseLabel,
+            dataType: dataType,
+            visible: true,
+            order: maxOrder + 1,
+            major: major,
+            minor: minor,
+            sub: null
+          };
+          state.columns.push(col);
+        } else {
+          subs.forEach((sub, i)=>{
+            const fullLabel = `${baseLabel} - ${sub}`;
+            const col = {
+              id: uid(),
+              kind: 'dynamic',
+              label: fullLabel,
+              dataType: dataType,
+              visible: true,
+              order: maxOrder + i + 1,
+              major: major,
+              minor: minor,
+              sub: sub
+            };
+            state.columns.push(col);
+          });
+        }
+      }
+
+      await saveColumns();
+      render();
+    });
+  }
+
+  // 나머지 공통 리스너 (toggle, del, order)
+  document.querySelectorAll('[data-toggle]').forEach(el=>{
+    el.addEventListener('click', async ()=>{
+      const col = state.columns.find(c=>c.id===el.dataset.toggle);
+      if(col){ col.visible = !col.visible; }
+      await saveColumns(); render();
+    });
+  });
+  document.querySelectorAll('[data-del]').forEach(el=>{
+    el.addEventListener('click', async ()=>{
+      if(!confirm('이 평가 항목을 삭제하시겠습니까? 등록된 데이터의 해당 값도 표시되지 않습니다.')) return;
+      state.columns = state.columns.filter(c=>c.id!==el.dataset.del);
+      await saveColumns(); render();
+    });
+  });
+
+  // 중복 추가 허용 토글 (항목 추가 탭)
+  const dupToggle2 = document.getElementById('toggle-duplicate');
+  if(dupToggle2){
+    dupToggle2.addEventListener('click', async () => {
+      state.allowDuplicateAdditions = !state.allowDuplicateAdditions;
+      await saveAllowDuplicateSetting();
+      render();
+    });
+  }
+
+  // 중복 추가 허용 토글 (전체 항목 관리 탭)
+  const dupToggleMgmt = document.getElementById('toggle-duplicate-mgmt');
+  if(dupToggleMgmt){
+    dupToggleMgmt.addEventListener('click', async () => {
+      state.allowDuplicateAdditions = !state.allowDuplicateAdditions;
+      await saveAllowDuplicateSetting();
+      render();
+    });
+  }
+
+  bindOrderButtons();
+}
+
+function bindOrderButtons(){
+  document.querySelectorAll('[data-up]').forEach(el=>{
+    el.addEventListener('click', async ()=>{
+      await swapOrder(el.dataset.up, -1);
+    });
+  });
+  document.querySelectorAll('[data-down]').forEach(el=>{
+    el.addEventListener('click', async ()=>{
+      await swapOrder(el.dataset.down, 1);
+    });
+  });
+}
+async function swapOrder(id, dir){
+  const kind = state.columns.find(c=>c.id===id)?.kind;
+  const group = state.columns.filter(c=>c.kind===kind).sort((a,b)=>a.order-b.order);
+  const idx = group.findIndex(c=>c.id===id);
+  const swapIdx = idx + dir;
+  if(swapIdx<0 || swapIdx>=group.length) return;
+  const a = group[idx], b = group[swapIdx];
+  const tmp = a.order; a.order = b.order; b.order = tmp;
+  await saveColumns();
+  render();
+
+  // 순서 저장 완료 토스트
+  showToast('순서가 저장되었습니다.');
+}
+
+function showToast(message) {
+  let toast = document.getElementById('global-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'global-toast';
+    toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0E9488;color:white;padding:10px 20px;border-radius:8px;font-size:13px;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:9999;opacity:0;transition:opacity .2s;';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = message;
+  toast.style.opacity = '1';
+  setTimeout(() => {
+    toast.style.opacity = '0';
+  }, 1600);
+}
+
+/* ---------------- 시작 ---------------- */
+(async function init(){
+  render();
+  await loadState();
+  render();
+})();
+</script>
+</body>
+</html>
