@@ -10,392 +10,183 @@
     <link rel="manifest" href="manifest.json">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&amp;family=Inter:wght@400;500;600&amp;display=swap');
-        
-        body {
-            font-family: 'Noto Sans KR', 'Inter', system-ui, sans-serif;
-        }
-        
-        .section {
-            display: none;
-        }
-        .section.active {
-            display: block;
-        }
-        
-        .leaflet-container {
-            height: 300px;
-            border-radius: 20px;
-        }
-        
-        .species-card {
-            transition: all 0.3s ease;
-        }
+        body { font-family: 'Noto Sans KR', system-ui, sans-serif; }
+        .section { display: none; }
+        .section.active { display: block; }
+        .leaflet-container { height: 300px; border-radius: 20px; }
     </style>
 </head>
-<body class="bg-white text-slate-800 max-w-[480px] mx-auto overflow-x-hidden">
+<body class="bg-white text-slate-800 max-w-[480px] mx-auto">
     
     <!-- Header -->
-    <div class="sticky top-0 z-50 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between">
+    <div class="sticky top-0 z-50 bg-white border-b px-4 py-3 flex items-center justify-between">
         <div class="flex items-center gap-x-3">
             <div class="w-11 h-11">
-                <svg viewBox="0 0 48 48" class="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <ellipse cx="24" cy="20" rx="11" ry="14" fill="#06b6d4"/>
-                    <circle cx="19" cy="17" r="3.5" fill="#fff"/>
-                    <circle cx="29" cy="17" r="3.5" fill="#fff"/>
-                    <circle cx="19.5" cy="17.5" r="1.8" fill="#0e7490"/>
-                    <circle cx="29.5" cy="17.5" r="1.8" fill="#0e7490"/>
-                    <path d="M19 24 Q24 27 29 24" stroke="#0e7490" stroke-width="1.5" stroke-linecap="round"/>
-                </svg>
+                <svg viewBox="0 0 48 48" class="w-full h-full"><ellipse cx="24" cy="20" rx="11" ry="14" fill="#06b6d4"/></svg>
             </div>
             <div>
-                <h1 class="text-2xl font-bold tracking-tighter">두족류 낚시 가이드</h1>
-                <p class="text-[10px] text-slate-500 -mt-1">울산 ~ 남해 • v2.0</p>
+                <h1 class="text-2xl font-bold">두족류 낚시 가이드</h1>
+                <p class="text-[10px] text-slate-500">울산 ~ 남해 • v2.1</p>
             </div>
         </div>
-        
-        <div onclick="installPWA()" class="flex items-center gap-x-1.5 bg-[#06b6d4] hover:bg-[#0891b2] text-white text-xs px-3 py-1.5 rounded-2xl cursor-pointer transition-all">
-            <i class="fa-solid fa-download"></i>
-            <span>앱 설치</span>
+        <div onclick="installPWA()" class="bg-[#06b6d4] text-white text-xs px-3 py-1.5 rounded-2xl cursor-pointer">
+            <i class="fa-solid fa-download mr-1"></i> 앱 설치
         </div>
     </div>
 
     <div class="pb-20">
-        
         <!-- HOME -->
         <section id="home" class="section active px-4 pt-4">
-            <div class="mb-6">
-                <h2 class="text-3xl font-bold tracking-tighter">오늘의 낚시 컨디션</h2>
-            </div>
-
-            <!-- Weather Card with Tide & Wave -->
-            <div class="cute-card bg-white border border-slate-100 rounded-3xl p-5 mb-6" onclick="switchSection('weather')">
-                <div class="flex justify-between items-start">
+            <h2 class="text-3xl font-bold mb-4">오늘의 낚시 컨디션</h2>
+            
+            <div onclick="switchSection('weather')" class="bg-white border rounded-3xl p-5 mb-6 cursor-pointer">
+                <div class="flex justify-between">
                     <div>
-                        <div class="flex items-center gap-x-2">
-                            <span id="home-location" class="font-bold text-xl">울산</span>
-                        </div>
-                        <div class="flex items-baseline gap-x-1 mt-1">
-                            <span id="home-temp" class="text-5xl font-bold tabular-nums">—</span>
-                            <span class="text-2xl text-slate-400">°C</span>
-                        </div>
-                        <div id="home-desc" class="text-sm text-slate-600 mt-1">날씨 로딩 중...</div>
+                        <div id="home-temp" class="text-5xl font-bold">—</div>
+                        <div id="home-desc" class="text-slate-600">날씨 로딩 중...</div>
                     </div>
-                    <div class="text-right">
-                        <div id="home-icon" class="text-6xl">🌡️</div>
-                        <div id="home-index" class="mt-1 inline-flex items-center gap-x-1 text-xs font-bold px-3 py-1 rounded-2xl bg-emerald-100 text-emerald-600">
-                            <span>로딩중</span>
-                        </div>
-                    </div>
+                    <div id="home-icon" class="text-6xl">🌡️</div>
                 </div>
-                
-                <div class="mt-4 pt-4 border-t border-slate-100 grid grid-cols-2 gap-3 text-sm">
-                    <div>
-                        <div class="text-xs text-slate-500">바람</div>
-                        <div id="home-wind" class="font-semibold">— km/h</div>
-                    </div>
-                    <div>
-                        <div class="text-xs text-slate-500">파도</div>
-                        <div id="home-wave" class="font-semibold">— m</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-                <div onclick="switchSection('species')" class="cute-card bg-white border border-slate-100 rounded-3xl p-4 text-center cursor-pointer active:scale-[0.985]">
-                    <div class="text-4xl mb-2">🦑</div>
-                    <div class="font-bold">어종 도감</div>
-                </div>
-                <div onclick="switchSection('guide')" class="cute-card bg-white border border-slate-100 rounded-3xl p-4 text-center cursor-pointer active:scale-[0.985]">
-                    <div class="text-4xl mb-2">🎣</div>
-                    <div class="font-bold">가이드북</div>
+                <div class="mt-4 pt-4 border-t grid grid-cols-2 text-sm">
+                    <div>바람: <span id="home-wind">—</span></div>
+                    <div>파도: <span id="home-wave">—</span></div>
                 </div>
             </div>
         </section>
 
         <!-- WEATHER -->
         <section id="weather" class="section px-4 pt-4">
-            <h2 class="text-2xl font-bold mb-4">지역별 날씨 &amp; 조석</h2>
-            
-            <div class="cute-card bg-white border border-slate-100 rounded-3xl p-5 mb-6">
-                <div id="weather-content">
-                    <p>날씨 정보를 불러오는 중...</p>
-                </div>
+            <h2 class="text-2xl font-bold mb-4">날씨 &amp; 조석</h2>
+            <div id="weather-content" class="bg-white border rounded-3xl p-5">
+                로딩 중...
             </div>
         </section>
 
         <!-- SPECIES -->
         <section id="species" class="section px-4 pt-4 pb-24">
             <h2 class="text-2xl font-bold mb-4">두족류 도감</h2>
-            <div id="species-grid" class="grid grid-cols-2 gap-3">
-                <!-- JS로 채워짐 -->
-            </div>
+            <div id="species-grid" class="grid grid-cols-2 gap-3"></div>
         </section>
 
         <!-- GUIDE -->
         <section id="guide" class="section px-4 pt-4">
-            <h2 class="text-2xl font-bold mb-4">실전 가이드북</h2>
-            <!-- Tabs -->
+            <h2 class="text-2xl font-bold mb-4">가이드북</h2>
             <div class="flex bg-slate-100 rounded-2xl p-1 mb-4">
-                <div onclick="switchGuideTab(0)" class="flex-1 text-center py-2 rounded-[14px] cursor-pointer font-medium active-tab" id="guide-tab-0">낚시 방법</div>
+                <div onclick="switchGuideTab(0)" class="flex-1 text-center py-2 rounded-[14px] cursor-pointer font-medium bg-white" id="guide-tab-0">낚시 방법</div>
                 <div onclick="switchGuideTab(1)" class="flex-1 text-center py-2 rounded-[14px] cursor-pointer font-medium" id="guide-tab-1">매듭</div>
-                <div onclick="switchGuideTab(2)" class="flex-1 text-center py-2 rounded-[14px] cursor-pointer font-medium" id="guide-tab-2">채비 &amp; 선사</div>
             </div>
-            
-            <!-- Content -->
             <div id="guide-content-0">
-                <div class="space-y-4">
-                    <div class="cute-card bg-white border border-slate-100 rounded-3xl p-5">
-                        <div class="font-bold mb-2">도보 낚시 (방파제·갯바위)</div>
-                        <ul class="text-sm space-y-1 text-slate-600">
-                            <li>• 에깅 로드 5~7ft 라이트 추천</li>
-                            <li>• PE 0.6~1.0호 + 플로로 2~3호</li>
-                            <li>• 에기 1.5~3호 3~4개 연결</li>
-                        </ul>
-                    </div>
-                    <div class="cute-card bg-white border border-slate-100 rounded-3xl p-5">
-                        <div class="font-bold mb-2">선상 낚시</div>
-                        <ul class="text-sm space-y-1 text-slate-600">
-                            <li>• 삼천포·통영 선사 다수</li>
-                            <li>• 주로 야간 또는 새벽 출조</li>
-                            <li>• 수직 에깅 또는 드리프트</li>
-                        </ul>
-                    </div>
-                </div>
+                <div class="bg-white border rounded-3xl p-5">도보 / 선상 정보</div>
             </div>
-            
             <div id="guide-content-1" class="hidden">
-                <div class="cute-card bg-white border border-slate-100 rounded-3xl p-5">
-                    <div class="font-bold mb-3">FG Knot (PE ↔ 리더)</div>
-                    <ol class="text-sm space-y-1 text-slate-600 list-decimal pl-5">
-                        <li>PE 줄을 리더에 10~15회 감는다</li>
-                        <li>감은 부분을 리더 끝으로 2~3회 감아 고정</li>
-                        <li>PE 끝을 리더와 함께 당겨서 조인다</li>
-                    </ol>
-                    <a href="https://www.youtube.com/results?search_query=FG+Knot+%EB%82%9A%EC%8B%9C" target="_blank" 
-                       class="mt-3 inline-flex items-center gap-x-2 text-sm bg-red-500 text-white px-4 py-2 rounded-2xl">
-                        <i class="fa-brands fa-youtube"></i>
-                        <span>영상으로 보기</span>
-                    </a>
-                </div>
-            </div>
-            
-            <div id="guide-content-2" class="hidden">
-                <div class="cute-card bg-white border border-slate-100 rounded-3xl p-5">
-                    <div class="font-bold mb-3">상황별 채비</div>
-                    <div class="space-y-3 text-sm">
-                        <div><strong>강한 조류:</strong> 무거운 봉돌(40~60호) + 스프링</div>
-                        <div><strong>밤낚시:</strong> 축광·UV 에기 필수</div>
-                        <div><strong>주꾸미:</strong> 바닥 완전 접촉</div>
-                        <div><strong>갑오징어:</strong> 바닥에서 20~50cm 띄움</div>
-                    </div>
-                </div>
+                <div class="bg-white border rounded-3xl p-5">FG Knot + 영상 링크</div>
             </div>
         </section>
 
-        <!-- POINTS + MAP -->
+        <!-- POINTS -->
         <section id="points" class="section px-4 pt-4">
-            <h2 class="text-2xl font-bold mb-4">인기 포인트</h2>
+            <h2 class="text-2xl font-bold mb-4">포인트</h2>
             <div id="map" class="leaflet-container mb-6"></div>
-            
-            <div class="space-y-3">
-                <div class="cute-card bg-white border border-slate-100 rounded-3xl p-4">
-                    <div class="font-bold">거제 홍도 (안경섬)</div>
-                    <div class="text-sm text-slate-600">무늬오징어·한치 선상 포인트</div>
-                </div>
-                <div class="cute-card bg-white border border-slate-100 rounded-3xl p-4">
-                    <div class="font-bold">남해 창선 (냉천방파제)</div>
-                    <div class="text-sm text-slate-600">갑오징어·주꾸미 도보 포인트</div>
-                </div>
-                <div class="cute-card bg-white border border-slate-100 rounded-3xl p-4">
-                    <div class="font-bold">삼천포 일대</div>
-                    <div class="text-sm text-slate-600">주꾸미·갑오징어 성지 + 선사 출발지</div>
-                </div>
-            </div>
         </section>
     </div>
 
-    <!-- Bottom Navigation -->
-    <div class="fixed bottom-0 left-0 right-0 bg-white border-t max-w-[480px] mx-auto z-50">
+    <!-- Bottom Nav -->
+    <div class="fixed bottom-0 bg-white border-t w-full max-w-[480px] mx-auto z-50">
         <div class="grid grid-cols-5 text-center text-xs py-2">
-            <div onclick="switchSection('home')" class="nav-item flex flex-col items-center justify-center cursor-pointer py-1" id="nav-home">
-                <i class="fa-solid fa-home text-xl"></i>
-                <span>홈</span>
-            </div>
-            <div onclick="switchSection('weather')" class="nav-item flex flex-col items-center justify-center cursor-pointer py-1" id="nav-weather">
-                <i class="fa-solid fa-cloud-sun text-xl"></i>
-                <span>날씨</span>
-            </div>
-            <div onclick="switchSection('species')" class="nav-item flex flex-col items-center justify-center cursor-pointer py-1" id="nav-species">
-                <i class="fa-solid fa-fish text-xl"></i>
-                <span>어종</span>
-            </div>
-            <div onclick="switchSection('guide')" class="nav-item flex flex-col items-center justify-center cursor-pointer py-1" id="nav-guide">
-                <i class="fa-solid fa-book text-xl"></i>
-                <span>가이드</span>
-            </div>
-            <div onclick="switchSection('points')" class="nav-item flex flex-col items-center justify-center cursor-pointer py-1" id="nav-points">
-                <i class="fa-solid fa-map-marker-alt text-xl"></i>
-                <span>포인트</span>
-            </div>
+            <div onclick="switchSection('home')" class="cursor-pointer">🏠<br><span class="text-[10px]">홈</span></div>
+            <div onclick="switchSection('weather')" class="cursor-pointer">🌤️<br><span class="text-[10px]">날씨</span></div>
+            <div onclick="switchSection('species')" class="cursor-pointer">🦑<br><span class="text-[10px]">어종</span></div>
+            <div onclick="switchSection('guide')" class="cursor-pointer">📖<br><span class="text-[10px]">가이드</span></div>
+            <div onclick="switchSection('points')" class="cursor-pointer">📍<br><span class="text-[10px]">포인트</span></div>
         </div>
     </div>
 
     <script>
-        // Tailwind config
-        function initTailwind() {
-            tailwind.config = {
-                theme: {
-                    extend: {}
-                }
-            };
-        }
-
-        // Weather with Tide simulation
+        // Weather
         async function loadWeather() {
             try {
                 const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=35.5394&longitude=129.3114&current=temperature_2m,wind_speed_10m,weather_code&timezone=Asia%2FSeoul');
                 const data = await res.json();
-                
                 const temp = Math.round(data.current.temperature_2m);
                 const wind = Math.round(data.current.wind_speed_10m);
-                const code = data.current.weather_code;
-                
-                // Simple wave simulation
-                const wave = (wind > 15) ? "1.2~1.8m" : "0.6~1.0m";
-                
-                // Simple tide simulation
-                const tide = "만조 14:30경 • 간조 20:50경";
-                
+                const wave = wind > 15 ? "1.2~1.8m" : "0.6~1.0m";
+
                 document.getElementById('home-temp').textContent = temp;
-                document.getElementById('home-desc').textContent = getWeatherDesc(code);
-                document.getElementById('home-wind').textContent = `${wind} km/h`;
+                document.getElementById('home-desc').textContent = "현재 날씨";
+                document.getElementById('home-wind').textContent = wind + " km/h";
                 document.getElementById('home-wave').textContent = wave;
-                
-                // Update weather section
-                const weatherContent = document.getElementById('weather-content');
-                if (weatherContent) {
-                    weatherContent.innerHTML = `
-                        <div class="space-y-3">
-                            <div class="flex justify-between">
-                                <div>
-                                    <div class="text-4xl font-bold">${temp}°C</div>
-                                    <div class="text-lg">${getWeatherDesc(code)}</div>
-                                </div>
-                                <div class="text-right">
-                                    <div>바람: ${wind} km/h</div>
-                                    <div>파도: ${wave}</div>
-                                    <div class="mt-2 text-sm text-emerald-600">${tide}</div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                }
-            } catch (e) {
-                console.log("Weather fetch failed, using fallback");
+
+                document.getElementById('weather-content').innerHTML = `
+                    <div>온도: ${temp}°C<br>바람: ${wind} km/h<br>파도: ${wave}<br>조석: 만조 14:30경</div>
+                `;
+            } catch(e) {
+                console.log("Weather error");
             }
         }
 
-        function getWeatherDesc(code) {
-            if (code === 0) return "맑음";
-            if (code <= 3) return "구름 조금";
-            if (code <= 49) return "흐림";
-            return "비/소나기";
-        }
-
-        // Species data with nice cards
-        const species = [
-            { name: "주꾸미", emoji: "🐙", season: "3~4월, 9~10월", difficulty: "초보", tips: "바닥 접촉이 핵심" },
-            { name: "갑오징어", emoji: "🦑", season: "3~5월, 8~10월", difficulty: "초중", tips: "바닥 20~50cm 띄움" },
-            { name: "문어", emoji: "🐙", season: "7~9월", difficulty: "중", tips: "강한 힘 주의" },
-            { name: "한치", emoji: "🦑", season: "6~8월", difficulty: "중상", tips: "선상 전문" },
-            { name: "무늬오징어", emoji: "🦑", season: "5~6월, 10월", difficulty: "상", tips: "예민, 장비빨" }
-        ];
-
+        // Species
         function renderSpecies() {
             const grid = document.getElementById('species-grid');
-            grid.innerHTML = '';
-            
-            species.forEach(s => {
-                const card = document.createElement('div');
-                card.className = `cute-card bg-white border border-slate-100 rounded-3xl p-4 cursor-pointer`;
-                card.innerHTML = `
-                    <div class="text-5xl mb-3">${s.emoji}</div>
-                    <div class="font-bold text-xl">${s.name}</div>
-                    <div class="text-xs text-emerald-600 mt-1">${s.difficulty} • ${s.season}</div>
-                    <div class="text-sm text-slate-600 mt-2">${s.tips}</div>
-                `;
-                grid.appendChild(card);
-            });
+            const data = [
+                {name:"주꾸미", emoji:"🐙", tip:"바닥 접촉"},
+                {name:"갑오징어", emoji:"🦑", tip:"20~50cm 띄움"},
+                {name:"문어", emoji:"🐙", tip:"강한 힘 주의"},
+                {name:"한치", emoji:"🦑", tip:"선상 전문"},
+                {name:"무늬오징어", emoji:"🦑", tip:"예민"}
+            ];
+            grid.innerHTML = data.map(s => `
+                <div class="bg-white border rounded-3xl p-4">
+                    <div class="text-5xl mb-2">${s.emoji}</div>
+                    <div class="font-bold">${s.name}</div>
+                    <div class="text-sm text-slate-600">${s.tip}</div>
+                </div>
+            `).join('');
         }
 
-        // Simple Leaflet Map
         function initMap() {
-            const mapContainer = document.getElementById('map');
-            if (!mapContainer) return;
-            
             const map = L.map('map').setView([34.85, 128.0], 9);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap'
-            }).addTo(map);
-            
-            // Add markers
-            L.marker([34.85, 128.1]).addTo(map).bindPopup('<b>거제 홍도</b><br>무늬오징어·한치');
-            L.marker([34.9, 127.9]).addTo(map).bindPopup('<b>남해 창선</b><br>갑오징어·주꾸미');
-            L.marker([34.94, 127.89]).addTo(map).bindPopup('<b>삼천포</b><br>주꾸미·갑오징어 성지');
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+            L.marker([34.85, 128.1]).addTo(map).bindPopup('거제 홍도');
+            L.marker([34.9, 127.9]).addTo(map).bindPopup('남해 창선');
         }
 
-        // Section switcher
         function switchSection(id) {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
-            
             if (id === 'weather') loadWeather();
-            if (id === 'points' && !window.mapInitialized) {
-                initMap();
-                window.mapInitialized = true;
-            }
+            if (id === 'points') initMap();
         }
 
-        // Guide tabs
         function switchGuideTab(tab) {
             document.querySelectorAll('[id^="guide-content-"]').forEach(el => el.classList.add('hidden'));
             document.getElementById('guide-content-' + tab).classList.remove('hidden');
-            
-            document.querySelectorAll('[id^="guide-tab-"]').forEach(el => el.classList.remove('active-tab', 'bg-white'));
-            document.getElementById('guide-tab-' + tab).classList.add('active-tab', 'bg-white');
         }
 
-        // PWA Install
         function installPWA() {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-            } else {
-                alert('브라우저 주소창에 설치 아이콘이 있으면 눌러주세요!');
+            alert('브라우저 메뉴에서 "홈 화면에 추가"를 눌러주세요!');
+        }
+
+        // 강제 업데이트 알림
+        function checkForUpdate() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.ready.then(reg => {
+                    reg.update();
+                });
             }
         }
 
-        let deferredPrompt;
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-        });
-
-        // Init
         function init() {
-            initTailwind();
             renderSpecies();
             loadWeather();
-            
-            // Default active nav
-            document.getElementById('nav-home').classList.add('text-[#06b6d4]');
-            
-            // Register Service Worker if available
+            checkForUpdate(); // 강제 업데이트 확인
+
             if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('sw.js').catch(() => {});
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('SW 등록됨:', reg.scope))
+                    .catch(err => console.log('SW 실패'));
             }
             
-            console.log('%c[v2.0] 두족류 낚시 가이드 초기화 완료', 'color:#06b6d4');
+            console.log('%c[v2.1] 캐시 강제 업데이트 버전 초기화 완료', 'color:#06b6d4');
         }
 
         window.onload = init;
