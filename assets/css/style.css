@@ -1,8 +1,6 @@
 /* style.css
-   모바일 전용 흰색 기반 UI 스타일입니다.
-   iPhone Safari 대응(입력 시 확대 방지, safe-area)을 포함하며,
-   v0.0.7부터 실제 제품처럼 보이도록 카드/버튼/아이콘 톤을 다듬었습니다.
-   v0.0.8.1: 화면 겹침 방지 !important + 가로 스크롤 제거 */
+   모바일 전용 흰색 기반 UI
+   v0.0.8.2: 로그인 화면 dvh 고정 / 화면 전환 !important / 가로 스크롤 완전 차단 */
 
 :root{
   --color-bg:#ffffff;
@@ -20,14 +18,15 @@
   --radius:18px;
   --radius-sm:12px;
   --shadow-card:0 1px 2px rgba(16,24,40,0.04), 0 1px 1px rgba(16,24,40,0.03);
+  --tabbar-h:56px;
 }
 
 *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; max-width:100%; }
 
 html{
-  width:100%;
-  max-width:100%;
+  width:100%; max-width:100%;
   overflow-x:hidden;
+  /* 로그인 화면에서 스크롤 잠금용 클래스를 body에 붙임 */
 }
 
 body{
@@ -36,37 +35,109 @@ body{
   background:var(--color-bg);
   color:var(--color-text);
   letter-spacing:-0.1px;
-  width:100%;
-  max-width:100%;
+  width:100%; max-width:100%;
   overflow-x:hidden;
+}
+body.login-open{
+  overflow:hidden;
+  height:100dvh;
 }
 
 #app{
-  max-width:480px;
+  width:100%; max-width:480px;
   margin:0 auto;
   min-height:100vh;
-  display:flex;
-  flex-direction:column;
+  display:flex; flex-direction:column;
   background:var(--color-bg);
-  width:100%;
   overflow-x:hidden;
   position:relative;
 }
 
-/* ★ 화면 전환 핵심: !important로 Safari 렌더링 우선순위 확보 */
+/* ============================================================
+   화면 전환 — !important로 Safari 우선순위 확보
+   ============================================================ */
 .screen{
   display:none !important;
   flex-direction:column;
-  padding:18px 16px calc(112px + env(safe-area-inset-bottom)) 16px;
-  animation:fadeIn .22s ease;
-  width:100%;
-  max-width:100%;
+  /* 하단 tabbar + iPhone 홈바 여백 */
+  padding:18px 16px calc(var(--tabbar-h) + 44px + env(safe-area-inset-bottom)) 16px;
+  animation:fadeIn .2s ease;
+  width:100%; max-width:100%;
   overflow-x:hidden;
+  min-height:100vh;
 }
 .screen.active{
   display:flex !important;
 }
-@keyframes fadeIn{ from{opacity:0;transform:translateY(6px);} to{opacity:1;transform:translateY(0);} }
+@keyframes fadeIn{ from{opacity:0;transform:translateY(5px);} to{opacity:1;transform:translateY(0);} }
+
+/* ============================================================
+   로그인 화면 — 100dvh 전체 중앙 고정, 패딩 없음
+   ============================================================ */
+#screen-login{
+  /* 일반 .screen 패딩을 덮어씌움 */
+  padding:0 !important;
+  height:100dvh !important;
+  min-height:100dvh !important;
+  justify-content:center !important;
+  align-items:center !important;
+  overflow:hidden !important;
+}
+.login-wrap{
+  width:100%; max-width:320px;
+  display:flex; flex-direction:column;
+  align-items:center;
+  padding:0 24px;
+  gap:0;
+}
+.login-wrap h1{
+  font-size:28px; font-weight:800;
+  letter-spacing:-0.5px;
+  margin:0 0 32px 0;
+  text-align:center;
+}
+.login-wrap input{
+  text-align:center;
+  font-size:16px;
+  letter-spacing:2px;
+  margin-bottom:0;
+}
+.login-wrap .error-msg{
+  text-align:center;
+  margin-top:8px;
+}
+.login-wrap .btn{
+  margin-top:12px;
+  font-size:16px; font-weight:700;
+}
+
+/* ============================================================
+   하단 탭바 — position:fixed, safe-area
+   ============================================================ */
+.tabbar{
+  position:fixed; bottom:0; left:0; right:0;
+  max-width:480px; margin:0 auto;
+  background:rgba(255,255,255,0.97);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+  border-top:1px solid var(--color-border);
+  display:flex;
+  overflow-x:auto;
+  z-index:9999;
+  /* iPhone 홈바 영역 확보 */
+  padding-bottom:env(safe-area-inset-bottom);
+  height:calc(var(--tabbar-h) + env(safe-area-inset-bottom));
+}
+.tab-item{
+  flex:1; min-width:52px; text-align:center;
+  padding:8px 2px 6px 2px;
+  font-size:10px; color:var(--color-sub);
+  cursor:pointer; border:none; background:none; font-weight:600;
+}
+.tab-item.active{ color:var(--color-primary); font-weight:800; }
+.tab-item .icon{ font-size:18px; display:block; margin-bottom:2px; }
+
+
 
 .topbar{
   position:sticky; top:0; z-index:10; background:rgba(255,255,255,0.92); backdrop-filter:blur(6px);
@@ -145,20 +216,6 @@ input:focus, textarea:focus, select:focus{ outline:none; border-color:var(--colo
   max-width:90%; text-align:center; box-shadow:0 8px 24px rgba(0,0,0,0.18);
 }
 .toast.show{ opacity:1; }
-
-.tabbar{
-  position:fixed; bottom:0; left:0; right:0;
-  max-width:480px; margin:0 auto; background:rgba(255,255,255,0.96); backdrop-filter:blur(8px);
-  border-top:1px solid var(--color-border);
-  display:flex; overflow-x:auto; z-index:20;
-  padding-bottom:env(safe-area-inset-bottom);
-}
-.tab-item{
-  flex:1; min-width:62px; text-align:center; padding:10px 4px 8px 4px; font-size:10px; color:var(--color-sub);
-  cursor:pointer; border:none; background:none; font-weight:600;
-}
-.tab-item.active{ color:var(--color-primary); font-weight:800; }
-.tab-item .icon{ font-size:19px; display:block; margin-bottom:3px; }
 
 .error-msg{ color:var(--color-danger); font-size:13px; margin-top:8px; display:none; }
 .hint{ font-size:12px; color:var(--color-sub); margin-top:6px; line-height:1.55; }
