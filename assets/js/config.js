@@ -3,7 +3,7 @@
 // 실제 API 키나 운영 비밀번호는 절대 포함하지 않습니다.
 
 // 앱 버전
-const APP_VERSION = "v0.0.8";
+const APP_VERSION = "v0.0.8.1";
 
 // 기본 Worker URL (localStorage에 저장된 값이 없을 때 사용)
 // 실제 값은 여기에만 적혀 있으며, API 키나 비밀번호가 아닙니다.
@@ -85,7 +85,7 @@ const EMOJI_LEVELS = {
 const DEFAULT_EMOJI_LEVEL = 'few';
 
 /* ------------------------------------------------------------
-   v0.0.8 콘텐츠 엔진 - 키워드 수익성 평가 기준
+   v0.0.8.1 콘텐츠 엔진 - 키워드 수익성 평가 기준
    ------------------------------------------------------------ */
 // 키워드 평가 점수 구성 (최대 100점)
 const KEYWORD_SCORE_WEIGHTS = {
@@ -100,7 +100,7 @@ const KEYWORD_SCORE_WEIGHTS = {
   naverExposure:   5    // 네이버 웹문서 노출 가능성
 };
 
-// v0.0.8 브리핑 카테고리 (수익성 중심 재편)
+// v0.0.8.1 브리핑 카테고리 (수익성 중심 재편)
 const BRIEFING_CATEGORIES = [
   { key: 'high_profit',  label: '고수익 후보',     icon: '💰', desc: '광고 단가 높음 · 구매/비교 의도 강함' },
   { key: 'long_tail',    label: '장기 유입 후보',   icon: '📈', desc: '에버그린 · 꾸준한 유입 기대' },
