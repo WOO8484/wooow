@@ -62,24 +62,34 @@ async function handleBloggerConnect(){
     if(statusResult.ok && statusResult.result && statusResult.result.configured){
       saveLocal(STORAGE_KEYS.BLOGGER_CONNECTED, true);
       saveLocal(STORAGE_KEYS.BLOGGER_CONNECTION_MODE, API_MODE.WORKER);
-      showToast('Blogger 연결 성공 (실제 Worker 확인)');
+      saveLocal(STORAGE_KEYS.BLOGGER_FAIL_REASON, '');
+      showToast('Blogger 연결 성공');
       refreshBloggerScreen();
       return;
     }
 
-    // Worker는 응답했지만 Secret 미등록 등으로 configured:false이거나, 호출 자체가 실패한 경우
-    const reason = (statusResult.result && statusResult.result.message) || statusResult.error || 'Blogger 설정 확인 실패';
-    saveLocal(STORAGE_KEYS.BLOGGER_CONNECTED, true);
+    // 실패 원인 분석
+    const rawMsg = (statusResult.result && statusResult.result.message) || statusResult.error || '';
+    let failReason = 'Blogger 설정 확인 실패';
+    if(rawMsg.includes('GOOGLE_REFRESH_TOKEN'))  failReason = 'GOOGLE_REFRESH_TOKEN 확인 필요';
+    else if(rawMsg.includes('BLOGGER_BLOG_ID'))  failReason = 'BLOGGER_BLOG_ID 확인 필요';
+    else if(rawMsg.includes('Secret'))           failReason = 'Blogger Secret 누락 가능성';
+    else if(rawMsg.includes('OAuth'))            failReason = 'Google OAuth 인증 실패';
+    else if(rawMsg)                              failReason = rawMsg.slice(0, 60);
+
+    saveLocal(STORAGE_KEYS.BLOGGER_CONNECTED, false);
     saveLocal(STORAGE_KEYS.BLOGGER_CONNECTION_MODE, API_MODE.MOCK);
-    showToast(`Blogger 실제 연결 실패, Mock 연결로 계속 진행합니다. (${reason})`);
+    saveLocal(STORAGE_KEYS.BLOGGER_FAIL_REASON, failReason);
+    showToast(`Blogger 연결 실패 — ${failReason}`);
     refreshBloggerScreen();
     return;
   }
 
-  // Mock 모드이거나 Worker URL이 없는 경우
-  saveLocal(STORAGE_KEYS.BLOGGER_CONNECTED, true);
+  // Worker 모드가 아닌 경우 — Mock 저장만 가능
+  saveLocal(STORAGE_KEYS.BLOGGER_CONNECTED, false);
   saveLocal(STORAGE_KEYS.BLOGGER_CONNECTION_MODE, API_MODE.MOCK);
-  showToast('Blogger 연결 완료 (Mock)');
+  saveLocal(STORAGE_KEYS.BLOGGER_FAIL_REASON, 'Worker 모드가 아님 (설정에서 Worker 연결 테스트 필요)');
+  showToast('Worker 모드가 아닙니다. 설정에서 Worker 연결 테스트를 먼저 진행해주세요.');
   refreshBloggerScreen();
 }
 
@@ -96,13 +106,14 @@ function refreshBloggerScreen(){
   const statusEl = document.getElementById('blogger-connect-status');
 
   if(!connected){
-    statusEl.textContent = '미연결';
+    const failReason = loadLocal(STORAGE_KEYS.BLOGGER_FAIL_REASON, '');
+    statusEl.textContent = failReason ? `연결 실패 (${failReason.slice(0,30)})` : '미연결';
     statusEl.className = 'badge';
   } else if(connectionMode === API_MODE.WORKER){
-    statusEl.textContent = '연결됨 (실제 Blogger)';
+    statusEl.textContent = '연결됨';
     statusEl.className = 'badge success';
   } else {
-    statusEl.textContent = '연결됨 (Mock)';
+    statusEl.textContent = 'Mock 모드';
     statusEl.className = 'badge mock';
   }
 
@@ -168,8 +179,9 @@ async function handleSaveDraft(){
   }
 
   const connectionMode = loadLocal(STORAGE_KEYS.BLOGGER_CONNECTION_MODE, API_MODE.MOCK);
+  const canUseWorker = connectionMode === API_MODE.WORKER && getApiMode() === API_MODE.WORKER;
 
-  if(connectionMode === API_MODE.WORKER){
+  if(canUseWorker){
     showToast('Blogger에 임시저장하는 중입니다...');
     const result = await saveBloggerDraft({
       title: post.title,
@@ -250,8 +262,9 @@ async function handleSchedule(){
   }
 
   const connectionMode = loadLocal(STORAGE_KEYS.BLOGGER_CONNECTION_MODE, API_MODE.MOCK);
+  const canUseWorker = connectionMode === API_MODE.WORKER && getApiMode() === API_MODE.WORKER;
 
-  if(connectionMode === API_MODE.WORKER){
+  if(canUseWorker){
     showToast('Blogger에 예약발행을 등록하는 중입니다...');
 
     const result = await scheduleBloggerPost({
@@ -384,8 +397,9 @@ function refreshDashboard(){
   const connected = loadLocal(STORAGE_KEYS.BLOGGER_CONNECTED, false);
   const connectionMode = loadLocal(STORAGE_KEYS.BLOGGER_CONNECTION_MODE, API_MODE.MOCK);
   let bloggerDot = 'off', bloggerText = '미연결';
-  if(connected && connectionMode === API_MODE.WORKER){ bloggerDot = 'on'; bloggerText = '실제 연결'; }
-  else if(connected){ bloggerDot = 'off'; bloggerText = 'Mock 연결'; }
+  if(connected && connectionMode === API_MODE.WORKER){ bloggerDot = 'on'; bloggerText = '연결됨'; }
+  else if(connected){ bloggerDot = 'off'; bloggerText = 'Mock 모드'; }
+  else { bloggerDot = 'fail'; bloggerText = '연결 실패'; }
   setStatusMiniCard('dash-blogger-status', bloggerDot, bloggerText);
 
   const saved = loadLocal(STORAGE_KEYS.SAVED_POSTS, []);
