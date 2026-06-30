@@ -1,7 +1,7 @@
 // worker/worker.js
-// Cloudflare Worker (v0.0.8 보안 패치)
+// Cloudflare Worker (v0.0.8.1 보안 패치)
 //
-// 변경 내용 (v0.0.7 → v0.0.8):
+// 변경 내용 (v0.0.7 → v0.0.8.1):
 //   - /auth/login: 실제 env.ADMIN_PASSWORD 비교 + JWT-like 토큰 발급
 //   - /health, /auth/login 제외 모든 경로: Authorization: Bearer 토큰 검증 (401 반환)
 //   - SESSION_SECRET: 토큰 서명에 사용 (Cloudflare Secret으로 등록 필요)
@@ -22,7 +22,7 @@
 // ⚠️ 바로 발행(POST /blogger/publish) 경로는 의도적으로 만들지 않습니다.
 // ⚠️ 실제 키 값은 절대 이 파일에 적지 않습니다.
 
-const WORKER_VERSION = 'v0.0.8';
+const WORKER_VERSION = 'v0.0.8.1';
 
 /* ------------------------------------------------------------
    v0.0.7 AI 글 생성 옵션
@@ -297,7 +297,7 @@ function stripNaverTags(text) {
 
 /* ----------------------------------------------------------
    4. AI 글 생성 API 연동
-   응답에 post.contentHtml 구조 포함 (프론트 v0.0.8 대응)
+   응답에 post.contentHtml 구조 포함 (프론트 v0.0.8.1 대응)
    ---------------------------------------------------------- */
 async function handleAiGenerate(request, env, corsHeaders) {
   let payload;
@@ -348,7 +348,7 @@ async function handleAiGenerate(request, env, corsHeaders) {
     const parsed = parseAiJson(rawText);
     if (!parsed || !parsed.title || !parsed.html) throw new Error('AI 응답 형식이 올바르지 않습니다 (title/html 누락).');
 
-    // 응답: post.contentHtml 구조 (v0.0.8) + 레거시 title/html도 함께 반환
+    // 응답: post.contentHtml 구조 (v0.0.8.1) + 레거시 title/html도 함께 반환
     const responseBody = {
       ok: true,
       mode: 'worker',
