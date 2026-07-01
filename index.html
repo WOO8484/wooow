@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  블로그스팟 수익화 자동화 프로그램 - GitHub 배포용 (v0.1.0-test-r4)
+  블로그스팟 수익화 자동화 프로그램 - GitHub 배포용 (v0.1.0-test-r5)
   v0.1.0 보안 패치: Mock 로그인 제거, Worker 실제 인증 적용.
   Google OAuth Client Secret / Refresh Token은 이 저장소 어디에도 넣지 마세요.
   실제 운영 비밀값은 Cloudflare Worker Secret으로만 관리합니다. (worker/ 폴더 참고)
@@ -9,8 +9,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>블로그스팟 수익화 자동화 (v0.1.0-test-r4)</title>
-<link rel="stylesheet" href="./assets/css/style.css?v=0.1.0-r4">
+<title>블로그스팟 수익화 자동화 (v0.1.0-test-r5)</title>
+<link rel="stylesheet" href="./assets/css/style.css?v=0.1.0-r5">
 </head>
 <body>
 
@@ -210,7 +210,7 @@
       <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
         <button class="btn btn-secondary" onclick="goScreen('preview')">🔍 전체 미리보기</button>
         <button class="btn btn-secondary" onclick="goScreen('quality')">📊 품질검수 하러 가기</button>
-        <button class="btn btn-primary" onclick="goScreen('publish')">📋 발행 준비 (복사/저장)</button>
+        <div style="display:flex;flex-direction:column;gap:8px;"><button class="btn btn-primary" onclick="goScreen('publish')">📋 발행 준비 (HTML 복사)</button><button class="btn btn-secondary" onclick="goScreen('blogger')">🚀 Blogger 직접 발행</button></div>
       </div>
     </div>
   </div>
@@ -255,9 +255,46 @@
     <button class="btn btn-ghost" id="preview-close-btn" style="display:none;" onclick="closePreview()">닫기</button>
   </div>
 
-  <!-- 화면 7b. 구 Blogger 화면 → screen-blogger는 유지하되 숨김/안내 처리 -->
-  <div class="screen" id="screen-blogger" style="display:none !important;">
-    <!-- Blogger 자동발행은 비활성화됨. screen-publish를 사용하세요 -->
+  <!-- 화면 7b. Blogger 발행 (r5: 활성화) -->
+  <div class="screen" id="screen-blogger">
+    <div class="topbar" style="margin:-18px -16px 16px -16px;"><h1>🚀 Blogger 발행</h1></div>
+
+    <!-- 연결 상태 -->
+    <div class="card">
+      <h2>🔗 Blogger 연결 상태</h2>
+      <div class="row-between">
+        <span class="small-sub">연결 상태</span>
+        <span class="badge" id="blogger-connect-status">미연결</span>
+      </div>
+      <div id="blogger-fail-box" style="display:none;margin-top:10px;padding:10px 12px;background:#fef2f2;border-radius:10px;border:1px solid #fecaca;">
+        <p style="margin:0 0 4px 0;font-size:12px;font-weight:700;color:#991b1b;">⚠️ 연결 실패 원인</p>
+        <p id="blogger-fail-reason" style="margin:0;font-size:12px;color:#7f1d1d;line-height:1.6;"></p>
+      </div>
+      <button class="btn btn-secondary" style="margin-top:12px;" onclick="handleBloggerConnect()">Blogger 연결 확인</button>
+      <p class="hint">Worker /blogger/status를 호출해 실제 연결 상태를 확인합니다. GOOGLE_REFRESH_TOKEN / BLOGGER_BLOG_ID가 Cloudflare에 등록되어 있어야 합니다.</p>
+    </div>
+
+    <!-- 글 저장 -->
+    <div class="card">
+      <h2>💾 글 저장</h2>
+      <p class="desc" id="blogger-score-info">생성된 글과 품질점수에 따라 저장 방식이 결정됩니다.</p>
+      <button class="btn btn-disabled" id="btn-draft-save" onclick="handleSaveDraft()">💾 임시저장 (50점 이상)</button>
+
+      <label style="margin-top:14px;display:block;">예약 발행 날짜 / 시간</label>
+      <div class="field-row">
+        <div><input type="date" id="schedule-date"></div>
+        <div><input type="time" id="schedule-time"></div>
+      </div>
+      <button class="btn btn-disabled" id="btn-schedule-save" onclick="handleSchedule()">📅 예약발행 (70점 이상)</button>
+      <p class="hint">⚠️ 바로 발행 기능은 없습니다. 임시저장 또는 예약발행만 지원합니다.</p>
+    </div>
+
+    <!-- 저장된 글 목록 -->
+    <div class="card">
+      <h2>📚 저장된 글 목록</h2>
+      <button class="btn btn-ghost" style="margin-bottom:10px;font-size:13px;" onclick="handleLoadBloggerList()">🔄 목록 새로 고침</button>
+      <div id="blogger-saved-list"><p class="small-sub">목록을 불러오려면 위 버튼을 눌러주세요.</p></div>
+    </div>
   </div>
 
   <!-- 화면 8. 발행 준비 (HTML 복사 + BlogSpot 수동 업로드) -->
@@ -265,10 +302,10 @@
     <div class="topbar" style="margin:-18px -16px 16px -16px;"><h1>📋 발행 준비</h1></div>
 
     <div class="card" style="background:#eff6ff;border:1.5px solid #bfdbfe;">
-      <h2 style="color:#1d4ed8;">📌 BlogSpot 수동 업로드 방식</h2>
-      <p class="desc" style="color:#1e3a5f;">현재 버전은 Blogger 자동발행 대신 HTML을 복사해 BlogSpot에 수동 업로드하는 방식입니다.</p>
+      <h2 style="color:#1d4ed8;">📋 발행 준비</h2>
+      <p class="desc" style="color:#1e3a5f;">HTML을 복사해 BlogSpot에 수동 업로드하거나, <b>Blogger 발행 탭</b>에서 직접 임시저장·예약발행할 수 있습니다.</p>
       <p class="desc">BlogSpot 글쓰기 화면에서 <b>HTML 보기 모드</b>로 전환한 뒤 복사한 HTML을 붙여넣으세요.</p>
-      <p class="hint">Blogger 자동발행은 다음 버전에서 지원 예정입니다.</p>
+      <p class="hint">Blogger 자동발행: 연결 가능 ✅ / 임시저장 가능 ✅ / 예약발행 테스트 필요</p>
     </div>
 
     <div class="card" id="publish-empty-card">
@@ -426,6 +463,7 @@
     <button class="tab-item" data-tab="editor" onclick="safeGoScreen('editor')"><span class="icon">✍️</span>글생성</button>
     <button class="tab-item" data-tab="quality" onclick="safeGoScreen('quality')"><span class="icon">📊</span>검수</button>
     <button class="tab-item" data-tab="publish" onclick="safeGoScreen('publish')"><span class="icon">📋</span>발행준비</button>
+    <button class="tab-item" data-tab="blogger" onclick="safeGoScreen('blogger')"><span class="icon">🚀</span>발행</button>
     <button class="tab-item" data-tab="settings" onclick="safeGoScreen('settings')"><span class="icon">⚙️</span>설정</button>
     <button class="tab-item" onclick="handleLogout()"><span class="icon">🚪</span>아웃</button>
   </div>
@@ -435,15 +473,15 @@
 </div>
 
 <!-- JS는 의존 순서대로 불러옵니다: config → storage → ui → auth → editor → quality-check → blogger → api → app -->
-<script src="./assets/js/config.js?v=0.1.0-r4"></script>
-<script src="./assets/js/storage.js?v=0.1.0-r4"></script>
-<script src="./assets/js/ui.js?v=0.1.0-r4"></script>
-<script src="./assets/js/auth.js?v=0.1.0-r4"></script>
-<script src="./assets/js/editor.js?v=0.1.0-r4"></script>
-<script src="./assets/js/quality-check.js?v=0.1.0-r4"></script>
-<script src="./assets/js/hero-image.js?v=0.1.0-r4"></script>
-<script src="./assets/js/blogger.js?v=0.1.0-r4"></script>
-<script src="./assets/js/api.js?v=0.1.0-r4"></script>
-<script src="./assets/js/app.js?v=0.1.0-r4"></script>
+<script src="./assets/js/config.js?v=0.1.0-r5"></script>
+<script src="./assets/js/storage.js?v=0.1.0-r5"></script>
+<script src="./assets/js/ui.js?v=0.1.0-r5"></script>
+<script src="./assets/js/auth.js?v=0.1.0-r5"></script>
+<script src="./assets/js/editor.js?v=0.1.0-r5"></script>
+<script src="./assets/js/quality-check.js?v=0.1.0-r5"></script>
+<script src="./assets/js/hero-image.js?v=0.1.0-r5"></script>
+<script src="./assets/js/blogger.js?v=0.1.0-r5"></script>
+<script src="./assets/js/api.js?v=0.1.0-r5"></script>
+<script src="./assets/js/app.js?v=0.1.0-r5"></script>
 </body>
 </html>
