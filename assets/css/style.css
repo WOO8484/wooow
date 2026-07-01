@@ -22,6 +22,36 @@
 }
 
 *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; max-width:100%; }
+/* r8: iPhone Safari 오른쪽 잘림 완전 차단 */
+html {
+  overflow-x: hidden;
+  width: 100%;
+}
+body {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* r8: 상단 상태바 (BPW r8 | 현재메뉴 | ⚪W ⚪AI ⚪B ⚪N) */
+#status-bar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 200;
+  background: #1e3a5f;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+  gap: 8px;
+}
+#status-bar.status-bar-hidden {
+  display: none;
+}
 
 html{
   width:100%; max-width:100%;
@@ -364,3 +394,315 @@ th{ background:var(--color-primary-light); }
   line-height:1.5;
 }
 .briefing-title-item:active{ background:#dbeafe; }
+
+/* ============================================================
+   r8-mobile-operation 추가 스타일
+   ============================================================ */
+
+/* 상태바(48px) 공간 확보 — 로그인은 제외 */
+.screen { padding-top: 52px; }
+#screen-login { padding-top: 0; }
+
+/* 바텀시트 애니메이션 */
+#bottom-sheet {
+  transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
+  transform: translateY(100%);
+}
+#bottom-sheet.open {
+  display: block !important;
+  transform: translateY(0);
+}
+#bottom-sheet-overlay.open { display: block !important; }
+
+/* Lucide 계열 심플 아이콘 버튼 */
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #f1f5f9;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: #374151;
+  flex-shrink: 0;
+}
+.icon-btn:active { background: #e2e8f0; }
+
+/* 컴팩트 리스트 아이템 (설정/발행관리용) */
+.compact-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 13px;
+  color: #374151;
+}
+.compact-row:last-child { border-bottom: none; }
+.compact-row .cr-label { flex: 1; font-weight: 600; color: #1c2434; }
+.compact-row .cr-value { font-size: 12px; color: #6b7280; text-align: right; }
+.compact-row .cr-badge { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: #f1f5f9; }
+.compact-row .cr-badge.ok { background: #f0fdf4; color: #16a34a; }
+.compact-row .cr-badge.err { background: #fef2f2; color: #dc2626; }
+
+/* 발행관리 컴팩트화 */
+#pubmgmt-checklist-list .check-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  padding: 4px 0;
+  border-bottom: 1px solid #f8fafc;
+}
+
+/* 탭바 padding-top safe area */
+.tabbar {
+  padding-bottom: max(env(safe-area-inset-bottom), 6px);
+}
+.screen {
+  padding-bottom: calc(64px + max(env(safe-area-inset-bottom), 6px));
+}
+
+/* 발행관리 저장 결과 카드 */
+#pubmgmt-save-result {
+  border: 1.5px solid #bbf7d0;
+  background: #f0fdf4;
+}
+#pubmgmt-save-result .save-fail {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+/* ============================================================
+   r9-mobile-ui-polish-1: 컴팩트 모바일 UI 보완
+   ============================================================ */
+
+/* 카드 기본 패딩 축소 (모바일 세로 절약) */
+.card {
+  padding: 14px 14px;
+  margin-bottom: 10px;
+}
+.card h2 {
+  font-size: 14px;
+  margin: 0 0 8px 0;
+}
+
+/* 버튼 기본 높이 통일 */
+.btn {
+  min-height: 44px;
+  font-size: 14px;
+  margin-top: 6px;
+}
+.btn + .btn { margin-top: 6px; }
+.btn.btn-ghost { min-height: 36px; font-size: 13px; }
+
+/* label + input/select 간격 */
+label { margin-top: 10px; margin-bottom: 4px; display: block; font-size: 13px; }
+input[type="text"], input[type="password"], input[type="number"],
+input[type="date"], input[type="time"],
+select, textarea {
+  font-size: 14px;
+  padding: 9px 11px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ── 홈 현황판 카드 ─────────────────────────────── */
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+.status-mini-card {
+  background: var(--color-card, #f8fafc);
+  border: 1px solid var(--color-card-border, #e7ebf1);
+  border-radius: 10px;
+  padding: 8px 6px;
+  text-align: center;
+}
+.mini-label {
+  display: block;
+  font-size: 10px;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+.mini-value {
+  font-size: 11px;
+  font-weight: 600;
+  color: #1c2434;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+}
+
+/* 홈 흐름 버튼 컴팩트 */
+#screen-dashboard .btn[style*="text-align:left"] {
+  padding: 11px 14px !important;
+  line-height: 1.3;
+}
+
+/* ── 설정 화면 컴팩트 ─────────────────────────── */
+#screen-settings .card { padding: 12px 14px; margin-bottom: 8px; }
+#screen-settings .row-between.small-sub { padding: 4px 0; font-size: 12px; }
+#screen-settings .row-between.small-sub + .row-between.small-sub {
+  border-top: 1px solid #f1f5f9;
+}
+#screen-settings h2 { font-size: 13px; margin-bottom: 6px; }
+/* Worker URL 입력창 — 짧게 표시 */
+#setting-worker-url { font-size: 12px; }
+/* 설정 섹션 구분선 대신 카드 간격으로 */
+#screen-settings .card:last-child { margin-bottom: 0; }
+
+/* ── 발행관리 화면 컴팩트 ────────────────────── */
+#screen-pubmgmt .card { padding: 12px 14px; margin-bottom: 8px; }
+#screen-pubmgmt h2 { font-size: 13px; margin-bottom: 6px; }
+/* 체크리스트 항목 더 촘촘하게 */
+#pubmgmt-checklist-list { gap: 2px !important; }
+.pubmgmt-check-row,
+#pubmgmt-checklist-list > div {
+  padding: 3px 0;
+  font-size: 12px;
+}
+/* 예약 날짜/시간 row */
+.field-row { gap: 6px; margin: 6px 0; }
+.field-row > div { flex: 1; }
+/* 발행 힌트 텍스트 축소 */
+#screen-pubmgmt .hint { font-size: 11px; margin-top: 4px; }
+/* 수동 복사 버튼들 */
+#manual-copy-body .btn { min-height: 38px; font-size: 13px; margin-top: 4px; }
+/* Blogger 글 목록 / 최근 글 카드 */
+#screen-pubmgmt #blogger-saved-list,
+#screen-pubmgmt #recent-posts-list { font-size: 13px; }
+
+/* ── 자동작성 화면 컴팩트 ──────────────────── */
+#screen-autowrite .card { margin-bottom: 8px; }
+/* 모드 선택 */
+.mode-select-group { gap: 6px; }
+.mode-option { padding: 8px 10px; font-size: 13px; }
+.mode-title { font-size: 13px; }
+.mode-desc  { font-size: 11px; }
+
+/* ── 공통 hint / small-sub 축소 ──────────────── */
+.hint     { font-size: 11.5px; line-height: 1.5; color: #6b7280; margin-top: 4px; }
+.small-sub{ font-size: 12px; }
+.desc     { font-size: 13px; }
+
+/* ── 잘림 방지 최종 ──────────────────────────── */
+.screen, .card, .btn, input, select, textarea, .field-row {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+img { max-width: 100%; height: auto; }
+
+/* ============================================================
+   r9-mobile-ui-polish-2: 바텀시트 애니메이션 + 추가 압축
+   ============================================================ */
+
+/* 바텀시트 슬라이드 업 */
+#bottom-sheet {
+  transform: translateY(100%);
+  transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+  padding-bottom: max(32px, env(safe-area-inset-bottom));
+}
+#bottom-sheet.open { transform: translateY(0); }
+
+#bottom-sheet-overlay {
+  opacity: 0;
+  transition: opacity 0.22s;
+}
+#bottom-sheet-overlay.open { opacity: 1; }
+
+/* 바텀시트 드래그 핸들 */
+#bottom-sheet::before {
+  content: '';
+  display: block;
+  width: 40px; height: 4px;
+  background: #e5e7eb;
+  border-radius: 2px;
+  margin: 0 auto 14px;
+}
+
+/* 발행관리 카드 추가 압축 */
+#screen-pubmgmt #pubmgmt-content-area > .card { margin-bottom: 7px; }
+#screen-pubmgmt .field-row { margin: 5px 0; }
+#screen-pubmgmt .field-row input { padding: 8px 10px; font-size: 13px; }
+#pubmgmt-save-result h2 { font-size: 13px; margin-bottom: 6px; }
+#pubmgmt-save-result-content { font-size: 12px; line-height: 1.6; }
+
+/* 상태바 indicators 클릭 피드백 */
+#sb-indicators { cursor: pointer; border-radius: 6px; padding: 2px 4px; }
+#sb-indicators:active { opacity: 0.7; }
+
+/* ============================================================
+   r9-mobile-ui-polish-3: 홈/설정/발행관리 최종 정리
+   ============================================================ */
+
+/* ── 홈 현황판 카드 최종 정리 ─────────────────────
+   4열은 좁은 화면에서 라벨/값이 겹치거나 잘리므로 2열로 재정렬 */
+.status-grid {
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+.status-mini-card {
+  padding: 10px 8px;
+  min-width: 0;
+}
+.mini-label { font-size: 11px; }
+.mini-value {
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* 홈 흐름 버튼 아이콘/텍스트 정렬 보정 */
+#screen-dashboard .btn[style*="text-align:left"] > div:first-child {
+  vertical-align: middle;
+  line-height: 1;
+}
+
+/* ── 설정 화면 컴팩트 최종 ───────────────────────── */
+#screen-settings .card { padding: 12px 14px; margin-bottom: 8px; }
+#screen-settings h2 { margin-bottom: 6px; }
+#screen-settings label { margin-top: 8px; margin-bottom: 4px; }
+#screen-settings .row-between.small-sub { min-height: 28px; }
+#screen-settings .row-between.small-sub b,
+#screen-settings .row-between.small-sub span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#screen-settings input[type="text"],
+#screen-settings input[type="number"],
+#screen-settings textarea { margin-bottom: 4px; }
+/* Worker 연결 버튼 줄바꿈/겹침 방지 */
+#screen-settings .card > div[style*="display:flex"] { flex-wrap: wrap; }
+
+/* ── 버튼/아이콘 정렬 공통 (홈/설정/발행관리) ───── */
+.icon-btn, .close-x-btn { display: inline-flex; align-items: center; justify-content: center; }
+
+/* ── 모바일 터치 영역 보완 (최소 40px, 겹침 방지) ── */
+.btn.btn-ghost { min-height: 40px; }
+.icon-btn { width: 40px; height: 40px; }
+.close-x-btn { width: 40px; height: 40px; }
+.tab-item { min-height: 48px; padding: 8px 2px 6px 2px; }
+#sb-indicators { padding: 6px 6px; margin: -6px -6px; }
+.row-between[onclick] { min-height: 32px; }
+
+/* ── 잘림/겹침 방지 최종 보완 ─────────────────────── */
+#screen-settings, #screen-pubmgmt, #screen-dashboard {
+  overflow-x: hidden;
+}
+.status-grid, .compact-row, .field-row {
+  min-width: 0;
+}
+.status-mini-card, .card, .btn {
+  min-width: 0;
+}
+#worker-status-url { max-width: 55%; }
