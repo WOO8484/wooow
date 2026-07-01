@@ -112,3 +112,171 @@ window.addEventListener('DOMContentLoaded', () => {
   loadMaterialIntoForm();
   bindLoginEvents();
 });
+
+/* ============================================================
+   v0.1.0-test-r4 발행 준비 화면 (screen-publish)
+   ============================================================ */
+
+function refreshPublishScreen() {
+  const post = loadLocal(STORAGE_KEYS.CURRENT_POST, null);
+  const emptyCard   = document.getElementById('publish-empty-card');
+  const contentArea = document.getElementById('publish-content-area');
+  if (!emptyCard || !contentArea) return;
+
+  if (!post) {
+    emptyCard.style.display = 'block';
+    contentArea.style.display = 'none';
+    return;
+  }
+  emptyCard.style.display = 'none';
+  contentArea.style.display = 'block';
+
+  // 제목
+  const titleEl = document.getElementById('publish-title-text');
+  if (titleEl) titleEl.textContent = post.title || '(제목 없음)';
+
+  // 메타 설명
+  const metaEl = document.getElementById('publish-meta-text');
+  if (metaEl) metaEl.textContent = post.metaDescription || post.summary || '(메타 설명 없음)';
+
+  // 라벨
+  const labelsEl = document.getElementById('publish-labels-text');
+  if (labelsEl) {
+    const labels = Array.isArray(post.labels) ? post.labels : [];
+    labelsEl.textContent = labels.length ? labels.join(', ') : '(태그 없음)';
+  }
+
+  // 이미지 프롬프트 (imagePrompts가 없으면 hero-image.js에서 생성)
+  const imgPrompts = post.imagePrompts ||
+    (typeof generateImagePrompts === 'function'
+      ? generateImagePrompts(post.keyword || '', post.title || '', post.summary || '')
+      : null);
+
+  if (imgPrompts) {
+    const el = id => document.getElementById(id);
+    if (el('publish-img-prompt'))     el('publish-img-prompt').textContent     = imgPrompts.mainPrompt    || '';
+    if (el('publish-thumbnail-text')) el('publish-thumbnail-text').textContent = imgPrompts.thumbnailText || '';
+    if (el('publish-alt-text'))       el('publish-alt-text').textContent       = imgPrompts.altText       || '';
+    if (el('publish-img-style'))      el('publish-img-style').textContent      = imgPrompts.style ? '스타일: ' + imgPrompts.style : '';
+    if (el('publish-image-card'))     el('publish-image-card').style.display   = 'block';
+  }
+
+  // 최근 생성 글 목록 렌더링
+  renderRecentPostsList();
+}
+
+function renderRecentPostsList() {
+  const listEl = document.getElementById('recent-posts-list');
+  if (!listEl) return;
+
+  const posts = typeof getRecentPosts === 'function' ? getRecentPosts() : [];
+  if (!posts.length) {
+    listEl.innerHTML = '<p class="small-sub">저장된 글이 없습니다.</p>';
+    return;
+  }
+
+  listEl.innerHTML = posts.map(p => `
+    <div class="row-between" style="padding:10px 0;border-bottom:1px solid #f1f5f9;">
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(p.title)}</div>
+        <div style="font-size:11px;color:#6b7280;">${new Date(p.createdAt).toLocaleString('ko-KR')}</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0;margin-left:8px;">
+        <button class="btn btn-ghost" style="font-size:11px;padding:4px 8px;" onclick="handleLoadRecentPost(${p.id})">열기</button>
+        <button class="btn btn-ghost" style="font-size:11px;padding:4px 8px;color:#dc2626;" onclick="handleDeleteRecentPost(${p.id})">삭제</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ----------------------------------------------------------
+   복사 핸들러
+   ---------------------------------------------------------- */
+function handleCopyTitle() {
+  const post = loadLocal(STORAGE_KEYS.CURRENT_POST, null);
+  if (!post?.title) return showToast('제목이 없습니다');
+  copyToClipboard(post.title, '제목');
+}
+
+function handleCopyMeta() {
+  const post = loadLocal(STORAGE_KEYS.CURRENT_POST, null);
+  const text = post?.metaDescription || post?.summary || '';
+  if (!text) return showToast('메타 설명이 없습니다');
+  copyToClipboard(text, '메타 설명');
+}
+
+function handleCopyLabels() {
+  const post = loadLocal(STORAGE_KEYS.CURRENT_POST, null);
+  const labels = Array.isArray(post?.labels) ? post.labels : [];
+  if (!labels.length) return showToast('라벨이 없습니다');
+  copyToClipboard(labels.join(', '), '라벨');
+}
+
+function handleCopyHtml() {
+  const post = loadLocal(STORAGE_KEYS.CURRENT_POST, null);
+  const html = post?.html || post?.contentHtml || '';
+  if (!html) return showToast('HTML 본문이 없습니다');
+  copyToClipboard(html, 'HTML 본문');
+}
+
+function handleCopyImgPrompt() {
+  const post = loadLocal(STORAGE_KEYS.CURRENT_POST, null);
+  const prompt = post?.imagePrompts?.mainPrompt ||
+    (post ? generateImagePrompts(post.keyword || '', post.title || '', post.summary || '')?.mainPrompt : '');
+  if (!prompt) return showToast('이미지 프롬프트가 없습니다');
+  copyToClipboard(prompt, '이미지 프롬프트');
+}
+
+function handleCopyAlt() {
+  const post = loadLocal(STORAGE_KEYS.CURRENT_POST, null);
+  const alt = post?.imagePrompts?.altText ||
+    (post ? generateImagePrompts(post.keyword || '', post.title || '', post.summary || '')?.altText : '');
+  if (!alt) return showToast('alt 문구가 없습니다');
+  copyToClipboard(alt, 'alt 문구');
+}
+
+function handleCopyAll() {
+  const post = loadLocal(STORAGE_KEYS.CURRENT_POST, null);
+  if (!post) return showToast('생성된 글이 없습니다');
+  const labels = Array.isArray(post.labels) ? post.labels.join(', ') : '';
+  const packageText = [
+    '=== 제목 ===',
+    post.title || '',
+    '',
+    '=== HTML 본문 ===',
+    post.html || post.contentHtml || '',
+    '',
+    '=== 메타 설명 ===',
+    post.metaDescription || post.summary || '',
+    '',
+    '=== 라벨 ===',
+    labels
+  ].join('\n');
+  copyToClipboard(packageText, '전체 패키지');
+}
+
+/* ----------------------------------------------------------
+   최근 생성 글 핸들러
+   ---------------------------------------------------------- */
+function handleLoadRecentPost(id) {
+  const posts = typeof getRecentPosts === 'function' ? getRecentPosts() : [];
+  const post = posts.find(p => p.id === id);
+  if (!post) return showToast('글을 찾을 수 없습니다');
+  saveLocal(STORAGE_KEYS.CURRENT_POST, post);
+  saveLocal(STORAGE_KEYS.QUALITY_SCORE, null);
+  refreshPublishScreen();
+  showToast('"' + post.title.slice(0, 20) + '" 글을 불러왔습니다');
+}
+
+function handleDeleteRecentPost(id) {
+  if (typeof deleteRecentPost === 'function') deleteRecentPost(id);
+  renderRecentPostsList();
+  showToast('삭제했습니다');
+}
+
+function handleClearRecentPosts() {
+  if (!confirm('최근 생성 글을 모두 삭제할까요?')) return;
+  if (typeof clearRecentPosts === 'function') clearRecentPosts();
+  renderRecentPostsList();
+  showToast('전체 삭제 완료');
+}

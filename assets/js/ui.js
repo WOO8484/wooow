@@ -54,7 +54,8 @@ function refreshCurrentScreen(name){
   if(name === 'editor')    refreshEditorScreen();
   if(name === 'quality')   refreshQualityScreen();
   if(name === 'preview')   refreshPreviewScreen();
-  if(name === 'blogger')   refreshBloggerScreen();
+  if(name === 'blogger')   refreshBloggerScreen && refreshBloggerScreen();
+  if(name === 'publish')   typeof refreshPublishScreen === 'function' && refreshPublishScreen();
   if(name === 'briefing')  refreshBriefingScreen();
   if(name === 'settings')  refreshSettingsScreen();
   if(name === 'dashboard') refreshDashboard();

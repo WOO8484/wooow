@@ -325,11 +325,20 @@ async function handleGeneratePost(){
     const post = result.post;
     post.generationMode = options.mode;
 
-    saveLocal(STORAGE_KEYS.CURRENT_POST, post);
+    // ★ 대표 이미지 히어로 카드 + H2 아이콘 삽입
+    const emojiLevel = options.emoji || loadLocal(STORAGE_KEYS.EMOJI_LEVEL, DEFAULT_EMOJI_LEVEL);
+    const enrichedPost = typeof enrichPostHtml === 'function'
+      ? enrichPostHtml(post, emojiLevel)
+      : post;
+
+    saveLocal(STORAGE_KEYS.CURRENT_POST, enrichedPost);
     saveLocal(STORAGE_KEYS.QUALITY_SCORE, null);
 
+    // ★ 최근 생성 글 저장 (최대 5개)
+    if (typeof saveRecentPost === 'function') saveRecentPost(enrichedPost);
+
     document.getElementById('editor-result-card').style.display = 'block';
-    document.getElementById('editor-title-preview').textContent = post.title;
+    document.getElementById('editor-title-preview').textContent = enrichedPost.title;
     renderGenerationSourceBadge(result);
 
     if(result.blocked){
