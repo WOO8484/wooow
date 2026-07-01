@@ -1,22 +1,41 @@
-# wrangler-example.toml
-# Cloudflare Worker 배포를 위한 예시 설정 파일입니다.
-# 실제 계정명, API 키, 비밀번호는 절대 이 파일에 적지 마세요.
-# 이 파일을 복사해서 wrangler.toml로 이름을 바꾼 뒤 본인 환경에 맞게 수정하세요.
+# wrangler-example.toml — BPW v0.1.0 AI Provider Router
+# Cloudflare Worker 배포 설정 예시입니다.
+# 실제 Secret 값은 절대 이 파일에 적지 마세요.
 
-name = "blogspot-profit-writer-worker"
+name = "wooow"
 main = "worker.js"
-compatibility_date = "2026-01-01"
+compatibility_date = "2026-07-01"
 
-# 아래 값들은 Secret으로 등록합니다. (이 파일에는 절대 실제 값을 적지 않습니다)
-# 터미널에서 아래 명령어로 하나씩 등록하세요.
+# Secret 등록 명령 (wrangler secret put 으로 하나씩 등록):
 #
+# [필수]
+#   wrangler secret put ADMIN_PASSWORD
+#   wrangler secret put SESSION_SECRET
+#
+# [네이버 검색]
 #   wrangler secret put NAVER_CLIENT_ID
 #   wrangler secret put NAVER_CLIENT_SECRET
+#
+# [AI — 기본 (Gemini)]
 #   wrangler secret put AI_API_KEY
-#   wrangler secret put AI_PROVIDER
-#   wrangler secret put AI_MODEL
+#   wrangler secret put AI_PROVIDER           (기본: gemini)
+#   wrangler secret put AI_MODEL              (기본: gemini-2.5-flash)
+#
+# [AI — v0.1.0 신규 fallback (선택)]
+#   wrangler secret put AI_FALLBACK_ORDER     (기본: gemini,openai,openrouter,claude)
+#   wrangler secret put OPENAI_API_KEY        (없으면 OpenAI 건너뜀)
+#   wrangler secret put OPENAI_MODEL          (기본: gpt-4o-mini)
+#   wrangler secret put CLAUDE_API_KEY        (없으면 Claude 건너뜀)
+#   wrangler secret put CLAUDE_MODEL          (기본: claude-3-haiku-20240307)
+#   wrangler secret put OPENROUTER_API_KEY    (없으면 OpenRouter 건너뜀)
+#   wrangler secret put OPENROUTER_MODEL      (기본: openai/gpt-4o-mini)
+#
+# [향후 — v0.1.3 KV 캐시 적용 예정]
+#   wrangler secret put DAILY_AI_LIMIT        (기본: 20)
+#   wrangler secret put AI_CACHE_TTL_MINUTES  (기본: 60)
+#
+# [Blogger]
 #   wrangler secret put GOOGLE_CLIENT_ID
 #   wrangler secret put GOOGLE_CLIENT_SECRET
 #   wrangler secret put GOOGLE_REFRESH_TOKEN
 #   wrangler secret put BLOGGER_BLOG_ID
-#   wrangler secret put ADMIN_PASSWORD
