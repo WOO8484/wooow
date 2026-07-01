@@ -1,4 +1,4 @@
-// ui.js — v0.0.8.2
+// ui.js — v0.0.9
 // 화면 전환 / 토스트 / 탭 활성화
 // classList + style.display 동시 제어로 Safari 화면 겹침 완전 차단
 

@@ -1,4 +1,4 @@
-// auth.js — v0.0.8.2
+// auth.js — v0.0.9
 // Worker /auth/login 검증, sessionStorage 토큰, Authorization Bearer 구조 유지
 // 추가: 로그인 화면 body 스크롤 잠금 / 로그인 성공 후 Worker 헬스체크 자동 실행
 

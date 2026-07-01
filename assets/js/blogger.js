@@ -58,23 +58,31 @@ async function handleBloggerConnect(){
   if(mode === API_MODE.WORKER && workerUrl){
     showToast('Blogger 연결 상태를 확인하는 중입니다...');
     const statusResult = await checkBloggerStatus();
+    const r = statusResult.result || {};
 
-    if(statusResult.ok && statusResult.result && statusResult.result.configured){
+    // Worker v0.0.9: connected:true OR configured:true 모두 성공으로 처리
+    const isConnected = r.connected === true || r.configured === true || r.blogExists === true;
+
+    if(statusResult.ok && isConnected){
       saveLocal(STORAGE_KEYS.BLOGGER_CONNECTED, true);
       saveLocal(STORAGE_KEYS.BLOGGER_CONNECTION_MODE, API_MODE.WORKER);
       saveLocal(STORAGE_KEYS.BLOGGER_FAIL_REASON, '');
-      showToast('Blogger 연결 성공');
+      // Worker v0.0.9가 반환하는 blogName/blogUrl 저장
+      if(r.blogName) saveLocal('bloggerBlogName', r.blogName);
+      if(r.blogUrl)  saveLocal('bloggerBlogUrl',  r.blogUrl);
+      showToast(`Blogger 연결 성공${r.blogName ? ' (' + r.blogName + ')' : ''}`);
       refreshBloggerScreen();
       return;
     }
 
     // 실패 원인 분석
-    const rawMsg = (statusResult.result && statusResult.result.message) || statusResult.error || '';
+    const rawMsg = r.message || statusResult.error || '';
     let failReason = 'Blogger 설정 확인 실패';
     if(rawMsg.includes('GOOGLE_REFRESH_TOKEN'))  failReason = 'GOOGLE_REFRESH_TOKEN 확인 필요';
     else if(rawMsg.includes('BLOGGER_BLOG_ID'))  failReason = 'BLOGGER_BLOG_ID 확인 필요';
     else if(rawMsg.includes('Secret'))           failReason = 'Blogger Secret 누락 가능성';
     else if(rawMsg.includes('OAuth'))            failReason = 'Google OAuth 인증 실패';
+    else if(rawMsg.includes('Access Token'))     failReason = 'Google Access Token 발급 실패';
     else if(rawMsg)                              failReason = rawMsg.slice(0, 60);
 
     saveLocal(STORAGE_KEYS.BLOGGER_CONNECTED, false);
@@ -85,7 +93,7 @@ async function handleBloggerConnect(){
     return;
   }
 
-  // Worker 모드가 아닌 경우 — Mock 저장만 가능
+  // Worker 모드가 아닌 경우
   saveLocal(STORAGE_KEYS.BLOGGER_CONNECTED, false);
   saveLocal(STORAGE_KEYS.BLOGGER_CONNECTION_MODE, API_MODE.MOCK);
   saveLocal(STORAGE_KEYS.BLOGGER_FAIL_REASON, 'Worker 모드가 아님 (설정에서 Worker 연결 테스트 필요)');
@@ -105,16 +113,25 @@ function refreshBloggerScreen(){
   const connectionMode = loadLocal(STORAGE_KEYS.BLOGGER_CONNECTION_MODE, API_MODE.MOCK);
   const statusEl = document.getElementById('blogger-connect-status');
 
-  if(!connected){
-    const failReason = loadLocal(STORAGE_KEYS.BLOGGER_FAIL_REASON, '');
-    statusEl.textContent = failReason ? `연결 실패 (${failReason.slice(0,30)})` : '미연결';
-    statusEl.className = 'badge';
-  } else if(connectionMode === API_MODE.WORKER){
-    statusEl.textContent = '연결됨';
+  // 연결 상태 배지 (모순 없게: connected=true & Worker이면 "연결됨")
+  if(connected && connectionMode === API_MODE.WORKER){
+    const blogName = loadLocal('bloggerBlogName', '');
+    statusEl.textContent = blogName ? `연결됨 (${blogName.slice(0,15)})` : '연결됨';
     statusEl.className = 'badge success';
-  } else {
-    statusEl.textContent = 'Mock 모드';
+  } else if(connected){
+    // connected이지만 Worker가 아닌 경우 (이 케이스는 이제 거의 발생하지 않음)
+    statusEl.textContent = '로컬 모드';
     statusEl.className = 'badge mock';
+  } else {
+    const failReason = loadLocal(STORAGE_KEYS.BLOGGER_FAIL_REASON, '');
+    if(failReason){
+      statusEl.textContent = '연결 실패';
+      statusEl.className = 'badge';
+      statusEl.title = failReason; // 툴팁으로 상세 원인 표시
+    } else {
+      statusEl.textContent = '미연결';
+      statusEl.className = 'badge';
+    }
   }
 
   const score = loadLocal(STORAGE_KEYS.QUALITY_SCORE, null);

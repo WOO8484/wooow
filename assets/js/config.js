@@ -3,17 +3,15 @@
 // 실제 API 키나 운영 비밀번호는 절대 포함하지 않습니다.
 
 // 앱 버전
-const APP_VERSION = "v0.0.8.2";
+const APP_VERSION = "v0.1.0";
 
-// 기본 Worker URL (localStorage에 저장된 값이 없을 때 사용)
-// 실제 값은 여기에만 적혀 있으며, API 키나 비밀번호가 아닙니다.
+// 기본 Worker URL
 const DEFAULT_WORKER_URL = "https://wooow.qudrnr84.workers.dev";
 
-// 로그인은 Cloudflare Worker의 /auth/login에서 검증합니다 (Worker Secret ADMIN_PASSWORD 비교).
-// 세션 토큰은 sessionStorage에만 저장하므로, 브라우저(탭)를 새로 열면 항상 다시 로그인해야 합니다.
+// 로그인은 Cloudflare Worker의 /auth/login에서 검증합니다.
 const FORCE_LOGIN_ON_START = true;
 
-// localStorage 키 접두사 (다른 사이트와 충돌 방지)
+// localStorage 키 접두사
 const STORAGE_PREFIX = "bpw_";
 
 // 하루 최대 저장/예약 발행 가능 건수
@@ -22,12 +20,14 @@ const DAILY_LIMIT_MIN = 1;
 const DAILY_LIMIT_MAX = 10;
 const DAILY_LIMIT_RECOMMENDED_TEXT = '초기 운영 권장값은 하루 3~5건입니다.';
 
-// 품질점수 기준값
-const QUALITY_DRAFT_MIN_SCORE = 70;
-const QUALITY_SCHEDULE_MIN_SCORE = 85;
+// 품질점수 기준값 (v0.0.9 기준 유지)
+// 임시저장: 50점 이상
+// 예약발행: 70점 이상
+const QUALITY_DRAFT_MIN_SCORE = 50;
+const QUALITY_SCHEDULE_MIN_SCORE = 70;
 
 // Mock 글의 최소 글자 수 기준
-const MIN_CONTENT_LENGTH = 1500;
+const MIN_CONTENT_LENGTH = 1000;
 
 // 과장 표현으로 간주할 단어 목록
 const EXAGGERATION_WORDS = ['100%', '무조건', '절대', '완벽', '최고의 효과'];
@@ -40,7 +40,30 @@ const DEFAULT_API_MODE = API_MODE.MOCK;
 const SAVE_VIA = { BLOGGER: 'blogger', MOCK: 'mock' };
 
 /* ------------------------------------------------------------
-   v0.0.7 글 생성 옵션
+   v0.1.0 AI Provider Router 설정
+   ※ 실제 API Key 값은 절대 여기에 넣지 않습니다.
+   ※ 값은 Cloudflare Worker Secret으로만 등록합니다.
+   ------------------------------------------------------------ */
+// Worker에서 사용하는 AI Provider 우선순위 기본값
+// 실제 적용은 Cloudflare Secret 'AI_FALLBACK_ORDER'로 설정합니다.
+const DEFAULT_AI_FALLBACK_ORDER = ['gemini', 'openai', 'openrouter', 'claude'];
+
+// AI Provider 표시명
+const AI_PROVIDER_LABELS = {
+  gemini:     'Gemini',
+  openai:     'OpenAI',
+  claude:     'Claude (Anthropic)',
+  openrouter: 'OpenRouter'
+};
+
+// 글 생성 버튼 연타 방지: 같은 키워드 재요청 최소 간격(ms)
+const AI_GENERATE_DEBOUNCE_MS = 10000; // 10초
+
+/* ------------------------------------------------------------
+   v0.0.9 글 생성 옵션
+   ※ maxOutputTokens는 프론트에서 Worker에 전달하는 요청 모드 구분용입니다.
+   ※ 실제 Worker(v0.0.9)는 Gemini 무료 쿼터 보호를 위해
+      maxOutputTokens를 3,200으로 고정합니다. (Worker worker.js 기준)
    ------------------------------------------------------------ */
 const GENERATION_MODES = {
   fast: {
@@ -50,12 +73,12 @@ const GENERATION_MODES = {
   },
   normal: {
     label: '일반 생성', sourceCount: 5, minLength: 1200, maxLength: 1500,
-    faqCount: 3, checklistCount: 4, imageIdeaCount: 2, maxOutputTokens: 4096,
+    faqCount: 3, checklistCount: 4, imageIdeaCount: 2, maxOutputTokens: 3200,
     description: '균형형 · 1200~1500자 · 참고자료 5개'
   },
   advanced: {
     label: '고급 생성', sourceCount: 8, minLength: 2000, maxLength: 3000,
-    faqCount: 5, checklistCount: 5, imageIdeaCount: 3, maxOutputTokens: 8192,
+    faqCount: 5, checklistCount: 5, imageIdeaCount: 3, maxOutputTokens: 3200,
     description: '품질 우선 · 2000자 이상 · 참고자료 8개'
   }
 };
@@ -85,7 +108,7 @@ const EMOJI_LEVELS = {
 const DEFAULT_EMOJI_LEVEL = 'few';
 
 /* ------------------------------------------------------------
-   v0.0.8.2 콘텐츠 엔진 - 키워드 수익성 평가 기준
+   v0.0.9 콘텐츠 엔진 - 키워드 수익성 평가 기준
    ------------------------------------------------------------ */
 // 키워드 평가 점수 구성 (최대 100점)
 const KEYWORD_SCORE_WEIGHTS = {
@@ -100,7 +123,7 @@ const KEYWORD_SCORE_WEIGHTS = {
   naverExposure:   5    // 네이버 웹문서 노출 가능성
 };
 
-// v0.0.8.2 브리핑 카테고리 (수익성 중심 재편)
+// v0.0.9 브리핑 카테고리 (수익성 중심 재편)
 const BRIEFING_CATEGORIES = [
   { key: 'high_profit',  label: '고수익 후보',     icon: '💰', desc: '광고 단가 높음 · 구매/비교 의도 강함' },
   { key: 'long_tail',    label: '장기 유입 후보',   icon: '📈', desc: '에버그린 · 꾸준한 유입 기대' },

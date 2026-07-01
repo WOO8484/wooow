@@ -156,8 +156,11 @@ function renderKeywordSearchResult(keyword, search){
   const list = document.getElementById('kw-result-list');
 
   const items = search.items || [];
-  const blogItems = items.filter(it => it.type === 'blog');
-  const webItems = items.filter(it => it.type === 'web');
+  const blogItems = Array.isArray(search.blog) ? search.blog
+    : items.filter(it => it.type === 'blog' || it.source === 'blog');
+  const webItems = Array.isArray(search.web) ? search.web
+    : items.filter(it => it.type === 'web' || it.source === 'web' || it.type === 'webkr');
+  const totalCount = items.length || (blogItems.length + webItems.length);
 
   const modeBadge = search.mode === 'worker'
     ? '<span class="badge success">실제 네이버 검색</span>'
@@ -184,7 +187,7 @@ function renderKeywordSearchResult(keyword, search){
   list.innerHTML = `
     <div class="row-between" style="margin-bottom:8px;">
       ${modeBadge}
-      <span class="small-sub">총 ${items.length}건</span>
+      <span class="small-sub">총 ${totalCount}건 (블로그 ${blogItems.length} / 웹문서 ${webItems.length})</span>
     </div>
     ${fallbackNotice}
     <p class="small-sub" style="margin:10px 0 4px 0;">📝 블로그 결과 (${blogItems.length}건)</p>
@@ -329,10 +332,20 @@ async function handleGeneratePost(){
     document.getElementById('editor-title-preview').textContent = post.title;
     renderGenerationSourceBadge(result);
 
-    if(result.source === 'ai'){
-      showToast('AI 글 생성 완료 (실제 결과)');
+    if(result.blocked){
+      showToast(result.blockReason || '잠시 후 다시 시도해주세요');
+    } else if(result.source === 'ai'){
+      const provLabel = {gemini:'Gemini',openai:'OpenAI',claude:'Claude',openrouter:'OpenRouter'};
+      const pName = provLabel[result.providerUsed] || result.providerUsed || 'AI';
+      if(result.fallbackUsed){
+        showToast(`✅ ${pName} fallback으로 글 생성 완료`);
+      } else {
+        showToast(`✅ AI 글 생성 완료 (${pName})`);
+      }
+    } else if(result.isQuotaExceeded){
+      showToast('⛔ AI 무료 사용량 초과 — Mock 글을 사용합니다');
     } else if(result.fallback){
-      showToast('AI 글 생성 연결 실패, Mock 글로 계속 진행합니다.');
+      showToast('AI 연결 실패 — Mock 글로 계속 진행합니다');
     } else {
       showToast('글이 생성되었습니다 (Mock)');
     }
@@ -358,22 +371,63 @@ function handleCancelGeneration(){
   }
 }
 
-// 글 생성 결과 카드에 "실제 AI 결과 / Mock 결과" 배지와 실패 사유를 표시합니다.
+// 글 생성 결과 배지 — v0.1.0: Provider 정보 + fallback 상태 표시
 function renderGenerationSourceBadge(result){
-  const badgeEl = document.getElementById('editor-source-badge');
+  const badgeEl  = document.getElementById('editor-source-badge');
   const noticeEl = document.getElementById('editor-fallback-notice');
   if(!badgeEl || !noticeEl) return;
 
-  if(result.source === 'ai'){
-    badgeEl.textContent = '실제 AI 글 생성';
-    badgeEl.className = 'badge success';
-    noticeEl.style.display = 'none';
-  } else {
-    badgeEl.textContent = 'Mock 글 생성';
+  const providerLabel = {
+    gemini: 'Gemini', openai: 'OpenAI', claude: 'Claude', openrouter: 'OpenRouter'
+  };
+  const usedName = providerLabel[result.providerUsed] || result.providerUsed || '';
+
+  // 연타 방지 차단
+  if(result.blocked){
+    badgeEl.textContent = '⏳ 잠시 후 다시 시도';
     badgeEl.className = 'badge mock';
-    if(result.fallback){
+    noticeEl.style.display = 'block';
+    noticeEl.innerHTML = `<b>⏳ 생성 대기 중</b><div style="margin-top:4px;font-size:12px;">${escapeHtml(result.blockReason || '')}</div>`;
+    return;
+  }
+
+  if(result.source === 'ai'){
+    if(result.fallbackUsed){
+      // fallback 성공
+      const tried = (result.providersTried || []).slice(0, -1).map(p => providerLabel[p]||p).join(' → ');
+      badgeEl.textContent = `✅ 실제 AI 글 생성 · ${usedName} (fallback)`;
+      badgeEl.className = 'badge success';
       noticeEl.style.display = 'block';
-      noticeEl.textContent = `AI 글 생성 연결 실패, Mock 글로 계속 진행합니다. (${result.fallbackReason || ''})`;
+      noticeEl.innerHTML = `<div style="color:#16a34a;font-size:12px;">✅ <b>${tried} 실패 후 ${usedName}로 글 생성 완료</b></div>` +
+        (result.fallbackReason ? `<div style="margin-top:4px;font-size:11px;color:#6b7280;">사유: ${escapeHtml(result.fallbackReason)}</div>` : '');
+    } else {
+      // 첫 번째 provider 성공
+      badgeEl.textContent = `✅ 실제 AI 글 생성 · ${usedName || 'AI'}`;
+      badgeEl.className = 'badge success';
+      noticeEl.style.display = 'none';
+    }
+  } else if(result.isQuotaExceeded){
+    badgeEl.textContent = '⛔ 쿼터 초과 → Mock 사용';
+    badgeEl.className = 'badge';
+    badgeEl.style.background = '#dc2626';
+    badgeEl.style.color = '#fff';
+    noticeEl.style.display = 'block';
+    noticeEl.innerHTML = [
+      '<b>⛔ AI 무료 사용량(쿼터)을 초과했습니다.</b>',
+      '다음 조치 중 하나를 선택하세요:',
+      '1. 오늘은 Mock 글을 직접 편집 후 임시저장하세요.',
+      '2. 내일 사용량이 초기화되면 다시 시도하세요.',
+      '3. OPENAI_API_KEY / CLAUDE_API_KEY 등 fallback Secret을 Cloudflare에 등록하세요.',
+      '<span style="color:#6b7280;font-size:11px;">현재 글은 Mock 초안입니다. 편집 후 발행 가능합니다.</span>'
+    ].map(t => `<div>${t}</div>`).join('');
+  } else {
+    badgeEl.textContent = '🟡 Mock 글 (AI 미연결)';
+    badgeEl.className = 'badge mock';
+    if(result.fallback && result.fallbackReason){
+      noticeEl.style.display = 'block';
+      noticeEl.innerHTML = `<b>AI 연결 실패</b>` +
+        `<div style="margin-top:4px;font-size:12px;">${escapeHtml(result.fallbackReason)}</div>` +
+        `<div style="margin-top:6px;font-size:11px;color:#6b7280;">Mock 초안을 직접 편집한 뒤 임시저장할 수 있습니다.</div>`;
     } else {
       noticeEl.style.display = 'none';
     }
@@ -607,7 +661,7 @@ function closePreview(){
 }
 
 /* ==============================================================
-   v0.0.8 콘텐츠 엔진 브리핑
+   v0.0.9 콘텐츠 엔진 브리핑
    - 한국 최신 이슈를 카테고리별(경제/IT/생활/부동산 등)로 분류
    - 수익성·광고친화도·구매의도·경쟁강도·민감도 기준으로 평가
    - 대형 이슈 → 안전 블로그 키워드로 변환
@@ -641,7 +695,7 @@ function calcKeywordScore(item) {
   return Math.round(score);
 }
 
-// v0.0.8 수익형 브리핑 데이터 (한국 최신 이슈 기반 안전 키워드 변환)
+// v0.0.9 수익형 브리핑 데이터 (한국 최신 이슈 기반 안전 키워드 변환)
 function buildContentEngineBriefing() {
   const today = new Date().toLocaleDateString('ko-KR');
   const now = new Date();
@@ -811,7 +865,7 @@ function buildContentEngineBriefing() {
   return {
     generatedAt: new Date().toISOString(),
     generatedAtDisplay: today,
-    engineVersion: 'v0.0.8',
+    engineVersion: 'v0.1.0',
     items: allItems
   };
 }
@@ -946,7 +1000,7 @@ function renderBriefingResult(briefing) {
 
   area.innerHTML = `
     ${topBanner}
-    <p class="small-sub" style="margin:8px 0 4px 0;text-align:right;">기준: ${escapeHtml(briefing.generatedAtDisplay)} · 엔진 ${briefing.engineVersion || 'v0.0.8'}</p>
+    <p class="small-sub" style="margin:8px 0 4px 0;text-align:right;">기준: ${escapeHtml(briefing.generatedAtDisplay)} · 엔진 ${briefing.engineVersion || 'v0.0.9'}</p>
     ${sections}
   `;
 }
