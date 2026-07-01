@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
-  블로그스팟 수익화 자동화 프로그램 - GitHub 배포용 (v0.0.8.2)
-  v0.0.8.2 보안 패치: Mock 로그인 제거, Worker 실제 인증 적용.
+  블로그스팟 수익화 자동화 프로그램 - GitHub 배포용 (v0.1.0)
+  v0.1.0 보안 패치: Mock 로그인 제거, Worker 실제 인증 적용.
   Google OAuth Client Secret / Refresh Token은 이 저장소 어디에도 넣지 마세요.
   실제 운영 비밀값은 Cloudflare Worker Secret으로만 관리합니다. (worker/ 폴더 참고)
 -->
@@ -9,8 +9,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>블로그스팟 수익화 자동화 (v0.0.8.2)</title>
-<link rel="stylesheet" href="./assets/css/style.css">
+<title>블로그스팟 수익화 자동화 (v0.1.0)</title>
+<link rel="stylesheet" href="./assets/css/style.css?v=0.1.0">
 </head>
 <body>
 
@@ -274,7 +274,7 @@
         <div><input type="date" id="schedule-date"></div>
         <div><input type="time" id="schedule-time"></div>
       </div>
-      <button class="btn btn-disabled" id="btn-schedule-save" onclick="handleSchedule()">예약발행 (85점 이상 필요)</button>
+      <button class="btn btn-disabled" id="btn-schedule-save" onclick="handleSchedule()">예약발행 (70점 이상 필요)</button>
       <p class="hint">⚠️ 바로 발행 기능은 없습니다. 임시저장 또는 예약발행만 가능합니다.</p>
     </div>
     <div class="card">
@@ -371,14 +371,14 @@
 </div>
 
 <!-- JS는 의존 순서대로 불러옵니다: config → storage → ui → auth → editor → quality-check → blogger → api → app -->
-<script src="./assets/js/config.js"></script>
-<script src="./assets/js/storage.js"></script>
-<script src="./assets/js/ui.js"></script>
-<script src="./assets/js/auth.js"></script>
-<script src="./assets/js/editor.js"></script>
-<script src="./assets/js/quality-check.js"></script>
-<script src="./assets/js/blogger.js"></script>
-<script src="./assets/js/api.js"></script>
-<script src="./assets/js/app.js"></script>
+<script src="./assets/js/config.js?v=0.1.0"></script>
+<script src="./assets/js/storage.js?v=0.1.0"></script>
+<script src="./assets/js/ui.js?v=0.1.0"></script>
+<script src="./assets/js/auth.js?v=0.1.0"></script>
+<script src="./assets/js/editor.js?v=0.1.0"></script>
+<script src="./assets/js/quality-check.js?v=0.1.0"></script>
+<script src="./assets/js/blogger.js?v=0.1.0"></script>
+<script src="./assets/js/api.js?v=0.1.0"></script>
+<script src="./assets/js/app.js?v=0.1.0"></script>
 </body>
 </html>
