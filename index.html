@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  블로그스팟 수익화 자동화 프로그램 - GitHub 배포용 (v0.1.0)
+  블로그스팟 수익화 자동화 프로그램 - GitHub 배포용 (v0.1.0-test-r4)
   v0.1.0 보안 패치: Mock 로그인 제거, Worker 실제 인증 적용.
   Google OAuth Client Secret / Refresh Token은 이 저장소 어디에도 넣지 마세요.
   실제 운영 비밀값은 Cloudflare Worker Secret으로만 관리합니다. (worker/ 폴더 참고)
@@ -9,8 +9,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>블로그스팟 수익화 자동화 (v0.1.0)</title>
-<link rel="stylesheet" href="./assets/css/style.css?v=0.1.0">
+<title>블로그스팟 수익화 자동화 (v0.1.0-test-r4)</title>
+<link rel="stylesheet" href="./assets/css/style.css?v=0.1.0-r4">
 </head>
 <body>
 
@@ -202,13 +202,16 @@
     </div>
     <div class="card" id="editor-result-card" style="display:none;">
       <div class="row-between" style="margin-bottom:8px;">
-        <h2 style="margin:0;">📄 생성된 글 (요약 미리보기)</h2>
+        <h2 style="margin:0;">📄 생성된 글</h2>
         <span class="badge mock" id="editor-source-badge">Mock 글 생성</span>
       </div>
-      <p class="small-sub" id="editor-title-preview"></p>
+      <p class="small-sub" id="editor-title-preview" style="font-weight:700;"></p>
       <p class="hint" id="editor-fallback-notice" style="display:none;color:#dc2626;"></p>
-      <button class="btn btn-secondary" onclick="goScreen('preview')">전체 미리보기 보기</button>
-      <button class="btn btn-secondary" onclick="goScreen('quality')">품질검수 하러 가기</button>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
+        <button class="btn btn-secondary" onclick="goScreen('preview')">🔍 전체 미리보기</button>
+        <button class="btn btn-secondary" onclick="goScreen('quality')">📊 품질검수 하러 가기</button>
+        <button class="btn btn-primary" onclick="goScreen('publish')">📋 발행 준비 (복사/저장)</button>
+      </div>
     </div>
   </div>
 
@@ -236,7 +239,7 @@
     </div>
     <div class="card" id="quality-next-card" style="display:none;">
       <button class="btn btn-secondary" onclick="goScreen('preview')">미리보기로 이동</button>
-      <button class="btn btn-success" onclick="goScreen('blogger')">Blogger 저장하러 가기</button>
+      <button class="btn btn-success" onclick="goScreen('publish')">📋 발행 준비로 이동</button>
     </div>
   </div>
 
@@ -248,38 +251,99 @@
     </div>
     <div id="preview-empty"><p class="small-sub">아직 생성된 글이 없습니다.</p></div>
     <div class="preview-box" id="preview-content" style="display:none;"></div>
-    <button class="btn btn-success" id="preview-to-blogger-btn" style="display:none;" onclick="goScreen('blogger')">Blogger 저장하러 가기</button>
+    <button class="btn btn-success" id="preview-to-blogger-btn" style="display:none;" onclick="goScreen('publish')">📋 발행 준비로 이동</button>
     <button class="btn btn-ghost" id="preview-close-btn" style="display:none;" onclick="closePreview()">닫기</button>
   </div>
 
-  <!-- 화면 8. Blogger 저장 -->
-  <div class="screen" id="screen-blogger">
-    <div class="topbar" style="margin:-18px -16px 16px -16px;"><h1>📤 Blogger 저장</h1></div>
-    <div class="card">
-      <h2>🔗 Blogger 연결 상태</h2>
-      <div class="row-between">
-        <span class="small-sub">연결 상태</span>
-        <span class="badge" id="blogger-connect-status">미연결</span>
-      </div>
-      <button class="btn btn-secondary" onclick="handleBloggerConnect()">Blogger 연결하기</button>
-      <p class="hint">Worker가 연결되어 있으면 실제 Blogger 설정 상태(/blogger/status)를 확인합니다. 연결이 없거나 실패하면 Mock 연결로 자동 진행됩니다. Google OAuth Client Secret/Refresh Token은 절대 프론트에 저장되지 않고 Cloudflare Worker Secret에만 보관됩니다.</p>
-    </div>
-    <div class="card">
-      <h2>💾 글 저장</h2>
-      <p class="desc" id="blogger-score-info">현재 글의 품질 점수와 Blogger 연결 상태에 따라 가능한 저장 방식이 달라집니다.</p>
-      <button class="btn btn-disabled" id="btn-draft-save" onclick="handleSaveDraft()">임시저장 (기본)</button>
+  <!-- 화면 7b. 구 Blogger 화면 → screen-blogger는 유지하되 숨김/안내 처리 -->
+  <div class="screen" id="screen-blogger" style="display:none !important;">
+    <!-- Blogger 자동발행은 비활성화됨. screen-publish를 사용하세요 -->
+  </div>
 
-      <label>예약 날짜</label>
-      <div class="field-row">
-        <div><input type="date" id="schedule-date"></div>
-        <div><input type="time" id="schedule-time"></div>
-      </div>
-      <button class="btn btn-disabled" id="btn-schedule-save" onclick="handleSchedule()">예약발행 (70점 이상 필요)</button>
-      <p class="hint">⚠️ 바로 발행 기능은 없습니다. 임시저장 또는 예약발행만 가능합니다.</p>
+  <!-- 화면 8. 발행 준비 (HTML 복사 + BlogSpot 수동 업로드) -->
+  <div class="screen" id="screen-publish">
+    <div class="topbar" style="margin:-18px -16px 16px -16px;"><h1>📋 발행 준비</h1></div>
+
+    <div class="card" style="background:#eff6ff;border:1.5px solid #bfdbfe;">
+      <h2 style="color:#1d4ed8;">📌 BlogSpot 수동 업로드 방식</h2>
+      <p class="desc" style="color:#1e3a5f;">현재 버전은 Blogger 자동발행 대신 HTML을 복사해 BlogSpot에 수동 업로드하는 방식입니다.</p>
+      <p class="desc">BlogSpot 글쓰기 화면에서 <b>HTML 보기 모드</b>로 전환한 뒤 복사한 HTML을 붙여넣으세요.</p>
+      <p class="hint">Blogger 자동발행은 다음 버전에서 지원 예정입니다.</p>
     </div>
-    <div class="card">
-      <h2>📚 저장된 글 목록</h2>
-      <div id="blogger-saved-list"><p class="small-sub">아직 저장된 글이 없습니다.</p></div>
+
+    <div class="card" id="publish-empty-card">
+      <p class="small-sub">생성된 글이 없습니다. 글 생성 화면에서 먼저 글을 만들어주세요.</p>
+      <button class="btn btn-secondary" onclick="goScreen('editor')">✍️ 글 생성으로 이동</button>
+    </div>
+
+    <div id="publish-content-area" style="display:none;">
+      <div class="card">
+        <h2>📝 제목</h2>
+        <p id="publish-title-text" style="font-weight:700;font-size:15px;color:#1c2434;line-height:1.5;"></p>
+        <button class="btn btn-secondary" onclick="handleCopyTitle()">제목 복사</button>
+      </div>
+
+      <div class="card">
+        <h2>💬 메타 설명</h2>
+        <p id="publish-meta-text" class="small-sub"></p>
+        <button class="btn btn-secondary" onclick="handleCopyMeta()">메타 설명 복사</button>
+      </div>
+
+      <div class="card">
+        <h2>🏷️ 라벨 / 태그</h2>
+        <p id="publish-labels-text" class="small-sub"></p>
+        <button class="btn btn-secondary" onclick="handleCopyLabels()">라벨 복사</button>
+      </div>
+
+      <div class="card" id="publish-image-card">
+        <h2>🖼️ 대표 이미지 프롬프트</h2>
+        <p class="hint">아래 프롬프트를 AI 이미지 생성 도구(Midjourney, DALL·E, Stable Diffusion 등)에 붙여넣으면 대표 이미지를 만들 수 있습니다.</p>
+        <div style="background:#f8fafc;border-radius:10px;padding:12px;margin:8px 0;">
+          <p class="small-sub" style="font-weight:700;margin-bottom:4px;">영문 프롬프트 (권장)</p>
+          <p id="publish-img-prompt" class="small-sub" style="font-size:11.5px;word-break:break-all;"></p>
+        </div>
+        <div style="background:#f8fafc;border-radius:10px;padding:10px;margin:8px 0;">
+          <p class="small-sub" style="font-weight:700;margin-bottom:4px;">썸네일 문구</p>
+          <p id="publish-thumbnail-text" class="small-sub"></p>
+        </div>
+        <div style="background:#f8fafc;border-radius:10px;padding:10px;margin:8px 0;">
+          <p class="small-sub" style="font-weight:700;margin-bottom:4px;">이미지 alt 문구</p>
+          <p id="publish-alt-text" class="small-sub"></p>
+        </div>
+        <p class="hint" id="publish-img-style"></p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
+          <button class="btn btn-secondary" onclick="handleCopyImgPrompt()">프롬프트 복사</button>
+          <button class="btn btn-secondary" onclick="handleCopyAlt()">alt 문구 복사</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>📄 HTML 본문 복사</h2>
+        <p class="desc">BlogSpot 글쓰기 → HTML 모드로 전환 후 붙여넣으세요.</p>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <button class="btn btn-primary" onclick="handleCopyHtml()">✅ HTML 전체 복사</button>
+          <button class="btn btn-secondary" onclick="handleCopyAll()">📦 전체 패키지 복사 (제목+HTML+메타+라벨)</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>🕑 최근 생성 글</h2>
+        <p class="hint">최근 생성한 글 5개를 저장합니다.</p>
+        <div id="recent-posts-list"><p class="small-sub">저장된 글이 없습니다.</p></div>
+        <button class="btn btn-ghost" onclick="handleClearRecentPosts()" style="margin-top:8px;font-size:12px;color:#dc2626;">전체 삭제</button>
+      </div>
+
+      <div class="card">
+        <h2>📖 BlogSpot 업로드 순서</h2>
+        <ol style="margin:0;padding-left:20px;font-size:13px;line-height:2;color:#374151;">
+          <li>blogger.com 로그인 → 새 게시물</li>
+          <li>제목 입력 후 본문 영역에서 <b>HTML 보기</b> 클릭</li>
+          <li>복사한 HTML 붙여넣기</li>
+          <li>라벨(태그) 추가</li>
+          <li>대표 이미지 업로드 (AI 프롬프트로 생성)</li>
+          <li>임시저장 또는 예약 발행</li>
+        </ol>
+      </div>
     </div>
   </div>
 
@@ -361,7 +425,7 @@
     <button class="tab-item" data-tab="keyword" onclick="safeGoScreen('keyword')"><span class="icon">🔍</span>키워드</button>
     <button class="tab-item" data-tab="editor" onclick="safeGoScreen('editor')"><span class="icon">✍️</span>글생성</button>
     <button class="tab-item" data-tab="quality" onclick="safeGoScreen('quality')"><span class="icon">📊</span>검수</button>
-    <button class="tab-item" data-tab="blogger" onclick="safeGoScreen('blogger')"><span class="icon">🚀</span>발행</button>
+    <button class="tab-item" data-tab="publish" onclick="safeGoScreen('publish')"><span class="icon">📋</span>발행준비</button>
     <button class="tab-item" data-tab="settings" onclick="safeGoScreen('settings')"><span class="icon">⚙️</span>설정</button>
     <button class="tab-item" onclick="handleLogout()"><span class="icon">🚪</span>아웃</button>
   </div>
@@ -371,14 +435,15 @@
 </div>
 
 <!-- JS는 의존 순서대로 불러옵니다: config → storage → ui → auth → editor → quality-check → blogger → api → app -->
-<script src="./assets/js/config.js?v=0.1.0"></script>
-<script src="./assets/js/storage.js?v=0.1.0"></script>
-<script src="./assets/js/ui.js?v=0.1.0"></script>
-<script src="./assets/js/auth.js?v=0.1.0"></script>
-<script src="./assets/js/editor.js?v=0.1.0"></script>
-<script src="./assets/js/quality-check.js?v=0.1.0"></script>
-<script src="./assets/js/blogger.js?v=0.1.0"></script>
-<script src="./assets/js/api.js?v=0.1.0"></script>
-<script src="./assets/js/app.js?v=0.1.0"></script>
+<script src="./assets/js/config.js?v=0.1.0-r4"></script>
+<script src="./assets/js/storage.js?v=0.1.0-r4"></script>
+<script src="./assets/js/ui.js?v=0.1.0-r4"></script>
+<script src="./assets/js/auth.js?v=0.1.0-r4"></script>
+<script src="./assets/js/editor.js?v=0.1.0-r4"></script>
+<script src="./assets/js/quality-check.js?v=0.1.0-r4"></script>
+<script src="./assets/js/hero-image.js?v=0.1.0-r4"></script>
+<script src="./assets/js/blogger.js?v=0.1.0-r4"></script>
+<script src="./assets/js/api.js?v=0.1.0-r4"></script>
+<script src="./assets/js/app.js?v=0.1.0-r4"></script>
 </body>
 </html>
