@@ -671,9 +671,9 @@ function refreshPreviewScreen(){
   contentEl.innerHTML = post.html;
 }
 
-// 미리보기 상단 X 버튼 또는 하단 "닫기" 버튼을 누르면 글 생성 화면으로 돌아갑니다.
+// 미리보기 닫기: r8에서는 자동작성 화면으로 돌아갑니다.
 function closePreview(){
-  goScreen('editor');
+  safeGoScreen('autowrite');
 }
 
 /* ==============================================================
@@ -1021,21 +1021,21 @@ function renderBriefingResult(briefing) {
   `;
 }
 
-// 추천 키워드 클릭 → 키워드 수집 화면
+// 추천 키워드 클릭 → 핫이슈 화면 (r8: keyword → hotissue alias)
 function handleBriefingKeywordClick(keyword) {
-  goScreen('keyword');
-  const input = document.getElementById('kw-input');
+  goScreen('hotissue');
+  const input = document.getElementById('hotissue-keyword') || document.getElementById('kw-input');
   if (input) input.value = keyword;
   showToast(`"${keyword}" 키워드로 이동했습니다`);
 }
 
-// 추천 제목 클릭 → 편집기로 이동하며 키워드+제목 자동 입력
+// 추천 제목 클릭 → 자동작성 화면 (r8: editor → autowrite alias)
 function handleBriefingTitleClick(keyword, title) {
   saveLocal(STORAGE_KEYS.LAST_KEYWORD, keyword);
-  goScreen('editor');
-  const kwEl = document.getElementById('kw-input');
+  goScreen('autowrite');
+  const kwEl = document.getElementById('autowrite-keyword') || document.getElementById('kw-input');
   if (kwEl) kwEl.value = keyword;
-  showToast(`"${title}" 제목으로 글 생성 화면으로 이동했습니다`);
+  showToast(`"${title}" 제목으로 자동작성 화면으로 이동했습니다`);
 }
 
 // 브리핑 화면 진입 시 이전 결과 복원

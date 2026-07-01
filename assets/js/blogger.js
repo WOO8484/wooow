@@ -113,59 +113,58 @@ function refreshBloggerScreen(){
   const connectionMode = loadLocal(STORAGE_KEYS.BLOGGER_CONNECTION_MODE, API_MODE.MOCK);
   const statusEl = document.getElementById('blogger-connect-status');
 
-  // 연결 상태 배지 (모순 없게: connected=true & Worker이면 "연결됨")
-  if(connected && connectionMode === API_MODE.WORKER){
-    const blogName = loadLocal('bloggerBlogName', '');
-    statusEl.textContent = blogName ? `연결됨 (${blogName.slice(0,15)})` : '연결됨';
-    statusEl.className = 'badge success';
-  } else if(connected){
-    // connected이지만 Worker가 아닌 경우 (이 케이스는 이제 거의 발생하지 않음)
-    statusEl.textContent = '로컬 모드';
-    statusEl.className = 'badge mock';
-  } else {
-    const failReason = loadLocal(STORAGE_KEYS.BLOGGER_FAIL_REASON, '');
-    if(failReason){
-      statusEl.textContent = '연결 실패';
-      statusEl.className = 'badge';
-      statusEl.title = failReason; // 툴팁으로 상세 원인 표시
+  // 연결 상태 배지 — statusEl null guard 적용
+  if(statusEl){
+    if(connected && connectionMode === API_MODE.WORKER){
+      const blogName = loadLocal('bloggerBlogName', '');
+      statusEl.textContent = blogName ? `연결됨 (${blogName.slice(0,15)})` : '연결됨';
+      statusEl.className = 'badge success';
+    } else if(connected){
+      statusEl.textContent = '로컬 모드';
+      statusEl.className = 'badge mock';
     } else {
-      statusEl.textContent = '미연결';
-      statusEl.className = 'badge';
+      const failReason = loadLocal(STORAGE_KEYS.BLOGGER_FAIL_REASON, '');
+      if(failReason){
+        statusEl.textContent = '연결 실패';
+        statusEl.className = 'badge';
+        statusEl.title = failReason;
+      } else {
+        statusEl.textContent = '미연결';
+        statusEl.className = 'badge';
+      }
     }
   }
 
   const score = loadLocal(STORAGE_KEYS.QUALITY_SCORE, null);
-  const infoEl = document.getElementById('blogger-score-info');
+  // r8: blogger-score-info는 구버전 화면에 있음. pubmgmt-score-info 우선 사용
+  const infoEl = document.getElementById('pubmgmt-score-info') || document.getElementById('blogger-score-info');
   const draftBtn = document.getElementById('btn-draft-save');
   const scheduleBtn = document.getElementById('btn-schedule-save');
   const dailyLimit = getDailyPublishLimit();
   const todayCount = getTodaySavedCount();
   const limitReached = todayCount >= dailyLimit;
 
+  const _setInfo = (msg) => { if(infoEl) infoEl.textContent = msg; };
+  const _setBtns = (d, s) => { if(draftBtn) draftBtn.className = d; if(scheduleBtn) scheduleBtn.className = s; };
+
   if(!connected){
-    infoEl.textContent = '먼저 위에서 Blogger 연결을 진행해주세요.';
-    draftBtn.className = 'btn btn-disabled';
-    scheduleBtn.className = 'btn btn-disabled';
+    _setInfo('먼저 Blogger 연결을 진행해주세요.');
+    _setBtns('btn btn-disabled', 'btn btn-disabled');
   } else if(limitReached){
-    infoEl.textContent = `오늘 발행 제한(${dailyLimit}건)을 초과했습니다.`;
-    draftBtn.className = 'btn btn-disabled';
-    scheduleBtn.className = 'btn btn-disabled';
+    _setInfo(`오늘 발행 제한(${dailyLimit}건)을 초과했습니다.`);
+    _setBtns('btn btn-disabled', 'btn btn-disabled');
   } else if(score === null){
-    infoEl.textContent = '아직 품질검수를 진행하지 않았습니다. 먼저 검수를 진행해주세요.';
-    draftBtn.className = 'btn btn-disabled';
-    scheduleBtn.className = 'btn btn-disabled';
+    _setInfo('품질검수를 먼저 진행해주세요.');
+    _setBtns('btn btn-disabled', 'btn btn-disabled');
   } else if(score < QUALITY_DRAFT_MIN_SCORE){
-    infoEl.textContent = `현재 점수 ${score}점: ${QUALITY_DRAFT_MIN_SCORE}점 미만이라 저장이 제한됩니다.`;
-    draftBtn.className = 'btn btn-disabled';
-    scheduleBtn.className = 'btn btn-disabled';
+    _setInfo(`현재 점수 ${score}점: ${QUALITY_DRAFT_MIN_SCORE}점 미만이라 저장이 제한됩니다.`);
+    _setBtns('btn btn-disabled', 'btn btn-disabled');
   } else if(score < QUALITY_SCHEDULE_MIN_SCORE){
-    infoEl.textContent = `현재 점수 ${score}점: 임시저장만 가능합니다. (오늘 ${todayCount}/${dailyLimit}건)`;
-    draftBtn.className = 'btn btn-primary';
-    scheduleBtn.className = 'btn btn-disabled';
+    _setInfo(`현재 점수 ${score}점: 임시저장만 가능합니다. (오늘 ${todayCount}/${dailyLimit}건)`);
+    _setBtns('btn btn-primary', 'btn btn-disabled');
   } else {
-    infoEl.textContent = `현재 점수 ${score}점: 임시저장과 예약발행이 모두 가능합니다. (오늘 ${todayCount}/${dailyLimit}건)`;
-    draftBtn.className = 'btn btn-primary';
-    scheduleBtn.className = 'btn btn-success';
+    _setInfo(`현재 점수 ${score}점: 임시저장과 예약발행이 모두 가능합니다. (오늘 ${todayCount}/${dailyLimit}건)`);
+    _setBtns('btn btn-primary', 'btn btn-success');
   }
 
   renderBloggerSavedList();
@@ -195,6 +194,12 @@ async function handleSaveDraft(){
     return;
   }
 
+  // r8: labels 없으면 저장 차단
+  if (!Array.isArray(post.labels) || !post.labels.length) {
+    showToast('라벨이 없습니다. 품질 자동 보완 후 다시 시도해주세요.');
+    return;
+  }
+
   const connectionMode = loadLocal(STORAGE_KEYS.BLOGGER_CONNECTION_MODE, API_MODE.MOCK);
   const canUseWorker = connectionMode === API_MODE.WORKER && getApiMode() === API_MODE.WORKER;
 
@@ -203,7 +208,7 @@ async function handleSaveDraft(){
     const result = await saveBloggerDraft({
       title:        post.title,
       html:         post.html,
-      labels:       Array.isArray(post.labels) && post.labels.length ? post.labels : [post.keyword || '정보', '생활정보'],
+      labels:       Array.isArray(post.labels) && post.labels.length ? post.labels : [],
       qualityScore: score
     });
 
@@ -220,20 +225,18 @@ async function handleSaveDraft(){
       return;
     }
 
-    // 실제 저장 실패 → Mock으로 대체
+    // Worker 모드: 실패 시 Mock 저장 금지 — 오류만 표시
     const reason = (result.result && result.result.message) || result.error || 'Blogger 저장 실패';
-    addSavedPost(post, 'draft', score, null, { savedVia: SAVE_VIA.MOCK });
-    showToast(`Blogger 저장 실패, Mock 저장으로 계속 진행합니다. (${reason})`);
-    refreshBloggerScreen();
-    refreshDashboard();
+    showToast(`❌ Blogger 저장 실패: ${reason}`);
+    if (typeof showPubmgmtSaveResult === 'function') {
+      showPubmgmtSaveResult({ error: reason }, 'draft_fail');
+    }
+    refreshBloggerScreen && refreshBloggerScreen();
     return;
   }
 
-  // Mock 연결인 경우
-  addSavedPost(post, 'draft', score, null, { savedVia: SAVE_VIA.MOCK });
-  showToast('임시저장 완료 (Mock)');
-  refreshBloggerScreen();
-  refreshDashboard();
+  // 운영 모드: Worker/Blogger 연결이 아니면 저장 금지
+  showToast('❌ Worker/Blogger 연결 후 다시 시도해주세요.');
 }
 
 /* ----------------------------------------------------------
@@ -257,6 +260,12 @@ async function handleSchedule(){
   const post = loadLocal(STORAGE_KEYS.CURRENT_POST, null);
   if(!post){
     showToast('예약할 글이 없습니다');
+    return;
+  }
+
+  // labels 없으면 예약 차단
+  if (!Array.isArray(post.labels) || !post.labels.length) {
+    showToast('라벨이 없습니다. 품질 자동 보완 후 다시 시도해주세요.');
     return;
   }
 
@@ -287,7 +296,7 @@ async function handleSchedule(){
     const result = await scheduleBloggerPost({
       title:        post.title,
       html:         post.html,
-      labels:       Array.isArray(post.labels) && post.labels.length ? post.labels : [post.keyword || '정보', '생활정보'],
+      labels:       Array.isArray(post.labels) && post.labels.length ? post.labels : [],
       qualityScore: score,
       scheduledAt: scheduledAtISO
     });
@@ -305,20 +314,18 @@ async function handleSchedule(){
       return;
     }
 
-    // 실제 예약 실패 → Mock으로 대체
+    // Worker 모드: 실패 시 Mock 예약 금지 — 오류만 표시
     const reason = (result.result && result.result.message) || result.error || 'Blogger 예약 실패';
-    addSavedPost(post, 'scheduled', score, scheduledAtDisplay, { savedVia: SAVE_VIA.MOCK });
-    showToast(`Blogger 예약 실패, Mock 예약으로 계속 진행합니다. (${reason})`);
-    refreshBloggerScreen();
-    refreshDashboard();
+    showToast(`❌ Blogger 예약 실패: ${reason}`);
+    if (typeof showPubmgmtSaveResult === 'function') {
+      showPubmgmtSaveResult({ error: reason }, 'schedule_fail');
+    }
+    refreshBloggerScreen && refreshBloggerScreen();
     return;
   }
 
-  // Mock 연결인 경우
-  addSavedPost(post, 'scheduled', score, scheduledAtDisplay, { savedVia: SAVE_VIA.MOCK });
-  showToast('예약발행 완료 (Mock)');
-  refreshBloggerScreen();
-  refreshDashboard();
+  // 운영 모드: Worker/Blogger 연결이 아니면 예약 금지
+  showToast('❌ Worker/Blogger 연결 후 다시 시도해주세요.');
 }
 
 // 저장/예약 목록에 글을 추가하는 공통 함수 (중복 로직 통합)
