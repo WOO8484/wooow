@@ -59,4 +59,8 @@ function refreshCurrentScreen(name){
   if(name === 'briefing')  refreshBriefingScreen();
   if(name === 'settings')  refreshSettingsScreen();
   if(name === 'dashboard') refreshDashboard();
+  // r6 새 화면
+  if(name === 'hotissue')  typeof refreshHotissueScreen  === 'function' && refreshHotissueScreen();
+  if(name === 'autowrite') typeof refreshAutowriteScreen === 'function' && refreshAutowriteScreen();
+  if(name === 'pubmgmt')   typeof refreshPubmgmtScreen   === 'function' && refreshPubmgmtScreen();
 }

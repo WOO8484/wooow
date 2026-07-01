@@ -4,7 +4,7 @@
 
 // 앱 버전
 const APP_VERSION = "v0.1.0";
-const APP_DISPLAY_VERSION = "v0.1.0-test-r5";
+const APP_DISPLAY_VERSION = "v0.1.0-test-r6";
 
 // 기본 Worker URL
 const DEFAULT_WORKER_URL = "https://wooow.qudrnr84.workers.dev";

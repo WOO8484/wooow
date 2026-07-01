@@ -280,3 +280,159 @@ function handleClearRecentPosts() {
   renderRecentPostsList();
   showToast('전체 삭제 완료');
 }
+
+/* ============================================================
+   v0.1.0-test-r6 새 화면 핸들러
+   ============================================================ */
+
+// ── 자동작성 화면 옵션 토글 ──
+function toggleWriteOptions() {
+  const b = document.getElementById('write-options-body');
+  const t = document.getElementById('write-options-toggle');
+  if (!b) return;
+  const v = b.style.display !== 'none';
+  b.style.display = v ? 'none' : 'block';
+  if (t) t.textContent = v ? '펼치기 ▼' : '접기 ▲';
+}
+
+function toggleMaterialOptions() {
+  const b = document.getElementById('material-options-body');
+  const t = document.getElementById('material-options-toggle');
+  if (!b) return;
+  const v = b.style.display !== 'none';
+  b.style.display = v ? 'none' : 'block';
+  if (t) t.textContent = v ? '펼치기 ▼' : '접기 ▲';
+}
+
+// ── 자동작성 화면 글 생성: autowrite-keyword → editor-keyword 동기화 후 기존 함수 호출 ──
+function handleGeneratePostFromAutowrite() {
+  const awKw = document.getElementById('autowrite-keyword');
+  const edKw = document.getElementById('editor-keyword');
+  if (awKw && edKw && awKw.value.trim()) edKw.value = awKw.value.trim();
+  if (typeof handleGeneratePost === 'function') {
+    handleGeneratePost();
+  } else {
+    showToast('글 생성 함수를 찾을 수 없습니다');
+  }
+}
+
+function refreshAutowriteScreen() {
+  // editor-keyword → autowrite-keyword 동기화
+  const edKw = document.getElementById('editor-keyword');
+  const awKw = document.getElementById('autowrite-keyword');
+  if (edKw && awKw && edKw.value && !awKw.value) awKw.value = edKw.value;
+}
+
+// ── 발행관리 화면 ──
+function toggleManualCopy() {
+  const b = document.getElementById('manual-copy-body');
+  const t = document.getElementById('manual-copy-toggle');
+  if (!b) return;
+  const v = b.style.display !== 'none';
+  b.style.display = v ? 'none' : 'block';
+  if (t) t.textContent = v ? '펼치기 ▼' : '접기 ▲';
+}
+
+function handleBloggerConnectFromPubmgmt() {
+  if (typeof handleBloggerConnect === 'function') {
+    handleBloggerConnect().then(() => refreshPubmgmtScreen()).catch(() => refreshPubmgmtScreen());
+  }
+}
+
+function refreshPubmgmtScreen() {
+  // Blogger 연결 상태
+  const connected    = loadLocal(STORAGE_KEYS.BLOGGER_CONNECTED, false);
+  const connMode     = loadLocal(STORAGE_KEYS.BLOGGER_CONNECTION_MODE, API_MODE.MOCK);
+  const failReason   = loadLocal(STORAGE_KEYS.BLOGGER_FAIL_REASON, '');
+  const blogName     = loadLocal('bloggerBlogName', '');
+  const statusEl     = document.getElementById('pubmgmt-blogger-status');
+  const failBox      = document.getElementById('pubmgmt-fail-box');
+  const failReasonEl = document.getElementById('pubmgmt-fail-reason');
+
+  if (statusEl) {
+    if (connected && connMode === API_MODE.WORKER) {
+      statusEl.textContent = blogName ? `연결됨 (${blogName.slice(0,15)})` : '연결됨';
+      statusEl.className = 'badge success';
+      if (failBox) failBox.style.display = 'none';
+    } else if (failReason) {
+      statusEl.textContent = '연결 실패';
+      statusEl.className = 'badge';
+      if (failBox)      failBox.style.display = 'block';
+      if (failReasonEl) failReasonEl.textContent = failReason;
+    } else {
+      statusEl.textContent = '미연결';
+      statusEl.className = 'badge';
+      if (failBox) failBox.style.display = 'none';
+    }
+  }
+
+  // 글 유무
+  const post        = loadLocal(STORAGE_KEYS.CURRENT_POST, null);
+  const emptyCard   = document.getElementById('pubmgmt-empty-card');
+  const contentArea = document.getElementById('pubmgmt-content-area');
+  if (!post) {
+    if (emptyCard)   emptyCard.style.display   = 'block';
+    if (contentArea) contentArea.style.display = 'none';
+    return;
+  }
+  if (emptyCard)   emptyCard.style.display   = 'none';
+  if (contentArea) contentArea.style.display = 'block';
+
+  // 제목
+  const titleEl     = document.getElementById('pubmgmt-title');
+  const titleTextEl = document.getElementById('pubmgmt-title-text');
+  if (titleEl)     titleEl.textContent     = post.title || '(제목 없음)';
+  if (titleTextEl) titleTextEl.textContent = post.title || '(제목 없음)';
+
+  // 점수 + 버튼 상태 (blogger.js의 refreshBloggerScreen 로직 재활용)
+  const score       = loadLocal(STORAGE_KEYS.QUALITY_SCORE, null);
+  const scoreEl     = document.getElementById('pubmgmt-score');
+  const infoEl      = document.getElementById('pubmgmt-score-info');
+  const draftBtn    = document.getElementById('btn-draft-save');
+  const schedBtn    = document.getElementById('btn-schedule-save');
+  const dailyLimit  = typeof getDailyPublishLimit === 'function' ? getDailyPublishLimit() : DAILY_PUBLISH_LIMIT;
+  const todayCount  = typeof getTodaySavedCount   === 'function' ? getTodaySavedCount()   : 0;
+  const overLimit   = todayCount >= dailyLimit;
+
+  if (scoreEl) scoreEl.textContent = score !== null ? score + '점' : '검수 전';
+
+  const disableBtns = () => {
+    if (draftBtn) draftBtn.className = 'btn btn-disabled';
+    if (schedBtn) schedBtn.className = 'btn btn-disabled';
+  };
+
+  if (!connected) {
+    if (infoEl) infoEl.textContent = '먼저 Blogger를 연결해주세요.';
+    disableBtns();
+  } else if (overLimit) {
+    if (infoEl) infoEl.textContent = `오늘 발행 제한(${dailyLimit}건)을 초과했습니다.`;
+    disableBtns();
+  } else if (score === null) {
+    if (infoEl) infoEl.textContent = '품질검수를 먼저 진행해주세요. (자동작성 탭)';
+    disableBtns();
+  } else if (score < QUALITY_DRAFT_MIN_SCORE) {
+    if (infoEl) infoEl.textContent = `${score}점: ${QUALITY_DRAFT_MIN_SCORE}점 미만이라 저장 제한됩니다.`;
+    disableBtns();
+  } else if (score < QUALITY_SCHEDULE_MIN_SCORE) {
+    if (infoEl) infoEl.textContent = `${score}점: 임시저장만 가능합니다. (오늘 ${todayCount}/${dailyLimit}건)`;
+    if (draftBtn) draftBtn.className = 'btn btn-primary';
+    if (schedBtn) schedBtn.className = 'btn btn-disabled';
+  } else {
+    if (infoEl) infoEl.textContent = `${score}점: 임시저장 · 예약발행 모두 가능합니다. (오늘 ${todayCount}/${dailyLimit}건)`;
+    if (draftBtn) draftBtn.className = 'btn btn-primary';
+    if (schedBtn) schedBtn.className = 'btn btn-success';
+  }
+
+  // 이미지 프롬프트
+  const imgEl = document.getElementById('pubmgmt-img-prompt');
+  if (imgEl) {
+    const pr = post.imagePrompts?.mainPrompt ||
+      (typeof generateImagePrompts === 'function'
+        ? generateImagePrompts(post.keyword || '', post.title || '', post.summary || '')?.mainPrompt
+        : '');
+    imgEl.textContent = pr || '(이미지 프롬프트 없음)';
+  }
+
+  // 최근 생성 글
+  if (typeof renderRecentPostsList === 'function') renderRecentPostsList();
+}
