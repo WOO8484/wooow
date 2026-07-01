@@ -1,176 +1,161 @@
 <!DOCTYPE html>
 <!--
-  블로그스팟 수익화 자동화 프로그램 - GitHub 배포용 (v0.1.0-test-r6)
-  v0.1.0 보안 패치: Mock 로그인 제거, Worker 실제 인증 적용.
-  Google OAuth Client Secret / Refresh Token은 이 저장소 어디에도 넣지 마세요.
-  실제 운영 비밀값은 Cloudflare Worker Secret으로만 관리합니다. (worker/ 폴더 참고)
+  BPW — BlogSpot Profit Writer (v0.1.0-test-r7-operation)
+  GitHub Pages 배포용. 실제 Secret 값은 절대 포함하지 않습니다.
+  모든 API Key / OAuth Token은 Cloudflare Worker Secret으로만 관리합니다.
 -->
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>블로그스팟 수익화 자동화 (v0.1.0-test-r6)</title>
-<link rel="stylesheet" href="./assets/css/style.css?v=0.1.0-r6">
+<title>BPW — BlogSpot 자동화 (v0.1.0-test-r7-operation)</title>
+<link rel="stylesheet" href="./assets/css/style.css?v=0.1.0-r7-operation">
 </head>
 <body>
-
 <div id="app">
 
-  <!-- 화면 1. 로그인 -->
-  <div class="screen active" id="screen-login">
-    <div class="login-wrap">
-      <h1>Mr.woo</h1>
-      <input type="password" id="login-password" placeholder="비밀번호 입력" autocomplete="current-password">
-      <div class="error-msg" id="login-error"></div>
-      <button class="btn btn-primary" id="login-btn" onclick="handleLogin()">🚀 할 수 있다!</button>
+<!-- =========================================
+     화면 1. 로그인
+     ========================================= -->
+<div class="screen active" id="screen-login">
+  <div class="login-wrap">
+    <h1>Mr.woo</h1>
+    <input type="password" id="login-password" placeholder="비밀번호 입력" autocomplete="current-password">
+    <div class="error-msg" id="login-error"></div>
+    <button class="btn btn-primary" id="login-btn" onclick="handleLogin()">🚀 할 수 있다!</button>
+  </div>
+</div>
+
+<!-- =========================================
+     화면 2. 홈 (대시보드)
+     ========================================= -->
+<div class="screen" id="screen-dashboard">
+  <div class="topbar" style="margin:-18px -16px 16px -16px;">
+    <h1>BPW <small style="font-size:12px;font-weight:500;color:#6b7280;">v0.1.0-r7-op</small></h1>
+    <span class="badge mock" id="dash-mode-badge">Mock 모드</span>
+  </div>
+
+  <div class="card" style="background:linear-gradient(135deg,#eff6ff,#f0fdf4);border:1.5px solid #bfdbfe;text-align:center;padding:20px 16px;">
+    <p style="font-size:15px;font-weight:800;color:#1e3a5f;margin:0 0 6px;">핫이슈를 찾고, 글을 만들고,<br>Blogger 저장까지 한 번에 진행합니다.</p>
+    <p class="small-sub" style="margin:0;">Worker가 연결되면 모든 과정이 자동으로 진행됩니다.</p>
+  </div>
+
+  <div class="card">
+    <h2>📡 연결 상태</h2>
+    <div class="status-grid">
+      <div class="status-mini-card"><span class="mini-label">Worker</span><span class="mini-value" id="dash-status-worker"><span class="status-dot off"></span>미확인</span></div>
+      <div class="status-mini-card"><span class="mini-label">네이버</span><span class="mini-value" id="dash-status-naver"><span class="status-dot off"></span>대기</span></div>
+      <div class="status-mini-card"><span class="mini-label">AI</span><span class="mini-value" id="dash-status-ai"><span class="status-dot off"></span>대기</span></div>
+      <div class="status-mini-card"><span class="mini-label">Blogger</span><span class="mini-value" id="dash-blogger-status"><span class="status-dot off"></span>미연결</span></div>
+    </div>
+    <div class="row-between small-sub" style="margin-top:10px;">
+      <span>오늘 저장/예약</span><b id="dash-today-count">0건 / 3건</b>
     </div>
   </div>
 
-  <!-- 화면 2. 대시보드 -->
-  <!-- 화면 1. 홈 (r6: 자동 흐름 중심 재설계) -->
-  <div class="screen" id="screen-dashboard">
-    <div class="topbar" style="margin:-18px -16px 16px -16px;">
-      <h1>BPW <small style="font-size:13px;font-weight:500;color:#6b7280;">v0.1.0-test-r6</small></h1>
-      <span class="badge mock" id="dash-mode-badge">Mock 모드</span>
-    </div>
-
-    <!-- 소개 배너 -->
-    <div class="card" style="background:linear-gradient(135deg,#eff6ff 0%,#f0fdf4 100%);border:1.5px solid #bfdbfe;text-align:center;padding:20px 16px;">
-      <p style="font-size:15px;font-weight:800;color:#1e3a5f;margin:0 0 6px;">핫이슈를 찾고, 글을 만들고,<br>Blogger 저장까지 한 번에 진행합니다.</p>
-      <p class="small-sub" style="margin:0;">Worker가 연결되면 모든 과정이 자동으로 진행됩니다.</p>
-    </div>
-
-    <!-- 연결 상태 -->
-    <div class="card">
-      <h2>📡 연결 상태</h2>
-      <div class="status-grid">
-        <div class="status-mini-card"><span class="mini-label">Worker</span>
-          <span class="mini-value" id="dash-status-worker"><span class="status-dot off"></span>미확인</span></div>
-        <div class="status-mini-card"><span class="mini-label">네이버</span>
-          <span class="mini-value" id="dash-status-naver"><span class="status-dot off"></span>대기</span></div>
-        <div class="status-mini-card"><span class="mini-label">AI</span>
-          <span class="mini-value" id="dash-status-ai"><span class="status-dot off"></span>대기</span></div>
-        <div class="status-mini-card"><span class="mini-label">Blogger</span>
-          <span class="mini-value" id="dash-blogger-status"><span class="status-dot off"></span>미연결</span></div>
-      </div>
-      <div class="row-between small-sub" style="margin-top:10px;">
-        <span>오늘 저장/예약</span><b id="dash-today-count">0건 / 3건</b>
-      </div>
-    </div>
-
-    <!-- 자동 흐름 단계 버튼 -->
-    <div class="card">
-      <h2>⚡ 자동 글쓰기 흐름</h2>
-      <div style="display:flex;flex-direction:column;gap:8px;">
-        <button class="btn btn-primary" onclick="safeGoScreen('hotissue')" style="text-align:left;padding:14px 16px;">
-          <div style="font-size:18px;display:inline;margin-right:8px;">🔥</div><b>1단계: 핫이슈 찾기</b>
-          <div style="font-size:11px;font-weight:400;margin-top:2px;opacity:0.85;">키워드 입력 → 확장 검색 → 점수 기반 추천</div>
-        </button>
-        <button class="btn btn-secondary" onclick="safeGoScreen('autowrite')" style="text-align:left;padding:14px 16px;">
-          <div style="font-size:18px;display:inline;margin-right:8px;">✍️</div><b>2단계: 글 자동 생성</b>
-          <div style="font-size:11px;font-weight:400;margin-top:2px;opacity:0.85;">AI 글 생성 → 히어로 이미지 삽입 → 품질검수</div>
-        </button>
-        <button class="btn btn-secondary" onclick="safeGoScreen('pubmgmt')" style="text-align:left;padding:14px 16px;">
-          <div style="font-size:18px;display:inline;margin-right:8px;">🚀</div><b>3단계: Blogger 발행</b>
-          <div style="font-size:11px;font-weight:400;margin-top:2px;opacity:0.85;">임시저장 또는 예약발행</div>
-        </button>
-      </div>
-    </div>
-
-    <!-- 최근 생성 글 -->
-    <div class="card">
-      <h2>📄 최근 생성 글</h2>
-      <div id="dash-recent-list"><p class="small-sub">아직 저장된 글이 없습니다.</p></div>
+  <div class="card">
+    <h2>⚡ 자동 글쓰기 흐름</h2>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <button class="btn btn-primary" onclick="safeGoScreen('hotissue')" style="text-align:left;padding:14px 16px;">
+        <div style="font-size:18px;display:inline;margin-right:8px;">🔥</div><b>1단계: 핫이슈 찾기</b>
+        <div style="font-size:11px;font-weight:400;margin-top:2px;opacity:0.85;">키워드 → 확장 검색 → 점수 기반 추천</div>
+      </button>
+      <button class="btn btn-secondary" onclick="safeGoScreen('autowrite')" style="text-align:left;padding:14px 16px;">
+        <div style="font-size:18px;display:inline;margin-right:8px;">✍️</div><b>2단계: 글 자동 생성</b>
+        <div style="font-size:11px;font-weight:400;margin-top:2px;opacity:0.85;">AI 글 생성 → 히어로 이미지 → 품질검수</div>
+      </button>
+      <button class="btn btn-secondary" onclick="safeGoScreen('pubmgmt')" style="text-align:left;padding:14px 16px;">
+        <div style="font-size:18px;display:inline;margin-right:8px;">🚀</div><b>3단계: Blogger 발행</b>
+        <div style="font-size:11px;font-weight:400;margin-top:2px;opacity:0.85;">임시저장 또는 예약발행</div>
+      </button>
     </div>
   </div>
 
-  <!-- 화면 3. 키워드 수집 -->
-  <div class="screen" id="screen-keyword">
-    <div class="topbar" style="margin:-18px -16px 16px -16px;"><h1>🔍 키워드 수집</h1></div>
-    <div class="card">
-      <h2>키워드 입력</h2>
-      <p class="desc">다룰 주제 키워드를 입력하세요. Worker가 연결되어 있으면 실제 네이버 검색을 시도하고, 연결이 없거나 실패하면 자동으로 Mock 결과로 진행합니다.</p>
-      <label for="kw-input">키워드</label>
-      <input type="text" id="kw-input" placeholder="예: 2026 전기요금 누진세">
-      <button class="btn btn-primary" onclick="handleKeywordSearch()">최신정보 수집</button>
-      <p class="hint" id="kw-worker-mode-hint" style="display:none;color:#d97706;">⚠️ Worker URL은 저장되어 있지만 아직 연결 테스트를 하지 않았습니다. 실제 네이버 검색을 사용하려면 설정에서 Worker 연결 테스트를 먼저 성공시켜야 합니다. (지금은 Mock 결과로 진행됩니다)</p>
-    </div>
-    <div class="card" id="kw-result-card" style="display:none;">
-      <h2>✅ 수집된 참고자료</h2>
-      <div id="kw-result-list"></div>
-      <p class="hint">실제 네이버 검색 결과 또는 Mock 결과가 표시되며, 글 생성 시 출처로 함께 반영됩니다.</p>
-    </div>
+  <div class="card">
+    <h2>📄 최근 생성 글</h2>
+    <div id="dash-recent-list"><p class="small-sub">아직 저장된 글이 없습니다.</p></div>
+  </div>
+</div>
+
+<!-- =========================================
+     화면 3. 핫이슈 (screen-hotissue)
+     ========================================= -->
+<div class="screen" id="screen-hotissue">
+  <div class="topbar" style="margin:-18px -16px 16px -16px;"><h1>🔥 핫이슈 검색</h1></div>
+
+  <div class="card">
+    <h2>키워드 입력</h2>
+    <input type="text" id="hotissue-keyword" placeholder="예: 전기요금 누진세, 청년대출, AI 스마트폰" oninput="onHotissueKeywordInput()">
+    <button class="btn btn-primary" style="margin-top:10px;" onclick="handleHotissueSearch()">🔥 핫이슈 검색 시작</button>
+    <p class="hint">확장 키워드(전망·비교·혜택 등 10종)로 네이버를 검색해 핫이슈 점수를 분석합니다.<br>※ 최신순(sort=date) 검색은 r8 Worker 업데이트 예정</p>
   </div>
 
-  <!-- 화면 4. 나만의 글 재료 -->
-  <div class="screen" id="screen-material">
-    <div class="topbar" style="margin:-18px -16px 16px -16px;"><h1>🧩 나만의 글 재료</h1></div>
-    <div class="card">
-      <p class="desc">⚠️ 여기에 입력하지 않은 경험은 글에서 지어내지 않습니다. 입력이 없으면 가상 사례로 작성됩니다.</p>
-
-      <label>내가 겪은 상황 (없으면 비워두세요)</label>
-      <textarea id="mat-situation" placeholder="실제 겪은 상황이 있다면 적어주세요"></textarea>
-
-      <label>내 생각</label>
-      <textarea id="mat-opinion" placeholder="이 주제에 대한 나의 의견"></textarea>
-
-      <label>비교한 기준</label>
-      <textarea id="mat-criteria" placeholder="무엇을 기준으로 비교했는지"></textarea>
-
-      <label>주변 사례</label>
-      <textarea id="mat-around-case" placeholder="주변 사람의 사례가 있다면 적어주세요"></textarea>
-
-      <label>추천하는 이유</label>
-      <textarea id="mat-pros" placeholder="추천하는 이유"></textarea>
-
-      <label>비추천하는 이유 / 주의할 점</label>
-      <textarea id="mat-cons" placeholder="조심해야 할 점"></textarea>
-
-      <label>꼭 넣고 싶은 문장</label>
-      <textarea id="mat-mustline" placeholder="이 문장은 꼭 넣어주세요"></textarea>
-
-      <label>내 결론</label>
-      <textarea id="mat-conclusion" placeholder="최종 결론"></textarea>
-
-      <label>사진/캡처 설명</label>
-      <textarea id="mat-photo-desc" placeholder="넣고 싶은 사진/캡처에 대한 설명"></textarea>
-
-      <label>내가 직접 확인한 자료</label>
-      <textarea id="mat-verified-source" placeholder="직접 확인한 자료나 링크, 출처"></textarea>
-
-      <label>독자가 가장 궁금해할 질문</label>
-      <textarea id="mat-reader-question" placeholder="독자가 가장 궁금해할 만한 질문"></textarea>
-
-      <button class="btn btn-primary" onclick="saveMaterial()">재료 저장하기</button>
-      <p class="hint" id="material-saved-hint" style="display:none;color:#16a34a;">저장되었습니다 ✅</p>
-    </div>
+  <div class="card" id="hotissue-expand-card" style="display:none;">
+    <h2>🔍 확장 검색 키워드 (10개)</h2>
+    <div id="hotissue-expand-list" style="line-height:2;"></div>
   </div>
 
-  <!-- 화면 5. 글 생성 -->
-  <div class="screen" id="screen-editor">
-    <div class="topbar" style="margin:-18px -16px 16px -16px;"><h1>✍️ 글 생성</h1></div>
+  <div class="card" id="hotissue-loading-card" style="display:none;text-align:center;padding:24px 16px;">
+    <p class="desc">🔍 핫이슈 분석 중...</p>
+    <p class="small-sub">네이버 검색 + 확장 키워드 + 점수 계산 중입니다.</p>
+  </div>
 
+  <div id="hotissue-result-area"></div>
+
+  <div id="hotissue-raw-area" style="display:none;">
     <div class="card">
-      <h2>생성 모드</h2>
-      <p class="desc">속도와 분량을 먼저 선택하세요.</p>
-      <div class="mode-select-group" id="mode-select-group">
-        <label class="mode-option" data-mode="fast">
-          <input type="radio" name="generation-mode" value="fast">
-          <div><div class="mode-title">⚡ 빠른 생성</div><div class="mode-desc">속도 우선 · 800~1000자 · 참고자료 3개</div></div>
-        </label>
-        <label class="mode-option selected" data-mode="normal">
-          <input type="radio" name="generation-mode" value="normal" checked>
-          <div><div class="mode-title">📘 일반 생성</div><div class="mode-desc">균형형 · 1200~1500자 · 참고자료 5개</div></div>
-        </label>
-        <label class="mode-option" data-mode="advanced">
-          <input type="radio" name="generation-mode" value="advanced">
-          <div><div class="mode-title">🏆 고급 생성</div><div class="mode-desc">품질 우선 · 2000자 이상 · 참고자료 8개</div></div>
-        </label>
+      <div class="row-between">
+        <h2 style="margin:0;">📋 네이버 검색 원문</h2>
+        <button class="btn btn-ghost" style="font-size:12px;" onclick="toggleRawResults()">접기 ▲</button>
       </div>
+      <p class="small-sub" id="hotissue-raw-count" style="margin:6px 0;"></p>
+      <div id="hotissue-raw-blog"></div>
+      <div id="hotissue-raw-web"></div>
     </div>
+  </div>
+</div>
 
-    <div class="card">
-      <h2>글쓰기 옵션</h2>
+<!-- =========================================
+     화면 4. 자동작성 (screen-autowrite) — 중복 ID 없는 유일한 생성 화면
+     ========================================= -->
+<div class="screen" id="screen-autowrite">
+  <div class="topbar" style="margin:-18px -16px 16px -16px;"><h1>✍️ 자동작성</h1></div>
+
+  <!-- 키워드 -->
+  <div class="card">
+    <h2>키워드</h2>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <input type="text" id="autowrite-keyword" placeholder="키워드 입력 또는 핫이슈 탭에서 가져오기" style="flex:1;">
+      <button class="btn btn-ghost" style="white-space:nowrap;font-size:12px;" onclick="syncAutowriteKeyword()">가져오기</button>
+    </div>
+  </div>
+
+  <!-- 생성 모드 -->
+  <div class="card">
+    <h2>생성 모드</h2>
+    <div class="mode-select-group" id="mode-select-group">
+      <label class="mode-option" data-mode="fast">
+        <input type="radio" name="generation-mode" value="fast">
+        <div><div class="mode-title">⚡ 빠른 생성</div><div class="mode-desc">800~1000자</div></div>
+      </label>
+      <label class="mode-option selected" data-mode="normal">
+        <input type="radio" name="generation-mode" value="normal" checked>
+        <div><div class="mode-title">📘 일반 생성</div><div class="mode-desc">1200~1500자</div></div>
+      </label>
+      <label class="mode-option" data-mode="advanced">
+        <input type="radio" name="generation-mode" value="advanced">
+        <div><div class="mode-title">🏆 고급 생성</div><div class="mode-desc">2000자+</div></div>
+      </label>
+    </div>
+  </div>
+
+  <!-- 글쓰기 옵션 (접기) -->
+  <div class="card">
+    <div class="row-between" onclick="toggleWriteOptions()" style="cursor:pointer;user-select:none;">
+      <h2 style="margin:0;">✏️ 글쓰기 옵션</h2>
+      <span id="write-options-toggle" style="color:#6b7280;font-size:13px;">펼치기 ▼</span>
+    </div>
+    <div id="write-options-body" style="display:none;margin-top:12px;">
       <label>글쓴이 느낌</label>
       <select id="setting-writer-persona">
         <option value="neutral">성별 드러내지 않음</option>
@@ -179,115 +164,165 @@
       </select>
       <label>작성 톤</label>
       <select id="setting-writing-tone">
-        <option value="basic">기본형</option>
         <option value="friendly">친근한 블로그형</option>
+        <option value="basic">기본형</option>
         <option value="review">꼼꼼한 리뷰형</option>
         <option value="lifehack">생활 꿀팁형</option>
         <option value="expert">전문가 정리형</option>
       </select>
       <label>이모티콘 사용</label>
       <select id="setting-emoji-level">
-        <option value="none">사용 안 함</option>
         <option value="few">적게 사용</option>
+        <option value="none">사용 안 함</option>
         <option value="moderate">적당히 사용</option>
       </select>
-      <p class="hint">⚠️ 성별 고정관념 표현("여자라서", "남자라서" 등)은 사용하지 않으며, 자연스러운 어조 차이만 반영됩니다.</p>
-    </div>
-
-    <div class="card">
-      <h2>글 생성하기</h2>
-      <p class="desc">키워드와 나만의 재료를 바탕으로 글을 생성합니다. Worker가 연결되어 있으면 실제 AI 글 생성을 시도하고, 연결이 없거나 실패하면 자동으로 Mock 글로 진행합니다.</p>
-      <label>키워드 (수집 화면과 자동 연동)</label>
-      <input type="text" id="editor-keyword" placeholder="예: 2026 전기요금 누진세">
-      <button class="btn btn-primary" id="btn-generate-post" onclick="handleGeneratePost()">글 생성하기</button>
-      <button class="btn btn-ghost" id="btn-cancel-generate" style="display:none;" onclick="handleCancelGeneration()">생성 취소</button>
-      <div class="progress-box" id="generate-progress-box">
-        <div class="progress-text" id="generate-progress-text">준비 중...</div>
-        <div class="progress-sub">완료까지 20~60초 정도 걸릴 수 있습니다.</div>
-      </div>
-      <p class="hint" id="editor-worker-mode-hint" style="display:none;color:#d97706;">⚠️ Worker URL은 저장되어 있지만 아직 연결 테스트를 하지 않았습니다. 실제 AI 글 생성을 사용하려면 설정에서 Worker 연결 테스트를 먼저 성공시켜야 합니다. (지금은 Mock 글로 진행됩니다)</p>
-    </div>
-    <div class="card" id="editor-result-card" style="display:none;">
-      <div class="row-between" style="margin-bottom:8px;">
-        <h2 style="margin:0;">📄 생성된 글</h2>
-        <span class="badge mock" id="editor-source-badge">Mock 글 생성</span>
-      </div>
-      <p class="small-sub" id="editor-title-preview" style="font-weight:700;"></p>
-      <p class="hint" id="editor-fallback-notice" style="display:none;color:#dc2626;"></p>
-      <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
-        <button class="btn btn-secondary" onclick="goScreen('preview')">🔍 전체 미리보기</button>
-        <button class="btn btn-secondary" onclick="goScreen('quality')">📊 품질검수 하러 가기</button>
-        <div style="display:flex;flex-direction:column;gap:8px;"><button class="btn btn-primary" onclick="goScreen('publish')">📋 발행 준비 (HTML 복사)</button></div>
-      </div>
     </div>
   </div>
 
-  <!-- 화면 6. 품질검수 -->
-  <div class="screen" id="screen-quality">
-    <div class="topbar" style="margin:-18px -16px 16px -16px;"><h1>✅ 품질검수</h1></div>
-    <div class="card" id="quality-empty-card">
-      <p class="desc">아직 생성된 글이 없습니다. 먼저 글 생성을 진행해주세요.</p>
-      <button class="btn btn-secondary" onclick="goScreen('editor')">글 생성하러 가기</button>
+  <!-- 글 재료 (접기) -->
+  <div class="card">
+    <div class="row-between" onclick="toggleMaterialOptions()" style="cursor:pointer;user-select:none;">
+      <h2 style="margin:0;">🧩 글 재료 (선택)</h2>
+      <span id="material-options-toggle" style="color:#6b7280;font-size:13px;">펼치기 ▼</span>
     </div>
-    <div class="card" id="quality-result-card" style="display:none;">
-      <h2 style="text-align:center;">품질 점수</h2>
-      <div class="score-circle" id="quality-score-circle">0점</div>
-      <p class="small-sub" id="quality-score-msg" style="text-align:center;"></p>
-      <button class="btn btn-secondary" onclick="runQualityCheck()">다시 검사하기</button>
-    </div>
-    <div class="card" id="quality-gap-card" style="display:none;">
-      <h2>🛠️ 보완이 필요한 항목</h2>
-      <div id="quality-gap-list"></div>
-      <button class="btn btn-secondary" onclick="goScreen('editor')">보완 후 다시 생성</button>
-    </div>
-    <div class="card" id="quality-checklist-card" style="display:none;">
-      <h2>📋 세부 검사 항목</h2>
-      <div id="quality-checklist"></div>
-    </div>
-    <div class="card" id="quality-next-card" style="display:none;">
-      <button class="btn btn-secondary" onclick="goScreen('preview')">미리보기로 이동</button>
-      <button class="btn btn-success" onclick="safeGoScreen('pubmgmt')">🚀 발행관리로 이동</button>
+    <div id="material-options-body" style="display:none;margin-top:12px;">
+      <p class="hint">실제 경험이 있으면 적어주세요. 없으면 AI가 일반적인 내용으로 작성합니다.</p>
+      <label>내가 겪은 상황</label>
+      <textarea id="mat-situation" placeholder="실제 겪은 상황이 있다면 적어주세요"></textarea>
+      <label>내 생각 / 결론</label>
+      <textarea id="mat-opinion" placeholder="이 주제에 대한 나의 의견"></textarea>
+      <label>비교 기준 / 추천 이유</label>
+      <textarea id="mat-criteria" placeholder="무엇을 기준으로 비교했는지"></textarea>
+      <label>주의할 점 / 비추천 이유</label>
+      <textarea id="mat-cons" placeholder="조심해야 할 점"></textarea>
+      <label>꼭 넣고 싶은 문장</label>
+      <textarea id="mat-mustline" placeholder="이 문장은 꼭 넣어주세요"></textarea>
+      <!-- 기존 editor.js가 참조하는 id 유지 (숨김) -->
+      <textarea id="mat-around-case" style="display:none;"></textarea>
+      <textarea id="mat-pros" style="display:none;"></textarea>
+      <textarea id="mat-conclusion" style="display:none;"></textarea>
+      <textarea id="mat-photo-desc" style="display:none;"></textarea>
+      <textarea id="mat-verified-source" style="display:none;"></textarea>
+      <textarea id="mat-reader-question" style="display:none;"></textarea>
+      <button class="btn btn-secondary" onclick="saveMaterial()">재료 저장하기</button>
+      <p class="hint" id="material-saved-hint" style="display:none;color:#16a34a;">저장되었습니다 ✅</p>
     </div>
   </div>
 
-  <!-- 화면 7. 미리보기 -->
-  <div class="screen" id="screen-preview">
-    <div class="topbar preview-topbar" style="margin:-18px -16px 16px -16px;">
-      <h1>👀 미리보기</h1>
-      <button class="close-x-btn" onclick="closePreview()" aria-label="닫기">✕</button>
+  <!-- 생성 실행 -->
+  <div class="card">
+    <button class="btn btn-primary" id="btn-generate-post" onclick="handleGeneratePostFromAutowrite()" style="font-size:16px;padding:16px;">✍️ 글 자동 생성 시작</button>
+    <button class="btn btn-ghost" id="btn-cancel-generate" style="display:none;margin-top:8px;" onclick="handleCancelGeneration()">생성 취소</button>
+    <div class="progress-box" id="generate-progress-box">
+      <div class="progress-text" id="generate-progress-text">준비 중...</div>
+      <div class="progress-sub">완료까지 20~60초 정도 걸릴 수 있습니다.</div>
     </div>
-    <div id="preview-empty"><p class="small-sub">아직 생성된 글이 없습니다.</p></div>
-    <div class="preview-box" id="preview-content" style="display:none;"></div>
-    <button class="btn btn-success" id="preview-to-blogger-btn" style="display:none;" onclick="safeGoScreen('pubmgmt')">🚀 발행관리로 이동</button>
-    <button class="btn btn-ghost" id="preview-close-btn" style="display:none;" onclick="closePreview()">닫기</button>
+    <p class="hint" id="editor-worker-mode-hint" style="display:none;color:#d97706;">⚠️ Worker 연결 테스트를 먼저 해주세요. Mock 모드로 진행됩니다.</p>
   </div>
 
-  <!-- 화면 7b. Blogger 발행 (r5: 활성화) -->
-  <div class="screen" id="screen-blogger">
-    <div class="topbar" style="margin:-18px -16px 16px -16px;"><h1>🚀 Blogger 발행</h1></div>
+  <!-- 생성 결과 (자동작성 화면 내 표시) -->
+  <div class="card" id="editor-result-card" style="display:none;">
+    <div class="row-between" style="margin-bottom:8px;">
+      <h2 style="margin:0;">📄 생성된 글</h2>
+      <span class="badge mock" id="editor-source-badge">Mock</span>
+    </div>
+    <p id="editor-title-preview" style="font-weight:700;font-size:15px;line-height:1.5;margin-bottom:8px;"></p>
+    <p class="hint" id="editor-fallback-notice" style="display:none;color:#dc2626;margin-bottom:8px;"></p>
 
-    <!-- 연결 상태 -->
-    <div class="card">
-      <h2>🔗 Blogger 연결 상태</h2>
-      <div class="row-between">
-        <span class="small-sub">연결 상태</span>
-        <span class="badge" id="blogger-connect-status">미연결</span>
-      </div>
-      <div id="blogger-fail-box" style="display:none;margin-top:10px;padding:10px 12px;background:#fef2f2;border-radius:10px;border:1px solid #fecaca;">
-        <p style="margin:0 0 4px 0;font-size:12px;font-weight:700;color:#991b1b;">⚠️ 연결 실패 원인</p>
-        <p id="blogger-fail-reason" style="margin:0;font-size:12px;color:#7f1d1d;line-height:1.6;"></p>
-      </div>
-      <button class="btn btn-secondary" style="margin-top:12px;" onclick="handleBloggerConnect()">Blogger 연결 확인</button>
-      <p class="hint">Worker /blogger/status를 호출해 실제 연결 상태를 확인합니다. GOOGLE_REFRESH_TOKEN / BLOGGER_BLOG_ID가 Cloudflare에 등록되어 있어야 합니다.</p>
+    <!-- 생성 요약 정보 -->
+    <div id="autowrite-result-meta" style="background:#f8fafc;border-radius:10px;padding:10px 12px;margin-bottom:10px;display:none;">
+      <div class="row-between small-sub" style="margin-bottom:4px;"><span>메타 설명</span></div>
+      <p id="autowrite-meta-preview" class="small-sub" style="margin:0;font-size:11.5px;"></p>
+      <div class="row-between small-sub" style="margin-top:8px;margin-bottom:4px;"><span>라벨</span></div>
+      <p id="autowrite-labels-preview" class="small-sub" style="margin:0;font-size:11.5px;"></p>
     </div>
 
-    <!-- 글 저장 -->
-    <div class="card">
-      <h2>💾 글 저장</h2>
-      <p class="desc" id="blogger-score-info">생성된 글과 품질점수에 따라 저장 방식이 결정됩니다.</p>
-      <button class="btn btn-disabled" id="btn-draft-save" onclick="handleSaveDraft()">💾 임시저장 (50점 이상)</button>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <button class="btn btn-secondary" onclick="goScreen('preview')">🔍 미리보기</button>
+      <button class="btn btn-secondary" onclick="runQualityCheckAndShow()">📊 품질검수</button>
+      <button class="btn btn-primary"   onclick="safeGoScreen('pubmgmt')">🚀 발행관리로 이동</button>
+    </div>
+  </div>
 
-      <label style="margin-top:14px;display:block;">예약 발행 날짜 / 시간</label>
+  <!-- 품질검수 결과 (자동작성 화면 내) -->
+  <div id="quality-result-card" style="display:none;" class="card">
+    <div class="row-between" style="margin-bottom:12px;">
+      <h2 style="margin:0;">📊 품질 점수</h2>
+      <div class="score-circle" id="quality-score-circle" style="width:52px;height:52px;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;border-radius:50%;background:#2563eb;color:#fff;">0점</div>
+    </div>
+    <p class="small-sub" id="quality-score-msg" style="margin-bottom:10px;"></p>
+
+    <!-- 자동 보완 버튼 -->
+    <button class="btn btn-secondary" style="background:#f0fdf4;border:1.5px solid #bbf7d0;color:#16a34a;" onclick="runAutoRepair()">🔧 품질 자동 보완</button>
+    <button class="btn btn-ghost" style="font-size:12px;margin-top:4px;" onclick="runQualityCheckAndShow()">다시 검사</button>
+
+    <!-- 보완 필요 항목 -->
+    <div id="quality-gap-list" style="margin-top:10px;"></div>
+
+    <!-- 세부 항목 (접기) -->
+    <div style="margin-top:8px;">
+      <button class="btn btn-ghost" style="font-size:12px;" onclick="toggleQualityDetail()">세부 항목 보기 ▼</button>
+      <div id="quality-checklist" style="display:none;margin-top:8px;"></div>
+    </div>
+
+    <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px;">
+      <button class="btn btn-primary" onclick="safeGoScreen('pubmgmt')">🚀 발행관리로 이동</button>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================
+     화면 5. 발행관리 (screen-pubmgmt)
+     ========================================= -->
+<div class="screen" id="screen-pubmgmt">
+  <div class="topbar" style="margin:-18px -16px 16px -16px;"><h1>🚀 발행관리</h1></div>
+
+  <!-- Blogger 연결 -->
+  <div class="card">
+    <h2>🔗 Blogger 연결</h2>
+    <div class="row-between">
+      <span class="small-sub">연결 상태</span>
+      <span class="badge" id="pubmgmt-blogger-status">미연결</span>
+    </div>
+    <div id="pubmgmt-fail-box" style="display:none;margin-top:8px;padding:10px 12px;background:#fef2f2;border-radius:10px;border:1px solid #fecaca;">
+      <p style="margin:0 0 4px;font-size:12px;font-weight:700;color:#991b1b;">⚠️ 연결 실패 원인</p>
+      <p id="pubmgmt-fail-reason" style="margin:0;font-size:12px;color:#7f1d1d;line-height:1.6;"></p>
+    </div>
+    <button class="btn btn-secondary" style="margin-top:10px;" onclick="handleBloggerConnectFromPubmgmt()">Blogger 연결 확인</button>
+    <p id="pubmgmt-blogger-blog-name" class="small-sub" style="display:none;margin-top:6px;color:#16a34a;"></p>
+  </div>
+
+  <!-- 글 없음 안내 -->
+  <div class="card" id="pubmgmt-empty-card">
+    <p class="small-sub">생성된 글이 없습니다. 자동작성 탭에서 먼저 글을 만들어주세요.</p>
+    <button class="btn btn-secondary" onclick="safeGoScreen('autowrite')">✍️ 자동작성으로 이동</button>
+  </div>
+
+  <!-- 글 있을 때 -->
+  <div id="pubmgmt-content-area" style="display:none;">
+
+    <!-- 현재 글 요약 -->
+    <div class="card">
+      <h2>📄 현재 글</h2>
+      <p id="pubmgmt-title" style="font-weight:700;font-size:14px;line-height:1.5;"></p>
+      <div class="row-between small-sub" style="margin-top:6px;">
+        <span>품질점수</span><b id="pubmgmt-score">—</b>
+      </div>
+      <p id="pubmgmt-score-info" class="hint" style="margin-top:4px;"></p>
+      <button class="btn btn-ghost" style="font-size:12px;margin-top:8px;" onclick="goScreen('preview')">🔍 미리보기</button>
+    </div>
+
+    <!-- 발행 전 체크리스트 -->
+    <div class="card" id="pubmgmt-checklist-card">
+      <h2>✅ 발행 전 체크리스트</h2>
+      <div id="pubmgmt-checklist-list" style="display:flex;flex-direction:column;gap:4px;font-size:12px;"></div>
+    </div>
+
+    <!-- Blogger 발행 -->
+    <div class="card">
+      <h2>💾 Blogger 발행</h2>
+      <button class="btn btn-disabled" id="btn-draft-save" onclick="handleSaveDraft()" style="margin-bottom:8px;">💾 임시저장 (50점 이상)</button>
+      <label style="margin-top:10px;display:block;">예약 날짜 / 시간</label>
       <div class="field-row">
         <div><input type="date" id="schedule-date"></div>
         <div><input type="time" id="schedule-time"></div>
@@ -296,454 +331,164 @@
       <p class="hint">⚠️ 바로 발행 기능은 없습니다. 임시저장 또는 예약발행만 지원합니다.</p>
     </div>
 
-    <!-- 저장된 글 목록 -->
+    <!-- 저장 결과 -->
+    <div class="card" id="pubmgmt-save-result" style="display:none;">
+      <h2>📋 저장 결과</h2>
+      <div id="pubmgmt-save-result-content"></div>
+    </div>
+
+    <!-- 수동 복사 (보조, 접기) -->
     <div class="card">
-      <h2>📚 저장된 글 목록</h2>
-      <button class="btn btn-ghost" style="margin-bottom:10px;font-size:13px;" onclick="handleLoadBloggerList()">🔄 목록 새로 고침</button>
-      <div id="blogger-saved-list"><p class="small-sub">목록을 불러오려면 위 버튼을 눌러주세요.</p></div>
-    </div>
-  </div>
-
-  <!-- 화면 8. 발행 준비 (HTML 복사 + BlogSpot 수동 업로드) -->
-  <div class="screen" id="screen-publish">
-    <div class="topbar" style="margin:-18px -16px 16px -16px;"><h1>📋 발행 준비</h1></div>
-
-    <div class="card" style="background:#eff6ff;border:1.5px solid #bfdbfe;">
-      <h2 style="color:#1d4ed8;">📋 발행 준비</h2>
-      <p class="desc" style="color:#1e3a5f;">HTML을 복사해 BlogSpot에 수동 업로드하거나, <b>Blogger 발행 탭</b>에서 직접 임시저장·예약발행할 수 있습니다.</p>
-      <p class="desc">BlogSpot 글쓰기 화면에서 <b>HTML 보기 모드</b>로 전환한 뒤 복사한 HTML을 붙여넣으세요.</p>
-      <p class="hint">Blogger 자동발행: 연결 가능 ✅ / 임시저장 가능 ✅ / 예약발행 테스트 필요</p>
-    </div>
-
-    <div class="card" id="publish-empty-card">
-      <p class="small-sub">생성된 글이 없습니다. 글 생성 화면에서 먼저 글을 만들어주세요.</p>
-      <button class="btn btn-secondary" onclick="goScreen('editor')">✍️ 글 생성으로 이동</button>
-    </div>
-
-    <div id="publish-content-area" style="display:none;">
-      <div class="card">
-        <h2>📝 제목</h2>
-        <p id="publish-title-text" style="font-weight:700;font-size:15px;color:#1c2434;line-height:1.5;"></p>
-        <button class="btn btn-secondary" onclick="handleCopyTitle()">제목 복사</button>
+      <div class="row-between" onclick="toggleManualCopy()" style="cursor:pointer;user-select:none;">
+        <h2 style="margin:0;">📋 수동 복사 (보조)</h2>
+        <span id="manual-copy-toggle" style="color:#6b7280;font-size:13px;">펼치기 ▼</span>
       </div>
-
-      <div class="card">
-        <h2>💬 메타 설명</h2>
-        <p id="publish-meta-text" class="small-sub"></p>
-        <button class="btn btn-secondary" onclick="handleCopyMeta()">메타 설명 복사</button>
-      </div>
-
-      <div class="card">
-        <h2>🏷️ 라벨 / 태그</h2>
-        <p id="publish-labels-text" class="small-sub"></p>
-        <button class="btn btn-secondary" onclick="handleCopyLabels()">라벨 복사</button>
-      </div>
-
-      <div class="card" id="publish-image-card">
-        <h2>🖼️ 대표 이미지 프롬프트</h2>
-        <p class="hint">아래 프롬프트를 AI 이미지 생성 도구(Midjourney, DALL·E, Stable Diffusion 등)에 붙여넣으면 대표 이미지를 만들 수 있습니다.</p>
-        <div style="background:#f8fafc;border-radius:10px;padding:12px;margin:8px 0;">
-          <p class="small-sub" style="font-weight:700;margin-bottom:4px;">영문 프롬프트 (권장)</p>
-          <p id="publish-img-prompt" class="small-sub" style="font-size:11.5px;word-break:break-all;"></p>
-        </div>
-        <div style="background:#f8fafc;border-radius:10px;padding:10px;margin:8px 0;">
-          <p class="small-sub" style="font-weight:700;margin-bottom:4px;">썸네일 문구</p>
-          <p id="publish-thumbnail-text" class="small-sub"></p>
-        </div>
-        <div style="background:#f8fafc;border-radius:10px;padding:10px;margin:8px 0;">
-          <p class="small-sub" style="font-weight:700;margin-bottom:4px;">이미지 alt 문구</p>
-          <p id="publish-alt-text" class="small-sub"></p>
-        </div>
-        <p class="hint" id="publish-img-style"></p>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
-          <button class="btn btn-secondary" onclick="handleCopyImgPrompt()">프롬프트 복사</button>
-          <button class="btn btn-secondary" onclick="handleCopyAlt()">alt 문구 복사</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>📄 HTML 본문 복사</h2>
-        <p class="desc">BlogSpot 글쓰기 → HTML 모드로 전환 후 붙여넣으세요.</p>
+      <p class="small-sub" style="margin-top:6px;">HTML 복사는 자동발행이 실패했을 때 사용하는 보조 기능입니다.</p>
+      <div id="manual-copy-body" style="display:none;margin-top:12px;">
         <div style="display:flex;flex-direction:column;gap:8px;">
-          <button class="btn btn-primary" onclick="handleCopyHtml()">✅ HTML 전체 복사</button>
-          <button class="btn btn-secondary" onclick="handleCopyAll()">📦 전체 패키지 복사 (제목+HTML+메타+라벨)</button>
+          <button class="btn btn-secondary" onclick="handleCopyTitle()">제목 복사</button>
+          <button class="btn btn-secondary" onclick="handleCopyMeta()">메타 설명 복사</button>
+          <button class="btn btn-secondary" onclick="handleCopyLabels()">라벨/태그 복사</button>
+          <button class="btn btn-primary"   onclick="handleCopyHtml()">✅ HTML 전체 복사</button>
+          <button class="btn btn-secondary" onclick="handleCopyAll()">📦 전체 패키지 복사</button>
         </div>
-      </div>
-
-      <div class="card">
-        <h2>🕑 최근 생성 글</h2>
-        <p class="hint">최근 생성한 글 5개를 저장합니다.</p>
-        <div id="recent-posts-list"><p class="small-sub">저장된 글이 없습니다.</p></div>
-        <button class="btn btn-ghost" onclick="handleClearRecentPosts()" style="margin-top:8px;font-size:12px;color:#dc2626;">전체 삭제</button>
-      </div>
-
-      <div class="card">
-        <h2>📖 BlogSpot 업로드 순서</h2>
-        <ol style="margin:0;padding-left:20px;font-size:13px;line-height:2;color:#374151;">
-          <li>blogger.com 로그인 → 새 게시물</li>
-          <li>제목 입력 후 본문 영역에서 <b>HTML 보기</b> 클릭</li>
-          <li>복사한 HTML 붙여넣기</li>
-          <li>라벨(태그) 추가</li>
-          <li>대표 이미지 업로드 (AI 프롬프트로 생성)</li>
-          <li>임시저장 또는 예약 발행</li>
-        </ol>
-      </div>
-    </div>
-  </div>
-
-  <!-- ======================================================
-       r6 신규 화면 1: 핫이슈 (screen-hotissue)
-       ====================================================== -->
-  <div class="screen" id="screen-hotissue">
-    <div class="topbar" style="margin:-18px -16px 16px -16px;"><h1>🔥 핫이슈 검색</h1></div>
-
-    <div class="card">
-      <h2>키워드 입력</h2>
-      <input type="text" id="hotissue-keyword" placeholder="예: 전기요금 누진세, 청년대출, AI 스마트폰" oninput="onHotissueKeywordInput()">
-      <button class="btn btn-primary" style="margin-top:10px;" onclick="handleHotissueSearch()">🔥 핫이슈 검색 시작</button>
-      <p class="hint">입력한 키워드와 확장 키워드(전망·비교·혜택 등)로 네이버를 검색해 핫이슈 점수를 분석합니다.<br>최신순 검색(sort=date)은 r7 Worker 업데이트에서 지원 예정입니다.</p>
-    </div>
-
-    <!-- 확장 키워드 미리보기 -->
-    <div class="card" id="hotissue-expand-card" style="display:none;">
-      <h2>🔍 확장 검색 키워드 (10개)</h2>
-      <div id="hotissue-expand-list" style="line-height:2;"></div>
-    </div>
-
-    <!-- 로딩 -->
-    <div class="card" id="hotissue-loading-card" style="display:none;text-align:center;padding:24px 16px;">
-      <p class="desc">🔍 핫이슈 분석 중...</p>
-      <p class="small-sub">네이버 검색 + 확장 키워드 + 점수 계산 중입니다.</p>
-    </div>
-
-    <!-- 추천 카드 결과 -->
-    <div id="hotissue-result-area"></div>
-
-    <!-- 원문 결과 (접기/펼치기) -->
-    <div id="hotissue-raw-area" style="display:none;">
-      <div class="card">
-        <div class="row-between">
-          <h2 style="margin:0;">📋 네이버 검색 원문</h2>
-          <button class="btn btn-ghost" style="font-size:12px;" onclick="toggleRawResults()">접기 ▲</button>
-        </div>
-        <p class="small-sub" id="hotissue-raw-count" style="margin:6px 0;"></p>
-        <div id="hotissue-raw-blog"></div>
-        <div id="hotissue-raw-web"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ======================================================
-       r6 신규 화면 2: 자동작성 (screen-autowrite)
-       ====================================================== -->
-  <div class="screen" id="screen-autowrite">
-    <div class="topbar" style="margin:-18px -16px 16px -16px;"><h1>✍️ 자동작성</h1></div>
-
-    <!-- 키워드 -->
-    <div class="card">
-      <h2>키워드</h2>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <input type="text" id="autowrite-keyword" placeholder="키워드 입력 또는 핫이슈 탭에서 가져오기" style="flex:1;">
-        <button class="btn btn-ghost" style="white-space:nowrap;font-size:12px;" onclick="syncAutowriteKeyword()">가져오기</button>
-      </div>
-    </div>
-
-    <!-- 생성 모드 -->
-    <div class="card">
-      <h2>생성 모드</h2>
-      <div class="mode-select-group" id="mode-select-group">
-        <label class="mode-option" data-mode="fast">
-          <input type="radio" name="generation-mode" value="fast">
-          <div><div class="mode-title">⚡ 빠른 생성</div><div class="mode-desc">800~1000자</div></div>
-        </label>
-        <label class="mode-option selected" data-mode="normal">
-          <input type="radio" name="generation-mode" value="normal" checked>
-          <div><div class="mode-title">📘 일반 생성</div><div class="mode-desc">1200~1500자</div></div>
-        </label>
-        <label class="mode-option" data-mode="advanced">
-          <input type="radio" name="generation-mode" value="advanced">
-          <div><div class="mode-title">🏆 고급 생성</div><div class="mode-desc">2000자+</div></div>
-        </label>
-      </div>
-    </div>
-
-    <!-- 글쓰기 옵션 (접기) -->
-    <div class="card">
-      <div class="row-between" onclick="toggleWriteOptions()" style="cursor:pointer;user-select:none;">
-        <h2 style="margin:0;">✏️ 글쓰기 옵션</h2>
-        <span id="write-options-toggle" style="color:#6b7280;font-size:13px;">펼치기 ▼</span>
-      </div>
-      <div id="write-options-body" style="display:none;margin-top:12px;">
-        <label>글쓴이 느낌</label>
-        <select id="setting-writer-persona">
-          <option value="neutral">성별 드러내지 않음</option>
-          <option value="male">남성 운영자 느낌</option>
-          <option value="female">여성 운영자 느낌</option>
-        </select>
-        <label>작성 톤</label>
-        <select id="setting-writing-tone">
-          <option value="friendly">친근한 블로그형</option>
-          <option value="basic">기본형</option>
-          <option value="review">꼼꼼한 리뷰형</option>
-          <option value="lifehack">생활 꿀팁형</option>
-          <option value="expert">전문가 정리형</option>
-        </select>
-        <label>이모티콘 사용</label>
-        <select id="setting-emoji-level">
-          <option value="few">적게 사용</option>
-          <option value="none">사용 안 함</option>
-          <option value="moderate">적당히 사용</option>
-        </select>
-      </div>
-    </div>
-
-    <!-- 글 재료 (접기) -->
-    <div class="card">
-      <div class="row-between" onclick="toggleMaterialOptions()" style="cursor:pointer;user-select:none;">
-        <h2 style="margin:0;">🧩 글 재료 (선택)</h2>
-        <span id="material-options-toggle" style="color:#6b7280;font-size:13px;">펼치기 ▼</span>
-      </div>
-      <div id="material-options-body" style="display:none;margin-top:12px;">
-        <p class="hint">실제 경험이 있으면 적어주세요. 없으면 AI가 일반적인 내용으로 작성합니다.</p>
-        <label>내가 겪은 상황</label>
-        <textarea id="mat-situation" placeholder="실제 겪은 상황이 있다면 적어주세요"></textarea>
-        <label>내 생각 / 결론</label>
-        <textarea id="mat-opinion" placeholder="이 주제에 대한 나의 의견"></textarea>
-        <label>비교 기준 / 추천 이유</label>
-        <textarea id="mat-criteria" placeholder="무엇을 기준으로 비교했는지"></textarea>
-        <label>주의할 점 / 비추천 이유</label>
-        <textarea id="mat-cons" placeholder="조심해야 할 점"></textarea>
-        <label>꼭 넣고 싶은 문장</label>
-        <textarea id="mat-mustline" placeholder="이 문장은 꼭 넣어주세요"></textarea>
-        <!-- 기존 id 유지 (비어있어도 JS에서 참조됨) -->
-        <textarea id="mat-around-case" style="display:none;"></textarea>
-        <textarea id="mat-pros" style="display:none;"></textarea>
-        <textarea id="mat-conclusion" style="display:none;"></textarea>
-        <textarea id="mat-photo-desc" style="display:none;"></textarea>
-        <textarea id="mat-verified-source" style="display:none;"></textarea>
-        <textarea id="mat-reader-question" style="display:none;"></textarea>
-        <button class="btn btn-secondary" onclick="saveMaterial()">재료 저장하기</button>
-        <p class="hint" id="material-saved-hint" style="display:none;color:#16a34a;">저장되었습니다 ✅</p>
-      </div>
-    </div>
-
-    <!-- 생성 실행 -->
-    <div class="card">
-      <button class="btn btn-primary" id="btn-generate-post" onclick="handleGeneratePostFromAutowrite()" style="font-size:16px;padding:16px;">✍️ 글 자동 생성 시작</button>
-      <button class="btn btn-ghost" id="btn-cancel-generate" style="display:none;margin-top:8px;" onclick="handleCancelGeneration()">생성 취소</button>
-      <div class="progress-box" id="generate-progress-box">
-        <div class="progress-text" id="generate-progress-text">준비 중...</div>
-        <div class="progress-sub">완료까지 20~60초 정도 걸릴 수 있습니다.</div>
-      </div>
-      <p class="hint" id="editor-worker-mode-hint" style="display:none;color:#d97706;">⚠️ Worker URL이 설정되어 있지만 연결 테스트를 하지 않았습니다. Mock 모드로 진행됩니다.</p>
-    </div>
-
-    <!-- 생성 결과 -->
-    <div class="card" id="editor-result-card" style="display:none;">
-      <div class="row-between" style="margin-bottom:8px;">
-        <h2 style="margin:0;">📄 생성된 글</h2>
-        <span class="badge mock" id="editor-source-badge">Mock</span>
-      </div>
-      <p id="editor-title-preview" style="font-weight:700;font-size:15px;line-height:1.5;"></p>
-      <p class="hint" id="editor-fallback-notice" style="display:none;color:#dc2626;"></p>
-      <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
-        <button class="btn btn-secondary" onclick="goScreen('preview')">🔍 미리보기</button>
-        <button class="btn btn-secondary" onclick="runQualityCheck();safeGoScreen('quality')">📊 품질검수</button>
-        <button class="btn btn-primary" onclick="safeGoScreen('pubmgmt')">🚀 발행관리로 이동</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ======================================================
-       r6 신규 화면 3: 발행관리 (screen-pubmgmt)
-       ====================================================== -->
-  <div class="screen" id="screen-pubmgmt">
-    <div class="topbar" style="margin:-18px -16px 16px -16px;"><h1>🚀 발행관리</h1></div>
-
-    <!-- Blogger 연결 -->
-    <div class="card">
-      <h2>🔗 Blogger 연결</h2>
-      <div class="row-between">
-        <span class="small-sub">연결 상태</span>
-        <span class="badge" id="pubmgmt-blogger-status">미연결</span>
-      </div>
-      <div id="pubmgmt-fail-box" style="display:none;margin-top:8px;padding:10px 12px;background:#fef2f2;border-radius:10px;border:1px solid #fecaca;">
-        <p style="margin:0 0 4px;font-size:12px;font-weight:700;color:#991b1b;">⚠️ 연결 실패 원인</p>
-        <p id="pubmgmt-fail-reason" style="margin:0;font-size:12px;color:#7f1d1d;line-height:1.6;"></p>
-      </div>
-      <button class="btn btn-secondary" style="margin-top:10px;" onclick="handleBloggerConnectFromPubmgmt()">Blogger 연결 확인</button>
-    </div>
-
-    <!-- 글 없음 안내 -->
-    <div class="card" id="pubmgmt-empty-card">
-      <p class="small-sub">생성된 글이 없습니다. 자동작성 탭에서 먼저 글을 만들어주세요.</p>
-      <button class="btn btn-secondary" onclick="safeGoScreen('autowrite')">✍️ 자동작성으로 이동</button>
-    </div>
-
-    <!-- 글 있을 때 -->
-    <div id="pubmgmt-content-area" style="display:none;">
-
-      <!-- 현재 글 요약 -->
-      <div class="card">
-        <h2>📄 현재 글</h2>
-        <p id="pubmgmt-title" style="font-weight:700;font-size:14px;line-height:1.5;"></p>
-        <div class="row-between small-sub" style="margin-top:6px;">
-          <span>품질점수</span><b id="pubmgmt-score">—</b>
-        </div>
-        <p id="pubmgmt-score-info" class="hint" style="margin-top:4px;"></p>
-      </div>
-
-      <!-- Blogger 발행 -->
-      <div class="card">
-        <h2>💾 Blogger 발행</h2>
-        <button class="btn btn-primary" id="btn-draft-save" onclick="handleSaveDraft()" style="margin-bottom:8px;">💾 임시저장 (50점 이상)</button>
-        <label style="margin-top:8px;display:block;">예약 날짜 / 시간</label>
-        <div class="field-row">
-          <div><input type="date" id="schedule-date"></div>
-          <div><input type="time" id="schedule-time"></div>
-        </div>
-        <button class="btn btn-success" id="btn-schedule-save" onclick="handleSchedule()">📅 예약발행 (70점 이상)</button>
-        <p class="hint">⚠️ 바로 발행 기능은 없습니다. 임시저장 또는 예약발행만 지원합니다.</p>
-      </div>
-
-      <!-- 수동 복사 (보조, 접기) -->
-      <div class="card">
-        <div class="row-between" onclick="toggleManualCopy()" style="cursor:pointer;user-select:none;">
-          <h2 style="margin:0;">📋 수동 복사 (보조)</h2>
-          <span id="manual-copy-toggle" style="color:#6b7280;font-size:13px;">펼치기 ▼</span>
-        </div>
-        <p class="small-sub" style="margin-top:6px;">HTML 복사는 자동발행이 실패했을 때 사용하는 보조 기능입니다.</p>
-        <div id="manual-copy-body" style="display:none;margin-top:12px;">
-          <p id="pubmgmt-title-text" style="font-weight:700;font-size:14px;margin-bottom:10px;"></p>
-          <div style="display:flex;flex-direction:column;gap:8px;">
-            <button class="btn btn-secondary" onclick="handleCopyTitle()">제목 복사</button>
-            <button class="btn btn-secondary" onclick="handleCopyMeta()">메타 설명 복사</button>
-            <button class="btn btn-secondary" onclick="handleCopyLabels()">라벨/태그 복사</button>
-            <button class="btn btn-primary"   onclick="handleCopyHtml()">✅ HTML 전체 복사</button>
-            <button class="btn btn-secondary" onclick="handleCopyAll()">📦 전체 패키지 복사</button>
-          </div>
-          <div style="margin-top:14px;">
-            <p class="small-sub" style="font-weight:700;">🖼️ AI 이미지 프롬프트</p>
-            <p id="pubmgmt-img-prompt" class="small-sub" style="font-size:11px;word-break:break-all;background:#f8fafc;padding:8px;border-radius:6px;margin:4px 0;"></p>
-            <button class="btn btn-ghost" style="font-size:12px;" onclick="handleCopyImgPrompt()">프롬프트 복사</button>
-            <button class="btn btn-ghost" style="font-size:12px;" onclick="handleCopyAlt()">alt 문구 복사</button>
-          </div>
+        <div style="margin-top:14px;">
+          <p class="small-sub" style="font-weight:700;margin-bottom:4px;">🖼️ AI 이미지 프롬프트</p>
+          <p id="pubmgmt-img-prompt" class="small-sub" style="font-size:11px;word-break:break-all;background:#f8fafc;padding:8px;border-radius:6px;margin:4px 0;"></p>
+          <button class="btn btn-ghost" style="font-size:12px;" onclick="handleCopyImgPrompt()">프롬프트 복사</button>
+          <button class="btn btn-ghost" style="font-size:12px;" onclick="handleCopyAlt()">alt 문구 복사</button>
         </div>
       </div>
     </div>
+  </div><!-- /pubmgmt-content-area -->
 
-    <!-- Blogger 글 목록 -->
-    <div class="card">
-      <h2>📚 Blogger 글 목록</h2>
-      <button class="btn btn-ghost" style="font-size:13px;" onclick="handleLoadBloggerList()">🔄 목록 새로 고침</button>
-      <div id="blogger-saved-list" style="margin-top:8px;"><p class="small-sub">목록을 불러오려면 위 버튼을 눌러주세요.</p></div>
-    </div>
-
-    <!-- 최근 생성 글 -->
-    <div class="card">
-      <h2>🕑 최근 생성 글</h2>
-      <div id="recent-posts-list"><p class="small-sub">저장된 글이 없습니다.</p></div>
-      <button class="btn btn-ghost" onclick="handleClearRecentPosts()" style="margin-top:8px;font-size:12px;color:#dc2626;">전체 삭제</button>
-    </div>
+  <!-- Blogger 글 목록 -->
+  <div class="card">
+    <h2>📚 Blogger 글 목록</h2>
+    <button class="btn btn-ghost" style="font-size:13px;" onclick="handleLoadBloggerList()">🔄 목록 새로 고침</button>
+    <div id="blogger-saved-list" style="margin-top:8px;"><p class="small-sub">목록을 불러오려면 위 버튼을 눌러주세요.</p></div>
   </div>
 
-  <!-- 화면 9. 콘텐츠 엔진 브리핑 -->
-  <div class="screen" id="screen-briefing">
-    <div class="topbar" style="margin:-18px -16px 16px -16px;"><h1>💰 콘텐츠 엔진</h1></div>
-    <div class="card">
-      <h2>수익형 키워드 브리핑</h2>
-      <p class="desc">한국 최신 이슈를 분석해 수익성·광고 친화도·구매 의도·경쟁 강도 기준으로 키워드를 평가합니다. 추천 키워드를 누르면 바로 수집 화면으로 이동합니다.</p>
-      <button class="btn btn-primary" onclick="handleBriefingCollect()">🔍 오늘의 수익형 브리핑 시작</button>
-      <p class="hint">⚠️ 정치·사건사고·연예 논란 키워드는 수익형 블로그에 부적합하며 "민감/주의"로 별도 분류합니다.</p>
-    </div>
-    <div id="briefing-result-area"></div>
+  <!-- 최근 생성 글 -->
+  <div class="card">
+    <h2>🕑 최근 생성 글</h2>
+    <div id="recent-posts-list"><p class="small-sub">저장된 글이 없습니다.</p></div>
+    <button class="btn btn-ghost" onclick="handleClearRecentPosts()" style="margin-top:8px;font-size:12px;color:#dc2626;">전체 삭제</button>
   </div>
-
-  <!-- 화면 10. 설정 -->
-  <div class="screen" id="screen-settings">
-    <div class="topbar" style="margin:-18px -16px 16px -16px;"><h1>⚙️ 설정</h1></div>
-    <div class="card">
-      <h2>Cloudflare Worker URL</h2>
-      <p class="desc">실제 API와 연결할 Worker 주소입니다. URL을 저장한 뒤 아래에서 연결 테스트를 진행하세요.</p>
-      <label>Worker URL</label>
-      <input type="text" id="setting-worker-url" placeholder="https://your-worker.your-name.workers.dev">
-      <button class="btn btn-primary" onclick="saveWorkerUrl()">Worker URL 저장</button>
-      <p class="hint" id="worker-saved-hint" style="display:none;color:#16a34a;">저장되었습니다 ✅</p>
-    </div>
-    <div class="card">
-      <h2>🔗 Worker 연결 상태</h2>
-      <div class="row-between small-sub">
-        <span>현재 Worker URL</span><b id="worker-status-url" style="word-break:break-all;text-align:right;">(아직 입력되지 않음)</b>
-      </div>
-      <div class="row-between small-sub" style="margin-top:6px;">
-        <span>연결 상태</span><span id="worker-status-badge" class="badge">미확인</span>
-      </div>
-      <div class="row-between small-sub" style="margin-top:6px;">
-        <span>마지막 테스트 시간</span><span id="worker-status-last-checked">아직 테스트한 적 없음</span>
-      </div>
-      <div class="row-between small-sub" style="margin-top:6px;">
-        <span>현재 동작 모드</span><span id="worker-status-mode">Mock 모드</span>
-      </div>
-      <div class="row-between small-sub" style="margin-top:6px;">
-        <span>로그인 방식</span><span id="login-mode-info">Worker /auth/login (ADMIN_PASSWORD)</span>
-      </div>
-      <button class="btn btn-secondary" onclick="handleWorkerConnectionTest()">Worker 연결 테스트</button>
-      <p class="hint" id="settings-worker-mode-hint" style="display:none;color:#d97706;">⚠️ Worker URL이 저장되어 있지만 아직 연결 테스트를 하지 않았습니다. 실제 네이버 검색을 사용하려면 Worker 연결 테스트를 먼저 성공시켜야 합니다.</p>
-      <p class="hint">⚠️ Worker 연결 성공 시 네이버 검색, AI 글 생성, Blogger 임시저장/예약발행을 실제로 시도합니다. 실패하면 앱이 멈추지 않고 Mock으로 대체됩니다.</p>
-    </div>
-    <div class="card">
-      <h2>🎨 기본 글 톤 (메모용)</h2>
-      <p class="desc">자유롭게 메모해두는 용도입니다. 실제 AI 작성 톤은 "글 생성" 화면의 글쓰기 옵션에서 선택합니다.</p>
-      <input type="text" id="setting-tone" placeholder="예: 친근하고 실용적인 톤">
-      <button class="btn btn-secondary" onclick="saveTone()">저장하기</button>
-    </div>
-    <div class="card">
-      <h2>🚫 금지어 목록</h2>
-      <p class="desc">쉼표(,)로 구분해서 입력하세요. 품질검수 시 이 단어들이 포함되어 있으면 검사에 실패합니다.</p>
-      <textarea id="setting-banned-words" placeholder="예: 100% 효과, 무조건 보장, 월 100만원 보장"></textarea>
-      <button class="btn btn-secondary" onclick="saveBannedWords()">저장하기</button>
-    </div>
-    <div class="card">
-      <h2>📅 하루 저장/예약 제한</h2>
-      <p class="desc">하루에 임시저장/예약발행할 수 있는 최대 건수입니다. 1~10건 사이로 설정할 수 있습니다.</p>
-      <label>하루 저장/예약 제한 (건)</label>
-      <input type="number" id="setting-daily-limit" min="1" max="10" value="3">
-      <button class="btn btn-secondary" onclick="saveDailyLimitSetting()">하루 제한 저장</button>
-      <p class="hint">⚠️ 너무 많은 글을 짧은 시간에 자동 저장/예약하면 스팸성 콘텐츠로 판단될 수 있습니다. 초기 운영은 하루 3~5건을 권장합니다.</p>
-    </div>
-    <div class="card">
-      <h2>🧹 데이터 초기화</h2>
-      <p class="desc">저장된 모든 localStorage 데이터를 삭제합니다.</p>
-      <button class="btn btn-danger" onclick="resetAllData()">전체 초기화</button>
-    </div>
-  </div>
-
-  <!-- 하단 탭바 -->
-  <!-- 탭바 r6: 5탭으로 단순화 -->
-  <div class="tabbar" id="tabbar" style="display:none;">
-    <button class="tab-item" data-tab="dashboard"  onclick="safeGoScreen('dashboard')"><span class="icon">🏠</span>홈</button>
-    <button class="tab-item" data-tab="hotissue"   onclick="safeGoScreen('hotissue')"><span class="icon">🔥</span>핫이슈</button>
-    <button class="tab-item" data-tab="autowrite"  onclick="safeGoScreen('autowrite')"><span class="icon">✍️</span>자동작성</button>
-    <button class="tab-item" data-tab="pubmgmt"    onclick="safeGoScreen('pubmgmt')"><span class="icon">🚀</span>발행관리</button>
-    <button class="tab-item" data-tab="settings"   onclick="safeGoScreen('settings')"><span class="icon">⚙️</span>설정</button>
-    <button class="tab-item" onclick="handleLogout()"><span class="icon">🚪</span>아웃</button>
-  </div>
-
-  <div class="toast" id="toast"></div>
-
 </div>
 
-<!-- JS는 의존 순서대로 불러옵니다: config → storage → ui → auth → editor → quality-check → blogger → api → app -->
-<script src="./assets/js/config.js?v=0.1.0-r6"></script>
-<script src="./assets/js/storage.js?v=0.1.0-r6"></script>
-<script src="./assets/js/ui.js?v=0.1.0-r6"></script>
-<script src="./assets/js/auth.js?v=0.1.0-r6"></script>
-<script src="./assets/js/editor.js?v=0.1.0-r6"></script>
-<script src="./assets/js/quality-check.js?v=0.1.0-r6"></script>
-<script src="./assets/js/hero-image.js?v=0.1.0-r6"></script>
-<script src="./assets/js/hotissue.js?v=0.1.0-r6"></script>
-<script src="./assets/js/blogger.js?v=0.1.0-r6"></script>
-<script src="./assets/js/api.js?v=0.1.0-r6"></script>
-<script src="./assets/js/app.js?v=0.1.0-r6"></script>
+<!-- =========================================
+     화면 6. 설정 (logout 포함)
+     ========================================= -->
+<div class="screen" id="screen-settings">
+  <div class="topbar" style="margin:-18px -16px 16px -16px;"><h1>⚙️ 설정</h1></div>
+
+  <div class="card">
+    <h2>Cloudflare Worker URL</h2>
+    <label>Worker URL</label>
+    <input type="text" id="setting-worker-url" placeholder="https://your-worker.your-name.workers.dev">
+    <button class="btn btn-primary" onclick="saveWorkerUrl()">Worker URL 저장</button>
+    <p class="hint" id="worker-saved-hint" style="display:none;color:#16a34a;">저장되었습니다 ✅</p>
+  </div>
+
+  <div class="card">
+    <h2>🔗 Worker 연결 상태</h2>
+    <div class="row-between small-sub">
+      <span>현재 Worker URL</span><b id="worker-status-url" style="word-break:break-all;text-align:right;">(미입력)</b>
+    </div>
+    <div class="row-between small-sub" style="margin-top:6px;">
+      <span>연결 상태</span><span id="worker-status-badge" class="badge">미확인</span>
+    </div>
+    <div class="row-between small-sub" style="margin-top:6px;">
+      <span>마지막 테스트</span><span id="worker-status-last-checked">아직 없음</span>
+    </div>
+    <div class="row-between small-sub" style="margin-top:6px;">
+      <span>동작 모드</span><span id="worker-status-mode">Mock 모드</span>
+    </div>
+    <div class="row-between small-sub" style="margin-top:6px;">
+      <span>로그인 방식</span><span id="login-mode-info">Worker /auth/login</span>
+    </div>
+    <button class="btn btn-secondary" onclick="handleWorkerConnectionTest()">Worker 연결 테스트</button>
+    <p class="hint" id="settings-worker-mode-hint" style="display:none;color:#d97706;">⚠️ Worker URL은 저장됐지만 아직 연결 테스트를 하지 않았습니다.</p>
+  </div>
+
+  <div class="card">
+    <h2>🚫 금지어 목록</h2>
+    <p class="desc">쉼표(,)로 구분해서 입력하세요. 품질검수 시 이 단어들이 포함되어 있으면 감점됩니다.</p>
+    <textarea id="setting-banned-words" placeholder="예: 100% 효과, 무조건 보장"></textarea>
+    <button class="btn btn-secondary" onclick="saveBannedWords()">저장하기</button>
+  </div>
+
+  <div class="card">
+    <h2>📅 하루 저장/예약 제한</h2>
+    <label>최대 건수 (1~10)</label>
+    <input type="number" id="setting-daily-limit" min="1" max="10" value="3">
+    <button class="btn btn-secondary" onclick="saveDailyLimitSetting()">하루 제한 저장</button>
+    <p class="hint">초기 운영 권장: 하루 3~5건</p>
+  </div>
+
+  <div class="card">
+    <h2>앱 정보</h2>
+    <div class="row-between small-sub"><span>앱 버전</span><span>v0.1.0-test-r7-operation</span></div>
+    <div class="row-between small-sub" style="margin-top:4px;"><span>Worker 버전</span><span id="settings-worker-version">—</span></div>
+    <div class="row-between small-sub" style="margin-top:4px;"><span>AI Provider</span><span id="settings-ai-provider">—</span></div>
+  </div>
+
+  <div class="card">
+    <h2>🧹 데이터 초기화</h2>
+    <button class="btn btn-danger" onclick="resetAllData()">전체 초기화</button>
+  </div>
+
+  <!-- 로그아웃 (설정 화면 안으로 이동) -->
+  <div class="card">
+    <button class="btn btn-ghost" onclick="handleLogout()" style="width:100%;color:#dc2626;">🚪 로그아웃</button>
+  </div>
+</div>
+
+<!-- =========================================
+     화면 7. 미리보기 (screen-preview) — 레거시 호환 유지
+     ========================================= -->
+<div class="screen" id="screen-preview">
+  <div class="topbar preview-topbar" style="margin:-18px -16px 16px -16px;">
+    <h1>👀 미리보기</h1>
+    <button class="close-x-btn" onclick="closePreview()" aria-label="닫기">✕</button>
+  </div>
+  <div id="preview-empty"><p class="small-sub">아직 생성된 글이 없습니다.</p></div>
+  <div class="preview-box" id="preview-content" style="display:none;"></div>
+  <button class="btn btn-primary" id="preview-to-blogger-btn" style="display:none;" onclick="safeGoScreen('pubmgmt')">🚀 발행관리로 이동</button>
+  <button class="btn btn-ghost" id="preview-close-btn" style="display:none;" onclick="closePreview()">닫기</button>
+</div>
+
+<!-- =========================================
+     레거시 화면들 (기존 JS 함수가 참조할 수 있으므로 숨김만 처리)
+     editor-keyword만 hidden input으로 유지
+     ========================================= -->
+<input type="hidden" id="editor-keyword">
+<input type="hidden" id="editor-tone">
+<input type="hidden" id="blogger-connect-status" value="">
+
+<!-- 하단 탭바 — 5탭 (아웃 제거, 설정 화면 안으로) -->
+<div class="tabbar" id="tabbar" style="display:none;">
+  <button class="tab-item" data-tab="dashboard"  onclick="safeGoScreen('dashboard')"><span class="icon">🏠</span>홈</button>
+  <button class="tab-item" data-tab="hotissue"   onclick="safeGoScreen('hotissue')"><span class="icon">🔥</span>핫이슈</button>
+  <button class="tab-item" data-tab="autowrite"  onclick="safeGoScreen('autowrite')"><span class="icon">✍️</span>자동작성</button>
+  <button class="tab-item" data-tab="pubmgmt"    onclick="safeGoScreen('pubmgmt')"><span class="icon">🚀</span>발행관리</button>
+  <button class="tab-item" data-tab="settings"   onclick="safeGoScreen('settings')"><span class="icon">⚙️</span>설정</button>
+</div>
+
+<div class="toast" id="toast"></div>
+</div><!-- /app -->
+
+<script src="./assets/js/config.js?v=0.1.0-r7-operation"></script>
+<script src="./assets/js/storage.js?v=0.1.0-r7-operation"></script>
+<script src="./assets/js/ui.js?v=0.1.0-r7-operation"></script>
+<script src="./assets/js/auth.js?v=0.1.0-r7-operation"></script>
+<script src="./assets/js/editor.js?v=0.1.0-r7-operation"></script>
+<script src="./assets/js/quality-check.js?v=0.1.0-r7-operation"></script>
+<script src="./assets/js/hero-image.js?v=0.1.0-r7-operation"></script>
+<script src="./assets/js/hotissue.js?v=0.1.0-r7-operation"></script>
+<script src="./assets/js/blogger.js?v=0.1.0-r7-operation"></script>
+<script src="./assets/js/api.js?v=0.1.0-r7-operation"></script>
+<script src="./assets/js/app.js?v=0.1.0-r7-operation"></script>
 </body>
 </html>
