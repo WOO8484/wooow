@@ -143,8 +143,13 @@ function showConnectionPanel() {
     row('Worker 버전',  verStr,   verStr !== '—') +
     row('AI Provider',  aiProv,   aiProv !== '—' && aiProv !== '없음') +
     row('Blogger',      blogLabel, bloggerOk) +
-    `<p style="font-size:11px;color:#9ca3af;margin-top:10px;line-height:1.5;">
+    `<p style="font-size:11px;color:#9ca3af;margin-top:10px;margin-bottom:10px;line-height:1.5;">
       실제 연결 테스트는 <b>설정</b> 화면에서 진행해주세요.
-    </p>`
+    </p>` +
+    `<div style="display:flex;flex-direction:column;gap:8px;">
+      <button class="btn btn-secondary" onclick="uiCloseBottomSheet();safeGoScreen('settings')">⚙️ 설정으로 이동</button>
+      <button class="btn btn-secondary" onclick="uiCloseBottomSheet();safeGoScreen('pubmgmt')">🚀 발행관리로 이동</button>
+      <button class="btn btn-ghost" onclick="uiCloseBottomSheet();typeof handleWorkerConnectionTest==='function'&&handleWorkerConnectionTest()">🔄 연결 재확인</button>
+    </div>`
   );
 }

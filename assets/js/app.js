@@ -16,6 +16,28 @@ function refreshSettingsScreen(){
   refreshWorkerStatusCard();
 }
 
+// r9-gui-one-screen-fix1: 설정 화면 compact-row 아코디언 — 한 번에 하나만 펼쳐서
+// screen 자체가 스크롤 없이 한 화면 안에 고정되도록 보장합니다.
+function toggleSettingsSection(sectionId){
+  const target = document.getElementById(sectionId);
+  if (!target) return;
+  const willOpen = target.style.display === 'none';
+
+  document.querySelectorAll('#screen-settings [id^="set-sec-"]').forEach(el => {
+    if (el.id.endsWith('-arrow')) return;
+    el.style.display = 'none';
+  });
+  document.querySelectorAll('#screen-settings .smr-arrow[id^="set-sec-"]').forEach(el => {
+    el.textContent = '▼';
+  });
+
+  if (willOpen) {
+    target.style.display = 'block';
+    const arrow = document.getElementById(sectionId + '-arrow');
+    if (arrow) arrow.textContent = '▲';
+  }
+}
+
 function saveWorkerUrl(){
   const rawUrl = document.getElementById('setting-worker-url').value;
   const url = normalizeWorkerUrl(rawUrl);
@@ -77,6 +99,12 @@ function refreshWorkerStatusCard(){
 
   document.getElementById('worker-status-mode').textContent =
     mode === API_MODE.WORKER ? 'Worker 모드' : 'Mock 모드';
+
+  // r9-gui-one-screen-fix1: compact-row 요약 텍스트
+  const summaryEl = document.getElementById('settings-connection-summary');
+  if(summaryEl){
+    summaryEl.textContent = status === 'success' ? '연결됨' : (status === 'fail' ? '연결 실패' : '미확인');
+  }
 
   document.getElementById('login-mode-info').textContent =
     mode === API_MODE.WORKER ? 'Worker /auth/login (ADMIN_PASSWORD)' : 'Worker URL 미설정';
@@ -296,29 +324,105 @@ function handleClearRecentPosts() {
    ============================================================ */
 
 // ── 자동작성 화면 옵션 토글 ──
+// r9-gui-one-screen-fix2: 글쓰기 옵션 — 카드 펼침 대신 바텀시트로 연다.
+// input/select id는 그대로 유지하고, 시트 삽입 직후 editor.js의 바인딩/복원 함수를 재사용한다.
 function toggleWriteOptions() {
-  const b = document.getElementById('write-options-body');
-  const t = document.getElementById('write-options-toggle');
-  if (!b) return;
-  const v = b.style.display !== 'none';
-  b.style.display = v ? 'none' : 'block';
-  if (t) t.textContent = v ? '펼치기 ▼' : '접기 ▲';
+  uiOpenBottomSheet(
+    `<h3 style="margin:0 0 10px;font-size:15px;font-weight:700;color:#1c2434;">✏️ 글쓰기 옵션</h3>` +
+    `<label style="margin-top:0;">글쓴이 느낌</label>
+    <select id="setting-writer-persona">
+      <option value="neutral">성별 드러내지 않음</option>
+      <option value="male">남성 운영자 느낌</option>
+      <option value="female">여성 운영자 느낌</option>
+    </select>
+    <label>작성 톤</label>
+    <select id="setting-writing-tone">
+      <option value="friendly">친근한 블로그형</option>
+      <option value="basic">기본형</option>
+      <option value="review">꼼꼼한 리뷰형</option>
+      <option value="lifehack">생활 꿀팁형</option>
+      <option value="expert">전문가 정리형</option>
+    </select>
+    <label>이모티콘 사용</label>
+    <select id="setting-emoji-level">
+      <option value="few">적게 사용</option>
+      <option value="none">사용 안 함</option>
+      <option value="moderate">적당히 사용</option>
+    </select>`
+  );
+  // 새로 생성된 select에 값 복원 + change 이벤트 바인딩 (editor.js 함수 재사용)
+  const personaSelect = document.getElementById('setting-writer-persona');
+  if (personaSelect && typeof getWriterPersona === 'function') personaSelect.value = getWriterPersona();
+  const toneSelect = document.getElementById('setting-writing-tone');
+  if (toneSelect && typeof getWritingTone === 'function') toneSelect.value = getWritingTone();
+  const emojiSelect = document.getElementById('setting-emoji-level');
+  if (emojiSelect && typeof getEmojiLevel === 'function') emojiSelect.value = getEmojiLevel();
+  if (typeof bindGenerationOptionEvents === 'function') bindGenerationOptionEvents();
 }
+
+// r9-gui-one-screen-fix2: 글 재료 — 카드 펼침 대신 바텀시트로 연다.
+// textarea id는 그대로 유지하고, saveMaterial()/loadMaterialIntoForm()(editor.js)을 그대로 재사용한다.
 function toggleMaterialOptions() {
-  const b = document.getElementById('material-options-body');
-  const t = document.getElementById('material-options-toggle');
-  if (!b) return;
-  const v = b.style.display !== 'none';
-  b.style.display = v ? 'none' : 'block';
-  if (t) t.textContent = v ? '펼치기 ▼' : '접기 ▲';
+  uiOpenBottomSheet(
+    `<h3 style="margin:0 0 4px;font-size:15px;font-weight:700;color:#1c2434;">🧩 글 재료 (선택)</h3>` +
+    `<p class="hint" style="margin-top:0;">실제 경험이 있으면 적어주세요. 없으면 AI가 일반적인 내용으로 작성합니다.</p>
+    <label style="margin-top:6px;">내가 겪은 상황</label>
+    <textarea id="mat-situation" placeholder="실제 겪은 상황이 있다면 적어주세요"></textarea>
+    <label>내 생각 / 결론</label>
+    <textarea id="mat-opinion" placeholder="이 주제에 대한 나의 의견"></textarea>
+    <label>비교 기준 / 추천 이유</label>
+    <textarea id="mat-criteria" placeholder="무엇을 기준으로 비교했는지"></textarea>
+    <label>주의할 점 / 비추천 이유</label>
+    <textarea id="mat-cons" placeholder="조심해야 할 점"></textarea>
+    <label>꼭 넣고 싶은 문장</label>
+    <textarea id="mat-mustline" placeholder="이 문장은 꼭 넣어주세요"></textarea>
+    <!-- 기존 editor.js가 참조하는 레거시 id 유지 (숨김) -->
+    <textarea id="mat-around-case" style="display:none;"></textarea>
+    <textarea id="mat-pros" style="display:none;"></textarea>
+    <textarea id="mat-conclusion" style="display:none;"></textarea>
+    <textarea id="mat-photo-desc" style="display:none;"></textarea>
+    <textarea id="mat-verified-source" style="display:none;"></textarea>
+    <textarea id="mat-reader-question" style="display:none;"></textarea>
+    <button class="btn btn-secondary" onclick="saveMaterial()">재료 저장하기</button>
+    <p class="hint" id="material-saved-hint" style="display:none;color:#16a34a;">저장되었습니다 ✅</p>`
+  );
+  if (typeof loadMaterialIntoForm === 'function') loadMaterialIntoForm();
+}
+
+// r9-gui-one-screen-fix2: 생성 결과 카드 내부 메타/라벨 미리보기 접기(compact 영역, 화면 내 유지)
+function toggleAutowriteResultMeta() {
+  const body = document.getElementById('autowrite-result-meta');
+  const arrow = document.getElementById('autowrite-result-meta-arrow');
+  if (!body) return;
+  const willOpen = body.style.display === 'none';
+  body.style.display = willOpen ? 'block' : 'none';
+  if (arrow) arrow.textContent = willOpen ? '▲' : '▼';
 }
 function toggleManualCopy() {
-  const b = document.getElementById('manual-copy-body');
-  const t = document.getElementById('manual-copy-toggle');
-  if (!b) return;
-  const v = b.style.display !== 'none';
-  b.style.display = v ? 'none' : 'block';
-  if (t) t.textContent = v ? '펼치기 ▼' : '접기 ▲';
+  const post = typeof loadLocal === 'function' ? loadLocal(STORAGE_KEYS.CURRENT_POST, null) : null;
+  const imgPrompt = post
+    ? (post.imagePrompts?.mainPrompt ||
+       (typeof generateImagePrompts === 'function'
+         ? generateImagePrompts(post.keyword || '', post.title || '', post.summary || '')?.mainPrompt
+         : ''))
+    : '';
+  uiOpenBottomSheet(
+    `<h3 style="margin:0 0 4px;font-size:15px;font-weight:700;color:#1c2434;">📋 수동 복사 (보조)</h3>` +
+    `<p class="hint" style="margin-top:0;">자동발행 실패 시 사용하는 보조 기능입니다.</p>` +
+    `<div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;">
+      <button class="btn btn-secondary" onclick="handleCopyTitle()">제목 복사</button>
+      <button class="btn btn-secondary" onclick="handleCopyMeta()">메타 설명 복사</button>
+      <button class="btn btn-secondary" onclick="handleCopyLabels()">라벨/태그 복사</button>
+      <button class="btn btn-primary"   onclick="handleCopyHtml()">✅ HTML 전체 복사</button>
+      <button class="btn btn-secondary" onclick="handleCopyAll()">📦 전체 패키지 복사</button>
+    </div>` +
+    `<div style="margin-top:14px;">
+      <p class="small-sub" style="font-weight:700;margin-bottom:4px;">🖼️ AI 이미지 프롬프트</p>
+      <p class="small-sub" style="font-size:11px;word-break:break-all;background:#f8fafc;padding:8px;border-radius:6px;margin:4px 0;">${escapeHtml(imgPrompt || (post ? '(프롬프트 없음)' : '(생성된 글이 없습니다)'))}</p>
+      <button class="btn btn-ghost" style="font-size:12px;" onclick="handleCopyImgPrompt()">프롬프트 복사</button>
+      <button class="btn btn-ghost" style="font-size:12px;" onclick="handleCopyAlt()">alt 문구 복사</button>
+    </div>`
+  );
 }
 
 // ── 자동작성 탭 글 생성: 결과를 자동작성 화면에 바로 표시 ──
@@ -345,12 +449,11 @@ function refreshAutowriteScreen() {
     const titleEl = document.getElementById('editor-title-preview');
     if (titleEl && !titleEl.textContent) titleEl.textContent = post.title || '';
     card.style.display = 'block';
-    // 메타/라벨 미리보기
+    // 메타/라벨 미리보기 데이터는 채워두되, 기본은 접힌 상태로 둔다 (compact 영역, 토글로 펼침)
     const metaArea   = document.getElementById('autowrite-result-meta');
     const metaPreEl  = document.getElementById('autowrite-meta-preview');
     const labelPreEl = document.getElementById('autowrite-labels-preview');
     if (metaArea && (post.metaDescription || post.labels?.length)) {
-      metaArea.style.display = 'block';
       if (metaPreEl)  metaPreEl.textContent  = post.metaDescription || '(없음)';
       if (labelPreEl) labelPreEl.textContent = Array.isArray(post.labels) ? post.labels.join(', ') : '(없음)';
     }
@@ -508,6 +611,36 @@ function handleBloggerConnectFromPubmgmt() {
   if (typeof handleBloggerConnect === 'function') {
     handleBloggerConnect().then(() => refreshPubmgmtScreen()).catch(() => refreshPubmgmtScreen());
   }
+}
+
+// r9-gui-one-screen-fix1: Blogger 글 목록 / 최근 생성 글은 공통 바텀시트로 열림
+// (pubmgmt 화면 자체는 핵심 요소만 남기고 고정, 목록은 바텀시트 내부에서만 스크롤)
+function showBloggerListSheet() {
+  uiOpenBottomSheet(
+    `<h3 style="margin:0 0 10px;font-size:15px;font-weight:700;color:#1c2434;">📚 Blogger 글 목록</h3>` +
+    `<button class="btn btn-ghost" style="font-size:13px;" onclick="handleLoadBloggerList()">🔄 목록 새로 고침</button>` +
+    `<div id="blogger-saved-list" style="margin-top:8px;max-height:55vh;overflow-y:auto;-webkit-overflow-scrolling:touch;"><p class="small-sub">목록을 불러오려면 위 버튼을 눌러주세요.</p></div>`
+  );
+}
+
+function showRecentPostsSheet() {
+  uiOpenBottomSheet(
+    `<h3 style="margin:0 0 10px;font-size:15px;font-weight:700;color:#1c2434;">🕑 최근 생성 글</h3>` +
+    `<div id="recent-posts-list" style="max-height:55vh;overflow-y:auto;-webkit-overflow-scrolling:touch;"><p class="small-sub">저장된 글이 없습니다.</p></div>` +
+    `<button class="btn btn-ghost" onclick="handleClearRecentPosts()" style="margin-top:8px;font-size:12px;color:#dc2626;">전체 삭제</button>`
+  );
+  if (typeof renderRecentPostsList === 'function') renderRecentPostsList();
+}
+
+// r9-gui-one-screen-fix2: 발행 전 체크리스트도 공통 바텀시트로 열림
+// (renderPubmgmtChecklist는 refreshPubmgmtScreen 안에서 null-safe하게 호출되므로,
+//  시트를 먼저 열어 #pubmgmt-checklist-list를 만든 뒤 refreshPubmgmtScreen()을 재호출해 채운다.)
+function showPubmgmtChecklistSheet() {
+  uiOpenBottomSheet(
+    `<h3 style="margin:0 0 10px;font-size:15px;font-weight:700;color:#1c2434;">✅ 발행 전 체크</h3>` +
+    `<div id="pubmgmt-checklist-list" style="display:flex;flex-direction:column;gap:5px;font-size:13px;max-height:60vh;overflow-y:auto;-webkit-overflow-scrolling:touch;"></div>`
+  );
+  if (typeof refreshPubmgmtScreen === 'function') refreshPubmgmtScreen();
 }
 
 // ── 설정 화면 refresh (Worker 버전 표시 추가) ──

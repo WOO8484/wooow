@@ -3,8 +3,8 @@
 // 실제 API 키나 운영 비밀번호는 절대 포함하지 않습니다.
 
 // 앱 버전
-const APP_VERSION = "v0.1.0";
-const APP_DISPLAY_VERSION = "v0.1.0-test-r8-mobile-operation";
+const APP_VERSION = "v0.1.1";
+const APP_DISPLAY_VERSION = "v0.1.1-r9-gui-one-screen-fix2";
 
 // 기본 Worker URL
 const DEFAULT_WORKER_URL = "https://wooow.qudrnr84.workers.dev";

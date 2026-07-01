@@ -322,6 +322,28 @@ async function handleGeneratePost(){
       signal: generationAbortController ? generationAbortController.signal : undefined
     });
 
+    /* ------------------------------------------------------------
+       r9-gui-one-screen-base: AI 운영 안전 조건
+       - AI 실제 성공(result.source === 'ai')일 때만 currentPost를 생성/저장합니다.
+       - Worker 미설정 / AI 연결 실패 / 쿼터 초과 / 연타 차단(blocked) 등
+         모든 비-성공 케이스에서는 Mock 글을 currentPost로 자동 저장하지 않고,
+         "AI 생성 실패 / Worker 설정 필요" 안내만 표시합니다.
+       - buildMockPost()는 삭제하지 않고 그대로 유지하되, 여기서 자동 fallback으로
+         사용하지 않습니다. (performPostGeneration 내부의 Mock 미리보기 결과(result.post)는
+         저장/화면 표시에 사용하지 않고 폐기합니다.)
+       ------------------------------------------------------------ */
+    if(result.source !== 'ai'){
+      showAiGenerationFailure(result);
+      if(result.blocked){
+        showToast(result.blockReason || '잠시 후 다시 시도해주세요');
+      } else if(result.isQuotaExceeded){
+        showToast('⛔ AI 생성 실패 (쿼터 초과) — Worker 설정을 확인해주세요');
+      } else {
+        showToast('❌ AI 생성 실패 — Worker 설정이 필요합니다');
+      }
+      return;
+    }
+
     const post = result.post;
     post.generationMode = options.mode;
 
@@ -337,6 +359,7 @@ async function handleGeneratePost(){
     // ★ 최근 생성 글 저장 (최대 5개)
     if (typeof saveRecentPost === 'function') saveRecentPost(enrichedPost);
 
+    hideAiGenerationFailure();
     document.getElementById('editor-result-card').style.display = 'block';
     document.getElementById('editor-title-preview').textContent = enrichedPost.title;
     renderGenerationSourceBadge(result);
@@ -348,22 +371,12 @@ async function handleGeneratePost(){
     if (metaPreEl)  metaPreEl.textContent  = enrichedPost.metaDescription || enrichedPost.summary || '(없음)';
     if (labelPreEl) labelPreEl.textContent = Array.isArray(enrichedPost.labels) ? enrichedPost.labels.join(', ') : '(없음)';
 
-    if(result.blocked){
-      showToast(result.blockReason || '잠시 후 다시 시도해주세요');
-    } else if(result.source === 'ai'){
-      const provLabel = {gemini:'Gemini',openai:'OpenAI',claude:'Claude',openrouter:'OpenRouter'};
-      const pName = provLabel[result.providerUsed] || result.providerUsed || 'AI';
-      if(result.fallbackUsed){
-        showToast(`✅ ${pName} fallback으로 글 생성 완료`);
-      } else {
-        showToast(`✅ AI 글 생성 완료 (${pName})`);
-      }
-    } else if(result.isQuotaExceeded){
-      showToast('⛔ AI 무료 사용량 초과 — Mock 글을 사용합니다');
-    } else if(result.fallback){
-      showToast('AI 연결 실패 — Mock 글로 계속 진행합니다');
+    const provLabel = {gemini:'Gemini',openai:'OpenAI',claude:'Claude',openrouter:'OpenRouter'};
+    const pName = provLabel[result.providerUsed] || result.providerUsed || 'AI';
+    if(result.fallbackUsed){
+      showToast(`✅ ${pName} fallback으로 글 생성 완료`);
     } else {
-      showToast('글이 생성되었습니다 (Mock)');
+      showToast(`✅ AI 글 생성 완료 (${pName})`);
     }
   }catch(e){
     if(e && e.name === 'AbortError'){
@@ -387,7 +400,35 @@ function handleCancelGeneration(){
   }
 }
 
-// 글 생성 결과 배지 — v0.1.0: Provider 정보 + fallback 상태 표시
+/* ----------------------------------------------------------
+   r9-gui-one-screen-base: AI 생성 실패 안내
+   - AI 실패 시 Mock 글/localDraft를 자동으로 currentPost로 만들지 않고,
+     이 안내 카드만 표시합니다.
+   ---------------------------------------------------------- */
+function showAiGenerationFailure(result){
+  const card   = document.getElementById('autowrite-ai-fail-card');
+  const reason = document.getElementById('autowrite-ai-fail-reason');
+  if(!card) return;
+
+  let msg;
+  if(result && result.blocked){
+    msg = result.blockReason || '같은 키워드로 너무 빨리 재요청했습니다. 잠시 후 다시 시도해주세요.';
+  } else if(result && result.isQuotaExceeded){
+    msg = 'AI 무료 사용량(쿼터)을 초과했습니다. 내일 다시 시도하거나 Worker에 다른 provider Secret을 등록해주세요.';
+  } else {
+    msg = (result && result.fallbackReason) || 'Worker 연결 또는 AI 응답에 실패했습니다. 설정 화면에서 Worker URL 연결 상태를 확인해주세요.';
+  }
+  if(reason) reason.textContent = msg;
+  card.style.display = 'block';
+}
+
+function hideAiGenerationFailure(){
+  const card = document.getElementById('autowrite-ai-fail-card');
+  if(card) card.style.display = 'none';
+}
+
+// 글 생성 결과 배지 — r9-gui-one-screen-fix1: 이 함수는 이제 result.source === 'ai' (실제 AI 성공)
+// 케이스에서만 호출됩니다. AI 실패/Mock/쿼터초과 안내는 showAiGenerationFailure()가 담당합니다.
 function renderGenerationSourceBadge(result){
   const badgeEl  = document.getElementById('editor-source-badge');
   const noticeEl = document.getElementById('editor-fallback-notice');
@@ -398,55 +439,18 @@ function renderGenerationSourceBadge(result){
   };
   const usedName = providerLabel[result.providerUsed] || result.providerUsed || '';
 
-  // 연타 방지 차단
-  if(result.blocked){
-    badgeEl.textContent = '⏳ 잠시 후 다시 시도';
-    badgeEl.className = 'badge mock';
+  if(result.fallbackUsed){
+    // provider fallback 성공 (실제 AI끼리의 fallback — Mock과 무관)
+    const tried = (result.providersTried || []).slice(0, -1).map(p => providerLabel[p]||p).join(' → ');
+    badgeEl.textContent = `✅ 실제 AI 글 생성 · ${usedName} (fallback)`;
+    badgeEl.className = 'badge success';
     noticeEl.style.display = 'block';
-    noticeEl.innerHTML = `<b>⏳ 생성 대기 중</b><div style="margin-top:4px;font-size:12px;">${escapeHtml(result.blockReason || '')}</div>`;
-    return;
-  }
-
-  if(result.source === 'ai'){
-    if(result.fallbackUsed){
-      // fallback 성공
-      const tried = (result.providersTried || []).slice(0, -1).map(p => providerLabel[p]||p).join(' → ');
-      badgeEl.textContent = `✅ 실제 AI 글 생성 · ${usedName} (fallback)`;
-      badgeEl.className = 'badge success';
-      noticeEl.style.display = 'block';
-      noticeEl.innerHTML = `<div style="color:#16a34a;font-size:12px;">✅ <b>${tried} 실패 후 ${usedName}로 글 생성 완료</b></div>` +
-        (result.fallbackReason ? `<div style="margin-top:4px;font-size:11px;color:#6b7280;">사유: ${escapeHtml(result.fallbackReason)}</div>` : '');
-    } else {
-      // 첫 번째 provider 성공
-      badgeEl.textContent = `✅ 실제 AI 글 생성 · ${usedName || 'AI'}`;
-      badgeEl.className = 'badge success';
-      noticeEl.style.display = 'none';
-    }
-  } else if(result.isQuotaExceeded){
-    badgeEl.textContent = '⛔ 쿼터 초과 → Mock 사용';
-    badgeEl.className = 'badge';
-    badgeEl.style.background = '#dc2626';
-    badgeEl.style.color = '#fff';
-    noticeEl.style.display = 'block';
-    noticeEl.innerHTML = [
-      '<b>⛔ AI 무료 사용량(쿼터)을 초과했습니다.</b>',
-      '다음 조치 중 하나를 선택하세요:',
-      '1. 오늘은 Mock 글을 직접 편집 후 임시저장하세요.',
-      '2. 내일 사용량이 초기화되면 다시 시도하세요.',
-      '3. OPENAI_API_KEY / CLAUDE_API_KEY 등 fallback Secret을 Cloudflare에 등록하세요.',
-      '<span style="color:#6b7280;font-size:11px;">현재 글은 Mock 초안입니다. 편집 후 발행 가능합니다.</span>'
-    ].map(t => `<div>${t}</div>`).join('');
+    noticeEl.innerHTML = `<div style="color:#16a34a;font-size:12px;">✅ <b>${tried} 실패 후 ${usedName}로 글 생성 완료</b></div>` +
+      (result.fallbackReason ? `<div style="margin-top:4px;font-size:11px;color:#6b7280;">사유: ${escapeHtml(result.fallbackReason)}</div>` : '');
   } else {
-    badgeEl.textContent = '🟡 Mock 글 (AI 미연결)';
-    badgeEl.className = 'badge mock';
-    if(result.fallback && result.fallbackReason){
-      noticeEl.style.display = 'block';
-      noticeEl.innerHTML = `<b>AI 연결 실패</b>` +
-        `<div style="margin-top:4px;font-size:12px;">${escapeHtml(result.fallbackReason)}</div>` +
-        `<div style="margin-top:6px;font-size:11px;color:#6b7280;">Mock 초안을 직접 편집한 뒤 임시저장할 수 있습니다.</div>`;
-    } else {
-      noticeEl.style.display = 'none';
-    }
+    badgeEl.textContent = `✅ 실제 AI 글 생성 · ${usedName || 'AI'}`;
+    badgeEl.className = 'badge success';
+    noticeEl.style.display = 'none';
   }
 }
 

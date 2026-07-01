@@ -220,6 +220,9 @@ async function handleSaveDraft(){
         url: r.url || ''
       });
       showToast('임시저장 완료 (실제 Blogger)');
+      if (typeof showPubmgmtSaveResult === 'function') {
+        showPubmgmtSaveResult({ postId: r.postId || '', url: r.url || '' }, 'draft');
+      }
       refreshBloggerScreen();
       refreshDashboard();
       return;
@@ -309,6 +312,9 @@ async function handleSchedule(){
         url: r.url || ''
       });
       showToast('예약발행 완료 (실제 Blogger)');
+      if (typeof showPubmgmtSaveResult === 'function') {
+        showPubmgmtSaveResult({ postId: r.postId || '', url: r.url || '' }, 'schedule');
+      }
       refreshBloggerScreen();
       refreshDashboard();
       return;
@@ -443,6 +449,28 @@ function refreshDashboard(){
   const dailyLimit = getDailyPublishLimit();
   const todayCount = getTodaySavedCount();
   document.getElementById('dash-today-count').textContent = `${todayCount}건 / ${dailyLimit}건`;
+
+  // r9-gui-one-screen-fix1: 홈 compact 상태 행 — 키워드 / 글 생성 상태 / 품질 점수
+  const post = loadLocal(STORAGE_KEYS.CURRENT_POST, null);
+  const kwEl = document.getElementById('dash-current-keyword');
+  if(kwEl){
+    const kw = (post && post.keyword) || loadLocal(STORAGE_KEYS.LAST_KEYWORD, '');
+    kwEl.textContent = kw || '없음';
+  }
+  const postStatusEl = document.getElementById('dash-post-status');
+  if(postStatusEl){
+    if(post && post.title){
+      const t = post.title.length > 16 ? post.title.slice(0, 16) + '…' : post.title;
+      postStatusEl.textContent = `생성됨 · ${t}`;
+    } else {
+      postStatusEl.textContent = '생성된 글 없음';
+    }
+  }
+  const qsEl = document.getElementById('dash-quality-score');
+  if(qsEl){
+    const score = loadLocal(STORAGE_KEYS.QUALITY_SCORE, null);
+    qsEl.textContent = score !== null ? `${score}점` : '검수 전';
+  }
 
   const apiMode = getApiMode();
   const modeBadge = document.getElementById('dash-mode-badge');
