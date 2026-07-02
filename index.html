@@ -8,8 +8,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>BPW — BlogSpot 자동화 (v0.1.1-r9-gui-popup-menu-fix5)</title>
-<link rel="stylesheet" href="./assets/css/style.css?v=r9-gui-popup-menu-fix5">
+<title>BPW — BlogSpot 자동화 (v0.1.1-r9-gui-hard-reset-layout-fix1)</title>
+<link rel="stylesheet" href="./assets/css/style.css?v=r9-gui-hard-reset-layout-fix1">
 </head>
 <body>
 <div id="app">
@@ -42,7 +42,7 @@
      ========================================= -->
 <div class="screen" id="screen-dashboard">
   <div class="topbar" style="margin:-10px -12px 8px -12px;">
-    <h1>BPW <small style="font-size:12px;font-weight:500;color:#6b7280;">v0.1.1-r9-gui-popup-menu-fix5</small></h1>
+    <h1>BPW <small style="font-size:12px;font-weight:500;color:#6b7280;">v0.1.1-r9-gui-hard-reset-layout-fix1</small></h1>
     <span class="badge mock" id="dash-mode-badge">Mock 모드</span>
   </div>
 
@@ -219,7 +219,7 @@
     <div style="display:flex;gap:6px;">
       <button class="btn btn-secondary" style="flex:1;min-height:36px;font-size:11.5px;margin-top:0;" onclick="goScreen('preview')">미리보기</button>
       <button class="btn btn-secondary" style="flex:1;min-height:36px;font-size:11.5px;margin-top:0;" onclick="runQualityCheckAndShow()">품질검수</button>
-      <button class="btn btn-primary"   style="flex:1;min-height:36px;font-size:11.5px;margin-top:0;" onclick="safeGoScreen('pubmgmt')">발행</button>
+      <button class="btn btn-primary"   style="flex:1;min-height:36px;font-size:11.5px;margin-top:0;" onclick="hardResetUI();safeGoScreen('pubmgmt')">발행</button>
     </div>
   </div>
 
@@ -239,7 +239,7 @@
 
     <div id="quality-gap-list" class="compact-list" style="margin-top:6px;"></div>
 
-    <button class="btn btn-primary" style="margin-top:6px;min-height:36px;font-size:12px;" onclick="safeGoScreen('pubmgmt')">발행관리로 이동</button>
+    <button class="btn btn-primary" style="margin-top:6px;min-height:36px;font-size:12px;" onclick="hardResetUI();safeGoScreen('pubmgmt')">발행관리로 이동</button>
   </div>
 </div>
 
@@ -268,7 +268,17 @@
       <div class="row-between small-sub">
         <span>품질점수</span><b id="pubmgmt-score">—</b>
       </div>
+      <div class="row-between small-sub" style="margin-top:2px;">
+        <span>Blogger</span><span id="pubmgmt-blogger-status" class="badge">미연결</span>
+      </div>
+      <p id="pubmgmt-blogger-blog-name" class="hint" style="display:none;margin-top:2px;"></p>
+      <div id="pubmgmt-fail-box" style="display:none;margin-top:2px;">
+        <p id="pubmgmt-fail-reason" class="hint" style="color:#dc2626;"></p>
+      </div>
       <p id="pubmgmt-score-info" class="hint" style="margin-top:2px;"></p>
+      <div class="row-between small-sub" style="margin-top:2px;">
+        <span>최근 저장</span><span id="pubmgmt-last-save-summary">아직 없음</span>
+      </div>
     </div>
 
     <!-- Blogger 발행 -->
@@ -278,25 +288,13 @@
       <button class="btn btn-disabled" id="btn-schedule-save" onclick="handlePubmgmtScheduleTrigger()" style="min-height:40px;font-size:13px;">예약발행 (70점 이상)</button>
     </div>
 
-    <!-- 저장 결과 -->
-    <div class="card" id="pubmgmt-save-result" style="display:none;padding:8px 12px;">
-      <h2 style="font-size:12.5px;">저장 결과</h2>
-      <div id="pubmgmt-save-result-content"></div>
-    </div>
-
-    <!-- 발행 전 체크 / 수동 복사 / 목록 — compact row 모음, 전부 바텀시트 -->
+    <!-- 발행 전 체크 / 기타 메뉴(수동 복사·Blogger 글 목록·최근 생성 글은 기타 메뉴 바텀시트 안에서 연다) -->
     <div class="card" style="padding:2px 12px;">
       <div class="settings-menu-row" onclick="showPubmgmtChecklistSheet()">
         <span class="smr-icon">체</span><span class="smr-label">발행 전 체크 보기</span><span class="smr-arrow">›</span>
       </div>
-      <div class="settings-menu-row" onclick="toggleManualCopy()">
-        <span class="smr-icon">복</span><span class="smr-label">수동 복사 (보조)</span><span class="smr-arrow">›</span>
-      </div>
-      <div class="settings-menu-row" onclick="showBloggerListSheet()">
-        <span class="smr-icon">목</span><span class="smr-label">Blogger 글 목록</span><span class="smr-arrow">›</span>
-      </div>
-      <div class="settings-menu-row" style="border-bottom:none;" onclick="showRecentPostsSheet()">
-        <span class="smr-icon">최</span><span class="smr-label">최근 생성 글</span><span class="smr-arrow">›</span>
+      <div class="settings-menu-row" style="border-bottom:none;" onclick="showPubmgmtMoreMenuSheet()">
+        <span class="smr-icon">메</span><span class="smr-label">기타 메뉴</span><span class="smr-arrow">›</span>
       </div>
     </div>
   </div><!-- /pubmgmt-content-area -->
@@ -405,16 +403,16 @@
 </div>
 </div><!-- /app -->
 
-<script src="./assets/js/config.js?v=r9-gui-popup-menu-fix5"></script>
-<script src="./assets/js/storage.js?v=r9-gui-popup-menu-fix5"></script>
-<script src="./assets/js/ui.js?v=r9-gui-popup-menu-fix5"></script>
-<script src="./assets/js/auth.js?v=r9-gui-popup-menu-fix5"></script>
-<script src="./assets/js/editor.js?v=r9-gui-popup-menu-fix5"></script>
-<script src="./assets/js/quality-check.js?v=r9-gui-popup-menu-fix5"></script>
-<script src="./assets/js/hero-image.js?v=r9-gui-popup-menu-fix5"></script>
-<script src="./assets/js/hotissue.js?v=r9-gui-popup-menu-fix5"></script>
-<script src="./assets/js/blogger.js?v=r9-gui-popup-menu-fix5"></script>
-<script src="./assets/js/api.js?v=r9-gui-popup-menu-fix5"></script>
-<script src="./assets/js/app.js?v=r9-gui-popup-menu-fix5"></script>
+<script src="./assets/js/config.js?v=r9-gui-hard-reset-layout-fix1"></script>
+<script src="./assets/js/storage.js?v=r9-gui-hard-reset-layout-fix1"></script>
+<script src="./assets/js/ui.js?v=r9-gui-hard-reset-layout-fix1"></script>
+<script src="./assets/js/auth.js?v=r9-gui-hard-reset-layout-fix1"></script>
+<script src="./assets/js/editor.js?v=r9-gui-hard-reset-layout-fix1"></script>
+<script src="./assets/js/quality-check.js?v=r9-gui-hard-reset-layout-fix1"></script>
+<script src="./assets/js/hero-image.js?v=r9-gui-hard-reset-layout-fix1"></script>
+<script src="./assets/js/hotissue.js?v=r9-gui-hard-reset-layout-fix1"></script>
+<script src="./assets/js/blogger.js?v=r9-gui-hard-reset-layout-fix1"></script>
+<script src="./assets/js/api.js?v=r9-gui-hard-reset-layout-fix1"></script>
+<script src="./assets/js/app.js?v=r9-gui-hard-reset-layout-fix1"></script>
 </body>
 </html>
