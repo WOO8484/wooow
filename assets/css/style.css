@@ -189,10 +189,14 @@ body.login-open{
 .topbar{
   position:sticky; top:0; z-index:10; background:rgba(255,255,255,0.92); backdrop-filter:blur(6px);
   padding:16px 16px 14px 16px; border-bottom:1px solid var(--color-border);
-  display:flex; align-items:center; justify-content:space-between;
+  display:flex; align-items:center; justify-content:space-between; flex-wrap:nowrap; gap:8px;
   width:100%; max-width:100%; overflow-x:hidden;
 }
-.topbar h1{ font-size:18px; margin:0; font-weight:800; letter-spacing:-0.3px; }
+.topbar h1{
+  font-size:18px; margin:0; font-weight:800; letter-spacing:-0.3px;
+  flex:1 1 auto; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.topbar .badge{ flex-shrink:0; white-space:nowrap; }
 
 .badge{
   font-size:11px; padding:4px 9px; border-radius:999px;
@@ -564,7 +568,7 @@ select, textarea {
 }
 
 /* 홈 흐름 버튼 컴팩트 */
-#screen-dashboard .btn[style*="text-align:left"] {
+#screen-dashboard .dash-flow-btn {
   padding: 11px 14px !important;
   line-height: 1.3;
 }
@@ -686,7 +690,7 @@ img { max-width: 100%; height: auto; }
 }
 
 /* 홈 흐름 버튼 아이콘/텍스트 정렬 보정 */
-#screen-dashboard .btn[style*="text-align:left"] > div:first-child {
+#screen-dashboard .dash-flow-btn > div:first-child {
   vertical-align: middle;
   line-height: 1;
 }
@@ -744,7 +748,7 @@ img { max-width: 100%; height: auto; }
 #screen-dashboard .topbar { margin-bottom: 8px !important; }
 /* 품질검수 핵심 문제는 최대 3개까지만 노출 (quality-check.js 미수정, CSS로만 제한) */
 #quality-gap-list > div:nth-child(n+4) { display: none; }
-#screen-dashboard .btn[style*="text-align:left"] {
+#screen-dashboard .dash-flow-btn {
   padding: 8px 12px !important;
   min-height: 40px;
 }
