@@ -8,8 +8,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>BPW — BlogSpot 자동화 (v0.1.1-r9-gui-mobile-base-hardening-fix3)</title>
-<link rel="stylesheet" href="./assets/css/style.css?v=r9-gui-mobile-base-hardening-fix3">
+<title>BPW — BlogSpot 자동화 (v0.1.1-r9-gui-mobile-inline-density-fix5)</title>
+<link rel="stylesheet" href="./assets/css/style.css?v=r9-gui-mobile-inline-density-fix5">
 </head>
 <body>
 <div id="app">
@@ -42,7 +42,7 @@
      ========================================= -->
 <div class="screen" id="screen-dashboard">
   <div class="topbar" style="margin:-10px -12px 8px -12px;">
-    <h1>BPW <small style="font-size:12px;font-weight:500;color:#6b7280;">v0.1.1-r9-gui-mobile-base-hardening-fix3</small></h1>
+    <h1>BPW <small style="font-size:12px;font-weight:500;color:#6b7280;">v0.1.1-r9-gui-mobile-inline-density-fix5</small></h1>
     <span class="badge mock" id="dash-mode-badge">Mock 모드</span>
   </div>
 
@@ -116,7 +116,7 @@
     <div id="hotissue-expand-list" style="line-height:2;"></div>
   </div>
 
-  <div class="card" id="hotissue-loading-card" style="display:none;text-align:center;padding:24px 16px;">
+  <div class="card" id="hotissue-loading-card" style="display:none;text-align:center;padding:12px 12px;">
     <p class="desc">핫이슈 분석 중...</p>
     <p class="small-sub">네이버 검색 + 확장 키워드 + 점수 계산 중입니다.</p>
   </div>
@@ -146,7 +146,7 @@
   <div class="card" style="padding:8px 12px;">
     <div style="display:flex;gap:8px;align-items:center;">
       <input type="text" id="autowrite-keyword" placeholder="키워드 입력 또는 핫이슈 탭에서 가져오기" style="flex:1;">
-      <button class="btn btn-ghost" style="white-space:nowrap;font-size:12px;flex-shrink:0;margin-top:0;" onclick="syncAutowriteKeyword()">가져오기</button>
+      <button class="btn btn-ghost autowrite-import-btn" style="white-space:nowrap;" onclick="syncAutowriteKeyword()">가져오기</button>
     </div>
     <p id="autowrite-import-status" class="hint" style="margin:6px 0 0;">가져온 키워드 없음</p>
 
@@ -165,7 +165,7 @@
       </label>
     </div>
 
-    <button class="btn btn-primary" id="btn-generate-post" onclick="handleGeneratePostFromAutowrite()" style="font-size:14.5px;padding:11px;margin-top:8px;">글 자동 생성 시작</button>
+    <button class="btn btn-primary" id="btn-generate-post" onclick="handleGeneratePostFromAutowrite()" style="font-size:14px;padding:9px;margin-top:8px;">글 자동 생성 시작</button>
     <p class="hint" id="editor-worker-mode-hint" style="display:none;color:#d97706;">Worker 연결 테스트를 먼저 해주세요. Mock 모드로 진행됩니다.</p>
   </div>
 
@@ -397,22 +397,21 @@
 <div id="popup-overlay-backdrop"></div>
 <!-- r8: 바텀시트 공통 (dismiss 가능) -->
 <div id="bottom-sheet-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:300;" onclick="uiCloseBottomSheet()"></div>
-<div id="bottom-sheet" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;padding:20px 16px 32px;z-index:301;">
-  <div style="width:40px;height:4px;background:#e5e7eb;border-radius:2px;margin:0 auto 16px;"></div>
+<div id="bottom-sheet" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;border-radius:16px 16px 0 0;padding:10px 12px;z-index:301;">
   <div id="bottom-sheet-content"></div>
 </div>
 </div><!-- /app -->
 
-<script src="./assets/js/config.js?v=r9-gui-mobile-base-hardening-fix3"></script>
-<script src="./assets/js/storage.js?v=r9-gui-mobile-base-hardening-fix3"></script>
-<script src="./assets/js/ui.js?v=r9-gui-mobile-base-hardening-fix3"></script>
-<script src="./assets/js/auth.js?v=r9-gui-mobile-base-hardening-fix3"></script>
-<script src="./assets/js/editor.js?v=r9-gui-mobile-base-hardening-fix3"></script>
-<script src="./assets/js/quality-check.js?v=r9-gui-mobile-base-hardening-fix3"></script>
-<script src="./assets/js/hero-image.js?v=r9-gui-mobile-base-hardening-fix3"></script>
-<script src="./assets/js/hotissue.js?v=r9-gui-mobile-base-hardening-fix3"></script>
-<script src="./assets/js/blogger.js?v=r9-gui-mobile-base-hardening-fix3"></script>
-<script src="./assets/js/api.js?v=r9-gui-mobile-base-hardening-fix3"></script>
-<script src="./assets/js/app.js?v=r9-gui-mobile-base-hardening-fix3"></script>
+<script src="./assets/js/config.js?v=r9-gui-mobile-inline-density-fix5"></script>
+<script src="./assets/js/storage.js?v=r9-gui-mobile-inline-density-fix5"></script>
+<script src="./assets/js/ui.js?v=r9-gui-mobile-inline-density-fix5"></script>
+<script src="./assets/js/auth.js?v=r9-gui-mobile-inline-density-fix5"></script>
+<script src="./assets/js/editor.js?v=r9-gui-mobile-inline-density-fix5"></script>
+<script src="./assets/js/quality-check.js?v=r9-gui-mobile-inline-density-fix5"></script>
+<script src="./assets/js/hero-image.js?v=r9-gui-mobile-inline-density-fix5"></script>
+<script src="./assets/js/hotissue.js?v=r9-gui-mobile-inline-density-fix5"></script>
+<script src="./assets/js/blogger.js?v=r9-gui-mobile-inline-density-fix5"></script>
+<script src="./assets/js/api.js?v=r9-gui-mobile-inline-density-fix5"></script>
+<script src="./assets/js/app.js?v=r9-gui-mobile-inline-density-fix5"></script>
 </body>
 </html>
