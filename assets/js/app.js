@@ -23,14 +23,14 @@ function refreshSettingsScreen(){
 // 핵심 버튼만 표시한다. Worker URL 입력은 별도 바텀시트(showWorkerUrlSheet)로 분리한다.
 function showConnectionSettingsSheet() {
   uiOpenBottomSheet(
-    `<h3 style="margin:0 0 10px;font-size:15px;font-weight:700;color:#1c2434;">연결 설정</h3>` +
+    `<h3 style="margin:0 0 8px;font-size:15px;font-weight:700;color:#1c2434;">연결 설정</h3>` +
     `<div style="display:flex;flex-direction:column;gap:2px;">
       <div class="row-between small-sub"><span>Worker</span><span id="worker-status-badge" class="badge">미확인</span></div>
       <div class="row-between small-sub"><span>AI Provider</span><span id="settings-ai-provider-inline">—</span></div>
       <div class="row-between small-sub"><span>Blogger</span><span id="settings-blogger-status-badge" class="badge">미확인</span></div>
       <div class="row-between small-sub"><span>Naver</span><span id="settings-naver-status-badge" class="badge">미확인</span></div>
     </div>` +
-    `<div style="display:flex;flex-direction:column;gap:8px;margin-top:12px;">
+    `<div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
       <button class="btn btn-secondary" onclick="showWorkerUrlSheet()">Worker URL 설정</button>
       <button class="btn btn-secondary" onclick="handleBloggerConnectFromSettings()">Blogger 연결 확인</button>
       <button class="btn btn-ghost" onclick="typeof reconnectAllFromStatusBar==='function'&&reconnectAllFromStatusBar()">전체 연결 재확인</button>
@@ -44,7 +44,7 @@ function showConnectionSettingsSheet() {
 // Worker URL 입력/테스트/상세 상태는 별도 단계 화면으로 분리
 function showWorkerUrlSheet() {
   uiOpenBottomSheet(
-    `<h3 style="margin:0 0 10px;font-size:15px;font-weight:700;color:#1c2434;">Worker URL 설정</h3>` +
+    `<h3 style="margin:0 0 8px;font-size:15px;font-weight:700;color:#1c2434;">Worker URL 설정</h3>` +
     `<input type="text" id="setting-worker-url" placeholder="https://your-worker.workers.dev" style="font-size:16px;">
     <div style="display:flex;gap:6px;margin-top:6px;">
       <button class="btn btn-primary" style="flex:1;min-height:38px;font-size:13px;" onclick="saveWorkerUrl()">URL 저장</button>
@@ -58,7 +58,7 @@ function showWorkerUrlSheet() {
       <div class="row-between small-sub"><span>URL</span><b id="worker-status-url" style="font-size:11px;word-break:break-all;text-align:right;max-width:60%;">(미입력)</b></div>
       <div class="row-between small-sub" style="display:none;"><span>로그인</span><span id="login-mode-info">Worker /auth/login</span></div>
     </div>` +
-    `<button class="btn btn-ghost" style="margin-top:10px;" onclick="uiCloseBottomSheet();showConnectionSettingsSheet();">← 연결 설정으로</button>` +
+    `<button class="btn btn-ghost" style="margin-top:8px;" onclick="uiCloseBottomSheet();showConnectionSettingsSheet();">← 연결 설정으로</button>` +
     `<button class="btn btn-ghost" style="margin-top:6px;" onclick="uiCloseBottomSheet();">닫기</button>`
   );
   const workerUrlEl = document.getElementById('setting-worker-url');
@@ -70,7 +70,7 @@ function showWritingDefaultsSheet() {
   uiOpenBottomSheet(
     `<h3 style="margin:0 0 8px;font-size:15px;font-weight:700;color:#1c2434;">글쓰기 기본값</h3>` +
     `<p class="desc" style="margin-top:0;">쉼표(,)로 구분해서 입력하세요.</p>
-    <textarea id="setting-banned-words" placeholder="예: 100% 효과, 무조건 보장" style="min-height:70px;"></textarea>
+    <textarea id="setting-banned-words" placeholder="예: 100% 효과, 무조건 보장" style="min-height:48px;"></textarea>
     <button class="btn btn-secondary" onclick="saveBannedWords()">저장하기</button>
     <button class="btn btn-ghost" style="margin-top:6px;" onclick="uiCloseBottomSheet();">닫기</button>`
   );
@@ -97,7 +97,7 @@ function showDataManagementSheet() {
     `<div class="row-between small-sub"><span>앱</span><span>${typeof APP_DISPLAY_VERSION !== 'undefined' ? APP_DISPLAY_VERSION : '—'}</span></div>
     <div class="row-between small-sub"><span>Worker</span><span id="settings-worker-version">—</span></div>
     <div class="row-between small-sub"><span>AI</span><span id="settings-ai-provider">—</span></div>
-    <button class="btn btn-danger" style="margin-top:10px;" onclick="resetAllData()">전체 초기화</button>
+    <button class="btn btn-danger" style="margin-top:8px;" onclick="resetAllData()">전체 초기화</button>
     <button class="btn btn-ghost" style="margin-top:6px;" onclick="uiCloseBottomSheet();">닫기</button>`
   );
   refreshSettingsScreenExtra();
@@ -422,7 +422,7 @@ function handleClearRecentPosts() {
 // input/select id는 그대로 유지하고, 시트 삽입 직후 editor.js의 바인딩/복원 함수를 재사용한다.
 function toggleWriteOptions() {
   uiOpenBottomSheet(
-    `<h3 style="margin:0 0 10px;font-size:15px;font-weight:700;color:#1c2434;">글쓰기 옵션</h3>` +
+    `<h3 style="margin:0 0 8px;font-size:15px;font-weight:700;color:#1c2434;">글쓰기 옵션</h3>` +
     `<label style="margin-top:0;">글쓴이 느낌</label>
     <select id="setting-writer-persona">
       <option value="neutral">성별 드러내지 않음</option>
@@ -443,7 +443,7 @@ function toggleWriteOptions() {
       <option value="none">사용 안 함</option>
       <option value="moderate">적당히 사용</option>
     </select>
-    <button class="btn btn-ghost" style="margin-top:10px;" onclick="uiCloseBottomSheet();">닫기</button>`
+    <button class="btn btn-ghost" style="margin-top:8px;" onclick="uiCloseBottomSheet();">닫기</button>`
   );
   // 새로 생성된 select에 값 복원 + change 이벤트 바인딩 (editor.js 함수 재사용)
   const personaSelect = document.getElementById('setting-writer-persona');
@@ -508,14 +508,14 @@ function showAutowriteDetailSheet() {
   const meta = post?.metaDescription || post?.summary || '(없음)';
   const labels = Array.isArray(post?.labels) && post.labels.length ? post.labels.join(', ') : '(없음)';
   uiOpenBottomSheet(
-    `<h3 style="margin:0 0 10px;font-size:15px;font-weight:700;color:#1c2434;">생성된 글 상세</h3>` +
+    `<h3 style="margin:0 0 8px;font-size:15px;font-weight:700;color:#1c2434;">생성된 글 상세</h3>` +
     `<div class="row-between small-sub" style="margin-bottom:2px;"><span>제목</span></div>
-    <p class="small-sub" style="margin:0 0 10px;font-size:12px;line-height:1.6;">${esc(post?.title || '(없음)')}</p>
+    <p class="small-sub" style="margin:0 0 8px;font-size:12px;line-height:1.6;">${esc(post?.title || '(없음)')}</p>
     <div class="row-between small-sub" style="margin-bottom:2px;"><span>메타 설명</span></div>
-    <p class="small-sub" style="margin:0 0 10px;font-size:12px;line-height:1.6;">${esc(meta)}</p>
+    <p class="small-sub" style="margin:0 0 8px;font-size:12px;line-height:1.6;">${esc(meta)}</p>
     <div class="row-between small-sub" style="margin-bottom:2px;"><span>라벨</span></div>
     <p class="small-sub" style="margin:0;font-size:12px;">${esc(labels)}</p>` +
-    `<button class="btn btn-ghost" style="margin-top:14px;" onclick="uiCloseBottomSheet();">닫기</button>`
+    `<button class="btn btn-ghost" style="margin-top:8px;" onclick="uiCloseBottomSheet();">닫기</button>`
   );
 }
 function toggleManualCopy() {
@@ -539,23 +539,23 @@ function toggleManualCopy() {
     `<h3 style="margin:0 0 4px;font-size:15px;font-weight:700;color:#1c2434;">수동 복사 (보조)</h3>` +
     `<p class="hint" style="margin-top:0;">자동발행 실패 시 사용하는 보조 기능입니다.</p>
     <div style="display:flex;gap:4px;margin-top:8px;">${tabsHtml}</div>
-    <div id="mc-tab-panel-basic" style="margin-top:10px;display:flex;flex-direction:column;gap:8px;">
+    <div id="mc-tab-panel-basic" style="margin-top:8px;display:flex;flex-direction:column;gap:8px;">
       <button class="btn btn-secondary" onclick="handleCopyTitle()">제목 복사</button>
       <button class="btn btn-secondary" onclick="handleCopyMeta()">메타 설명 복사</button>
       <button class="btn btn-secondary" onclick="handleCopyLabels()">라벨/태그 복사</button>
     </div>
-    <div id="mc-tab-panel-image" style="margin-top:10px;display:none;">
+    <div id="mc-tab-panel-image" style="margin-top:8px;display:none;">
       <p class="small-sub" style="font-size:11px;background:#f8fafc;padding:8px;border-radius:6px;margin:0 0 8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${esc(imgPrompt || (post ? '(프롬프트 없음)' : '(생성된 글이 없습니다)'))}</p>
       <div style="display:flex;flex-direction:column;gap:8px;">
         <button class="btn btn-ghost" onclick="handleCopyImgPrompt()">프롬프트 복사</button>
         <button class="btn btn-ghost" onclick="handleCopyAlt()">alt 문구 복사</button>
       </div>
     </div>
-    <div id="mc-tab-panel-all" style="margin-top:10px;display:none;flex-direction:column;gap:8px;">
+    <div id="mc-tab-panel-all" style="margin-top:8px;display:none;flex-direction:column;gap:8px;">
       <button class="btn btn-primary" onclick="handleCopyHtml()">HTML 전체 복사</button>
       <button class="btn btn-secondary" onclick="handleCopyAll()">전체 패키지 복사</button>
     </div>
-    <button class="btn btn-ghost" style="margin-top:10px;" onclick="uiCloseBottomSheet();">닫기</button>`
+    <button class="btn btn-ghost" style="margin-top:8px;" onclick="uiCloseBottomSheet();">닫기</button>`
   );
 }
 function switchManualCopyTab(key) {
@@ -800,7 +800,7 @@ function isBloggerConnectedForPubmgmt() {
 }
 function showBloggerConnectGuideSheet() {
   uiOpenBottomSheet(
-    `<h3 style="margin:0 0 10px;font-size:15px;font-weight:700;color:#1c2434;">Blogger 연결 필요</h3>` +
+    `<h3 style="margin:0 0 8px;font-size:15px;font-weight:700;color:#1c2434;">Blogger 연결 필요</h3>` +
     `<p style="font-size:13px;color:#6b7280;margin:0 0 16px;line-height:1.6;">설정 &gt; 연결 설정에서 Blogger 연결을 확인하세요.</p>` +
     `<div style="display:flex;flex-direction:column;gap:8px;">
       <button class="btn btn-primary" onclick="uiCloseBottomSheet();safeGoScreen('settings')">설정 &gt; 연결 설정으로 이동</button>
@@ -819,13 +819,13 @@ function handlePubmgmtScheduleTrigger() {
 }
 function showPubmgmtScheduleSheet() {
   uiOpenBottomSheet(
-    `<h3 style="margin:0 0 10px;font-size:15px;font-weight:700;color:#1c2434;">예약발행</h3>` +
+    `<h3 style="margin:0 0 8px;font-size:15px;font-weight:700;color:#1c2434;">예약발행</h3>` +
     `<label style="margin-top:0;">예약 날짜 / 시간</label>
     <div class="field-row">
       <div><input type="date" id="schedule-date"></div>
       <div><input type="time" id="schedule-time"></div>
     </div>` +
-    `<div style="display:flex;flex-direction:column;gap:8px;margin-top:14px;">
+    `<div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
       <button class="btn btn-primary" onclick="confirmPubmgmtSchedule()">예약 확정</button>
       <button class="btn btn-ghost" onclick="uiCloseBottomSheet();">취소</button>
     </div>`
@@ -846,7 +846,7 @@ function closeQualityResultCard() {
 // (pubmgmt 화면 자체는 핵심 요소만 남기고 고정, 목록은 바텀시트 내부에서만 스크롤)
 function showBloggerListSheet() {
   uiOpenBottomSheet(
-    `<h3 style="margin:0 0 10px;font-size:15px;font-weight:700;color:#1c2434;">Blogger 글 목록</h3>` +
+    `<h3 style="margin:0 0 8px;font-size:15px;font-weight:700;color:#1c2434;">Blogger 글 목록</h3>` +
     `<p class="hint" style="margin-top:0;">최근 5건만 표시합니다.</p>` +
     `<button class="btn btn-ghost" style="font-size:13px;" onclick="handleLoadBloggerListLimited()">목록 새로 고침</button>` +
     `<div id="blogger-saved-list" style="margin-top:8px;"><p class="small-sub">목록을 불러오려면 위 버튼을 눌러주세요.</p></div>` +
@@ -867,7 +867,7 @@ function handleLoadBloggerListLimited() {
 
 function showRecentPostsSheet() {
   uiOpenBottomSheet(
-    `<h3 style="margin:0 0 10px;font-size:15px;font-weight:700;color:#1c2434;">최근 생성 글</h3>` +
+    `<h3 style="margin:0 0 8px;font-size:15px;font-weight:700;color:#1c2434;">최근 생성 글</h3>` +
     `<p class="hint" style="margin-top:0;">최근 5건까지 저장됩니다.</p>` +
     `<div id="recent-posts-list"><p class="small-sub">저장된 글이 없습니다.</p></div>` +
     `<button class="btn btn-ghost" onclick="handleClearRecentPosts()" style="margin-top:8px;font-size:12px;color:#dc2626;">전체 삭제</button>` +
@@ -899,9 +899,9 @@ function showPubmgmtMoreMenuSheet() {
 //  시트를 먼저 열어 #pubmgmt-checklist-list를 만든 뒤 refreshPubmgmtScreen()을 재호출해 채운다.)
 function showPubmgmtChecklistSheet() {
   uiOpenBottomSheet(
-    `<h3 style="margin:0 0 10px;font-size:15px;font-weight:700;color:#1c2434;">발행 전 체크</h3>` +
+    `<h3 style="margin:0 0 8px;font-size:15px;font-weight:700;color:#1c2434;">발행 전 체크</h3>` +
     `<div id="pubmgmt-checklist-list" style="display:flex;flex-direction:column;gap:5px;font-size:13px;"></div>` +
-    `<button class="btn btn-ghost" style="margin-top:10px;" onclick="uiCloseBottomSheet();">닫기</button>`
+    `<button class="btn btn-ghost" style="margin-top:8px;" onclick="uiCloseBottomSheet();">닫기</button>`
   );
   if (typeof refreshPubmgmtScreen === 'function') refreshPubmgmtScreen();
 }
@@ -1042,9 +1042,9 @@ function showPubmgmtSaveResult(result, type) {
       ${url ? `<div style="margin-top:8px;"><a href="${url}" target="_blank" rel="noopener noreferrer" style="font-size:12px;color:#2563eb;">원문/관리 링크 ↗</a></div>` : ''}`;
   }
   uiOpenBottomSheet(
-    `<h3 style="margin:0 0 10px;font-size:15px;font-weight:700;color:#1c2434;">저장 결과</h3>` +
+    `<h3 style="margin:0 0 8px;font-size:15px;font-weight:700;color:#1c2434;">저장 결과</h3>` +
     bodyHtml +
-    `<button class="btn btn-ghost" style="margin-top:14px;" onclick="uiCloseBottomSheet();">닫기</button>`
+    `<button class="btn btn-ghost" style="margin-top:8px;" onclick="uiCloseBottomSheet();">닫기</button>`
   );
   // r9-gui-hard-reset-layout-fix: 본문에는 짧은 요약 한 줄만 남긴다 (예: "임시저장 완료 · 88점")
   const summaryEl = document.getElementById('pubmgmt-last-save-summary');
@@ -1167,7 +1167,7 @@ function compactHotissueMainResult(area) {
       <span style="font-weight:700;font-size:14px;">${escapeHtml(keywordText)}</span>
       <span style="font-weight:800;color:#2563eb;">${escapeHtml(scoreText)}</span>
     </div>
-    <p class="small-sub" style="margin:0 0 10px;">${escapeHtml(badgeTexts.join(' · '))}</p>
+    <p class="small-sub" style="margin:0 0 8px;">${escapeHtml(badgeTexts.join(' · '))}</p>
     <p class="small-sub" style="font-weight:700;margin:0 0 2px;">블로그</p>
     ${extractRawItemSummaryHtml(rawBlog, 2)}
     <p class="small-sub" style="font-weight:700;margin:8px 0 2px;">웹문서</p>
@@ -1193,9 +1193,9 @@ function showHotissueResultSheet() {
   const stored = area && area.dataset.hiSheetHtml;
   if (!stored) return;
   uiOpenBottomSheet(
-    `<h3 style="margin:0 0 10px;font-size:15px;font-weight:700;color:#1c2434;">핫이슈 검색 결과</h3>` +
+    `<h3 style="margin:0 0 8px;font-size:15px;font-weight:700;color:#1c2434;">핫이슈 검색 결과</h3>` +
     decodeURIComponent(stored) +
-    `<button class="btn btn-ghost" style="margin-top:12px;" onclick="uiCloseBottomSheet();">닫기</button>`
+    `<button class="btn btn-ghost" style="margin-top:8px;" onclick="uiCloseBottomSheet();">닫기</button>`
   );
 }
 
@@ -1243,10 +1243,10 @@ function showHotissueExpandSheet() {
     ? `<p class="small-sub" style="font-size:11px;margin:6px 0 0;color:#9ca3af;">총 ${spans.length}개 중 5개 표시</p>`
     : '';
   uiOpenBottomSheet(
-    `<h3 style="margin:0 0 10px;font-size:15px;font-weight:700;color:#1c2434;">확장 검색 키워드</h3>` +
+    `<h3 style="margin:0 0 8px;font-size:15px;font-weight:700;color:#1c2434;">확장 검색 키워드</h3>` +
     `<div style="line-height:2;">${shown}</div>` +
     note +
-    `<button class="btn btn-ghost" style="margin-top:12px;" onclick="uiCloseBottomSheet();">닫기</button>`
+    `<button class="btn btn-ghost" style="margin-top:8px;" onclick="uiCloseBottomSheet();">닫기</button>`
   );
 }
 
@@ -1387,11 +1387,11 @@ function showPreviewBodySummarySheet() {
   const esc = typeof escapeHtml === 'function' ? escapeHtml : (s => String(s == null ? '' : s));
   const tmp = document.createElement('div');
   tmp.innerHTML = decodeURIComponent(stored);
-  const text = (tmp.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 600);
+  const text = (tmp.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 320);
   uiOpenBottomSheet(
     `<h3 style="margin:0 0 8px;font-size:15px;font-weight:700;color:#1c2434;">본문 요약</h3>` +
-    `<p class="small-sub" style="line-height:1.6;">${esc(text)}${text.length >= 600 ? '…' : ''}</p>` +
-    `<button class="btn btn-ghost" style="margin-top:12px;" onclick="uiCloseBottomSheet();">닫기</button>`
+    `<p class="small-sub" style="line-height:1.6;">${esc(text)}${text.length >= 320 ? '…' : ''}</p>` +
+    `<button class="btn btn-ghost" style="margin-top:8px;" onclick="uiCloseBottomSheet();">닫기</button>`
   );
 }
 
