@@ -22,43 +22,99 @@ const SCREEN_ALIAS = {
   briefing: 'dashboard'
 };
 
+// r9-gui-hard-reset-layout-fix: 화면 이동 전/후 UI 잠금 상태를 강제로 초기화한다.
+// (editor.js/quality-check.js 등의 내부 생성 로직(isGenerating, currentPost 등)은 건드리지 않고,
+//  화면에 남아 클릭을 막을 수 있는 오버레이 DOM/클래스 상태만 정리한다)
+// r9-gui-overlap-navigation-fix에서 쓰던 clearOverlayLock()은 그대로 별칭으로 유지한다.
+const HARD_RESET_LOCK_CLASSES = ['modal-open', 'sheet-open', 'overlay-open', 'no-scroll', 'locked'];
+
+function hardResetUI(){
+  try {
+    // 바텀시트 — 애니메이션 지연 없이 즉시 닫음(전환 중간에 새 화면을 덮지 않도록)
+    const sheet    = document.getElementById('bottom-sheet');
+    const sOverlay = document.getElementById('bottom-sheet-overlay');
+    if (sheet)    { sheet.classList.remove('open'); sheet.style.display = 'none'; }
+    if (sOverlay) { sOverlay.classList.remove('open'); sOverlay.style.display = 'none'; }
+
+    // 공통 팝업 배경 / 로딩 오버레이
+    ['popup-overlay-backdrop', 'loading-overlay'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+
+    // 생성 진행 오버레이 / 품질점수 상세 오버레이 / 핫이슈 원문 팝업 — 표시 상태만 닫는다 (내부 로직 미변경)
+    ['generate-progress-box', 'quality-result-card', 'hotissue-raw-area'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { el.style.display = 'none'; el.classList.remove('active'); el.classList.remove('open'); }
+    });
+
+    // body/html/app/screen에 남을 수 있는 잠금 클래스 + pointer-events 차단 해제
+    // (login-open은 goScreen이 별도로 관리하므로 건드리지 않는다)
+    const lockTargets = [document.body, document.documentElement, document.getElementById('app')]
+      .concat(Array.from(document.querySelectorAll('.screen')));
+    lockTargets.forEach(el => {
+      if (!el) return;
+      HARD_RESET_LOCK_CLASSES.forEach(c => el.classList.remove(c));
+      if (el.style.pointerEvents === 'none') el.style.pointerEvents = '';
+    });
+  } catch (e) {
+    console.error('hardResetUI error', e);
+  }
+}
+
+// 이전 버전 호환용 별칭
+function clearOverlayLock(){ hardResetUI(); }
+
 function goScreen(name){
-  // alias 변환
-  name = SCREEN_ALIAS[name] || name;
+  try {
+    // alias 변환
+    name = SCREEN_ALIAS[name] || name;
 
-  // 모든 화면 숨김
-  document.querySelectorAll('.screen').forEach(s => {
-    s.classList.remove('active');
-    s.style.display = 'none';
-  });
+    // r9-gui-hard-reset-layout-fix: 화면 전환 전 hard reset
+    hardResetUI();
 
-  let target = document.getElementById('screen-' + name);
-  // r8: 없는 화면명이면 dashboard로 fallback
-  if (!target) {
-    name = 'dashboard';
-    target = document.getElementById('screen-dashboard');
+    // 모든 화면 숨김
+    document.querySelectorAll('.screen').forEach(s => {
+      s.classList.remove('active');
+      s.style.display = 'none';
+    });
+
+    let target = document.getElementById('screen-' + name);
+    // r8: 없는 화면명이면 dashboard로 fallback
+    if (!target) {
+      name = 'dashboard';
+      target = document.getElementById('screen-dashboard');
+    }
+    if(target){
+      target.classList.add('active');
+      target.style.display = 'flex';
+    }
+
+    // 로그인 화면 ↔ 일반 화면 body 스크롤 제어
+    if(name === 'login'){
+      document.body.classList.add('login-open');
+    } else {
+      document.body.classList.remove('login-open');
+    }
+
+    // 탭 활성화
+    document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+    const tab = document.querySelector('.tab-item[data-tab="' + name + '"]');
+    if(tab) tab.classList.add('active');
+
+    window.scrollTo(0, 0);
+    refreshCurrentScreen(name);
+    // r8: 상태바 현재 화면 업데이트
+    typeof updateStatusBar === 'function' && updateStatusBar(name);
+
+    // r9-gui-hard-reset-layout-fix: 화면 전환 직후 한 번 더 hard reset
+    // (전환 중 비동기로 열린 오버레이/시트가 있어도 다음 프레임에 확실히 정리)
+    requestAnimationFrame(() => hardResetUI());
+  } catch (e) {
+    console.error('goScreen error', e);
+    hardResetUI();
+    typeof showToast === 'function' && showToast('화면 전환 중 문제가 발생했습니다. 다시 시도해주세요.');
   }
-  if(target){
-    target.classList.add('active');
-    target.style.display = 'flex';
-  }
-
-  // 로그인 화면 ↔ 일반 화면 body 스크롤 제어
-  if(name === 'login'){
-    document.body.classList.add('login-open');
-  } else {
-    document.body.classList.remove('login-open');
-  }
-
-  // 탭 활성화
-  document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
-  const tab = document.querySelector('.tab-item[data-tab="' + name + '"]');
-  if(tab) tab.classList.add('active');
-
-  window.scrollTo(0, 0);
-  refreshCurrentScreen(name);
-  // r8: 상태바 현재 화면 업데이트
-  typeof updateStatusBar === 'function' && updateStatusBar(name);
 }
 
 // 탭바 클릭 — 글 생성 중 이탈 확인
@@ -70,19 +126,21 @@ function safeGoScreen(name){
 }
 
 // 화면 진입 시 데이터 새로고침
+// r9-gui-hard-reset-layout-fix: 개별 화면 refresh 함수 오류가 전체 화면 이동을 막지 않도록 최소 방어
 function refreshCurrentScreen(name){
-  if(name === 'keyword')   typeof refreshKeywordScreen  === 'function' && refreshKeywordScreen();
-  if(name === 'editor')    typeof refreshEditorScreen   === 'function' && refreshEditorScreen();
-  if(name === 'quality')   typeof refreshQualityScreen  === 'function' && refreshQualityScreen();
-  if(name === 'preview')   typeof refreshPreviewScreen  === 'function' && refreshPreviewScreen();
-  if(name === 'blogger')   typeof refreshBloggerScreen  === 'function' && refreshBloggerScreen();
-  if(name === 'publish')   typeof refreshPublishScreen  === 'function' && refreshPublishScreen();
-  if(name === 'briefing')  typeof refreshBriefingScreen === 'function' && refreshBriefingScreen();
-  if(name === 'settings')  { typeof refreshSettingsScreen === 'function' && refreshSettingsScreen(); typeof refreshSettingsScreenExtra === 'function' && refreshSettingsScreenExtra(); }
-  if(name === 'dashboard') typeof refreshDashboard      === 'function' && refreshDashboard();
-  if(name === 'hotissue')  typeof refreshHotissueScreen  === 'function' && refreshHotissueScreen();
-  if(name === 'autowrite') typeof refreshAutowriteScreen === 'function' && refreshAutowriteScreen();
-  if(name === 'pubmgmt')   typeof refreshPubmgmtScreen   === 'function' && refreshPubmgmtScreen();
+  const call = (fn) => { try { typeof fn === 'function' && fn(); } catch (e) { console.error('refreshCurrentScreen error', name, e); } };
+  if(name === 'keyword')   call(typeof refreshKeywordScreen  === 'function' ? refreshKeywordScreen  : null);
+  if(name === 'editor')    call(typeof refreshEditorScreen   === 'function' ? refreshEditorScreen   : null);
+  if(name === 'quality')   call(typeof refreshQualityScreen  === 'function' ? refreshQualityScreen  : null);
+  if(name === 'preview')   call(typeof refreshPreviewScreen  === 'function' ? refreshPreviewScreen  : null);
+  if(name === 'blogger')   call(typeof refreshBloggerScreen  === 'function' ? refreshBloggerScreen  : null);
+  if(name === 'publish')   call(typeof refreshPublishScreen  === 'function' ? refreshPublishScreen  : null);
+  if(name === 'briefing')  call(typeof refreshBriefingScreen === 'function' ? refreshBriefingScreen : null);
+  if(name === 'settings')  { call(typeof refreshSettingsScreen === 'function' ? refreshSettingsScreen : null); call(typeof refreshSettingsScreenExtra === 'function' ? refreshSettingsScreenExtra : null); }
+  if(name === 'dashboard') call(typeof refreshDashboard      === 'function' ? refreshDashboard      : null);
+  if(name === 'hotissue')  call(typeof refreshHotissueScreen  === 'function' ? refreshHotissueScreen  : null);
+  if(name === 'autowrite') call(typeof refreshAutowriteScreen === 'function' ? refreshAutowriteScreen : null);
+  if(name === 'pubmgmt')   call(typeof refreshPubmgmtScreen   === 'function' ? refreshPubmgmtScreen   : null);
 }
 
 /* ============================================================

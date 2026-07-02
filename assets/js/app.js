@@ -816,6 +816,23 @@ function showRecentPostsSheet() {
   if (typeof renderRecentPostsList === 'function') renderRecentPostsList();
 }
 
+// r9-gui-hard-reset-layout-fix: 발행관리 본문에는 "발행 전 체크"와 "기타 메뉴" 버튼만 두고,
+// 수동 복사 / Blogger 글 목록 / 최근 생성 글은 기타 메뉴 바텀시트 안에서 연다.
+function showPubmgmtMoreMenuSheet() {
+  uiOpenBottomSheet(
+    `<h3 style="margin:0 0 6px;font-size:15px;font-weight:700;color:#1c2434;">기타 메뉴</h3>` +
+    `<div class="settings-menu-row" onclick="uiCloseBottomSheet();toggleManualCopy();">
+      <span class="smr-icon">복</span><span class="smr-label">수동 복사 (보조)</span><span class="smr-arrow">›</span>
+    </div>
+    <div class="settings-menu-row" onclick="uiCloseBottomSheet();showBloggerListSheet();">
+      <span class="smr-icon">목</span><span class="smr-label">Blogger 글 목록</span><span class="smr-arrow">›</span>
+    </div>
+    <div class="settings-menu-row" style="border-bottom:none;" onclick="uiCloseBottomSheet();showRecentPostsSheet();">
+      <span class="smr-icon">최</span><span class="smr-label">최근 생성 글</span><span class="smr-arrow">›</span>
+    </div>`
+  );
+}
+
 // r9-gui-layout-lock-fix4: 발행 전 체크리스트도 공통 바텀시트로 열림
 // (renderPubmgmtChecklist는 refreshPubmgmtScreen 안에서 null-safe하게 호출되므로,
 //  시트를 먼저 열어 #pubmgmt-checklist-list를 만든 뒤 refreshPubmgmtScreen()을 재호출해 채운다.)
@@ -929,13 +946,9 @@ function closeBottomSheet() {
 }
 
 // 저장 성공 후 상태바도 갱신
+// r9-gui-overlap-navigation-fix: 저장 결과를 본문 카드에 길게 남기지 않고 바텀시트로 표시한다.
 const _origShowPubmgmtSaveResult = typeof showPubmgmtSaveResult === 'function' ? showPubmgmtSaveResult : null;
 function showPubmgmtSaveResult(result, type) {
-  const card    = document.getElementById('pubmgmt-save-result');
-  const content = document.getElementById('pubmgmt-save-result-content');
-  if (!card || !content) return;
-  card.style.display = 'block';
-
   const isFail = type && type.includes('fail');
   const typeLabel = type === 'draft' ? '임시저장' : type === 'schedule' ? '예약발행' : '저장';
   const now  = new Date().toLocaleString('ko-KR');
@@ -944,23 +957,32 @@ function showPubmgmtSaveResult(result, type) {
   const score  = loadLocal(STORAGE_KEYS.QUALITY_SCORE, null);
   const err    = result?.error  || '';
 
+  let bodyHtml;
   if (isFail) {
-    card.style.borderColor = '#fecaca';
-    card.style.background  = '#fef2f2';
-    content.innerHTML = `<div style="color:#dc2626;font-weight:700;">${typeLabel} 실패</div>
+    bodyHtml = `<div style="color:#dc2626;font-weight:700;">${typeLabel} 실패</div>
       <div class="small-sub" style="margin-top:6px;">${err}</div>`;
   } else {
-    card.style.borderColor = '#bbf7d0';
-    card.style.background  = '#f0fdf4';
-    content.innerHTML = `<div style="color:#16a34a;font-weight:700;">${typeLabel} 완료</div>
+    bodyHtml = `<div style="color:#16a34a;font-weight:700;">${typeLabel} 완료</div>
       <div class="row-between small-sub" style="margin-top:6px;"><span>저장 시간</span><span>${now}</span></div>
       ${score !== null ? `<div class="row-between small-sub" style="margin-top:4px;"><span>품질점수</span><span>${score}점</span></div>` : ''}
       ${postId ? `<div class="row-between small-sub" style="margin-top:4px;"><span>postId</span><span style="font-size:10px;">${postId}</span></div>` : ''}
       ${url ? `<div style="margin-top:8px;"><a href="${url}" target="_blank" rel="noopener noreferrer" style="font-size:12px;color:#2563eb;">원문/관리 링크 ↗</a></div>` : ''}`;
   }
+  uiOpenBottomSheet(
+    `<h3 style="margin:0 0 10px;font-size:15px;font-weight:700;color:#1c2434;">저장 결과</h3>` +
+    bodyHtml +
+    `<button class="btn btn-ghost" style="margin-top:14px;" onclick="uiCloseBottomSheet();">닫기</button>`
+  );
+  // r9-gui-hard-reset-layout-fix: 본문에는 짧은 요약 한 줄만 남긴다 (예: "임시저장 완료 · 88점")
+  const summaryEl = document.getElementById('pubmgmt-last-save-summary');
+  if (summaryEl) {
+    const scoreTxt = score !== null ? ` · ${score}점` : '';
+    summaryEl.textContent = isFail ? `${typeLabel} 실패` : `${typeLabel} 완료${scoreTxt}`;
+  }
   // 상태바도 갱신
   updateStatusBar();
 }
+
 
 // refreshDashboard 오버라이드: 상태바 갱신 추가
 const _origRefreshDashboard = typeof refreshDashboard === 'function' ? refreshDashboard : null;
