@@ -108,17 +108,9 @@ body.login-open{
 }
 @keyframes fadeIn{ from{opacity:0;transform:translateY(5px);} to{opacity:1;transform:translateY(0);} }
 
-/* r9-gui-one-screen-fix1: screen 내부에서 개별적으로 스크롤을 허용하는 유일한 영역.
-   화면 자체는 절대 스크롤되지 않고, 길어질 수 있는 목록/상세만 이 클래스로 감싸서
-   자체 max-height 안에서 스크롤한다. */
-.compact-list{
-  overflow-y:auto;
-  -webkit-overflow-scrolling:touch;
-  overscroll-behavior:contain;
-  max-height:132px;
-}
-.compact-list.compact-list-sm{ max-height:88px; }
-.compact-list.compact-list-lg{ max-height:180px; }
+/* r9-gui-popup-menu-fix3: .compact-list는 더 이상 내부 스크롤을 만들지 않는다.
+   긴 목록은 스크롤 대신 표시 항목 수 자체를 줄이는 방식(최대 3~5개)으로 처리한다. */
+.compact-list{ overscroll-behavior:contain; }
 
 /* ============================================================
    로그인 화면 — 100dvh 전체 중앙 고정, 패딩 없음
@@ -183,13 +175,14 @@ body.login-open{
   cursor:pointer; border:none; background:none; font-weight:600;
 }
 .tab-item.active{ color:var(--color-primary); font-weight:800; }
-.tab-item .tab-badge{
+.tab-item .tab-icon{
   display:flex; align-items:center; justify-content:center;
-  width:20px; height:20px; margin:0 auto 2px;
-  border-radius:6px; background:#eef1f5; color:#6b7280;
-  font-size:10.5px; font-weight:800;
+  margin:0 auto 2px;
+  color:#6b7280;
 }
-.tab-item.active .tab-badge{ background:var(--color-primary-light); color:var(--color-primary); }
+.tab-item .tab-icon svg{ width:21px; height:21px; display:block; }
+.tab-item.active .tab-icon{ color:var(--color-primary); }
+.tab-item .tab-text{ display:block; }
 
 
 
@@ -430,7 +423,11 @@ th{ background:var(--color-primary-light); }
 #bottom-sheet {
   transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
   transform: translateY(100%);
+  max-height: 88svh;
+  overflow: hidden;
 }
+/* r9-gui-popup-menu-fix4: 시트 내부 콘텐츠는 스크롤 대신 폰트/여백을 줄여서 한 화면에 담는다 */
+#bottom-sheet-content { max-height: calc(88svh - 56px); overflow: hidden; }
 #bottom-sheet.open {
   display: block !important;
   transform: translateY(0);
@@ -741,7 +738,8 @@ img { max-width: 100%; height: auto; }
 /* ── 홈: 현재 상태를 compact-row로, 카드 수를 최소화 ───────── */
 #screen-dashboard .card { padding: 10px 12px; margin-bottom: 7px; }
 #screen-dashboard .topbar { margin-bottom: 8px !important; }
-#dash-recent-list { max-height: 96px; }
+/* r9-gui-popup-menu-fix3: 품질검수 핵심 문제는 최대 3개까지만 노출 (quality-check.js 미수정, CSS로만 제한) */
+#quality-gap-list > div:nth-child(n+4) { display: none; }
 #screen-dashboard .btn[style*="text-align:left"] {
   padding: 8px 12px !important;
   min-height: 40px;
@@ -771,20 +769,18 @@ img { max-width: 100%; height: auto; }
 #autowrite-ai-fail-card .btn { min-height: 34px; font-size: 12px; margin-top: 0; }
 #autowrite-result-meta { padding: 6px 8px !important; }
 #quality-result-card, #editor-result-card { padding: 8px 12px; }
-#quality-checklist { max-height: 120px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-#quality-gap-list { max-height: 110px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+/* r9-gui-popup-menu-fix1: 품질검수 상세 팝업 내부 스크롤 제거 (item 2) — max-height/overflow 삭제 */
 
 /* ── 핫이슈: 결과 목록만 내부 스크롤, screen 자체는 고정 ────── */
 #screen-hotissue .card { padding: 8px 12px; margin-bottom: 6px; }
-#hotissue-expand-list { max-height: 78px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-#hotissue-result-area { max-height: 260px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-#hotissue-raw-blog, #hotissue-raw-web { max-height: 140px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+/* r9-gui-popup-menu-fix3: 핫이슈 확장 키워드/결과 요약 영역은 내부 스크롤 없이 자연스러운 높이로 표시 */
+/* r9-gui-popup-menu-fix3: 원문 상세는 스크롤 대신 각 3개까지만 노출 (hotissue.js 미수정, CSS로만 제한) */
+#hotissue-raw-blog div:nth-of-type(n+4), #hotissue-raw-web div:nth-of-type(n+4) { display: none; }
 
 /* ── 발행관리: 핵심만 표시, 목록류는 compact-list ───────────── */
 #screen-pubmgmt .card { padding: 8px 12px; margin-bottom: 6px; }
-#blogger-saved-list { max-height: 140px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-#recent-posts-list { max-height: 110px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-#pubmgmt-save-result-content { max-height: 120px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+/* r9-gui-popup-menu-fix1: 바텀시트 내부 스크롤 제거 (item 2) — 최근 5개 제한으로 대체 */
+/* r9-gui-popup-menu-fix3: 저장 결과는 성공/실패, 시간, 링크 정도만 표시해 스크롤 없이도 들어간다 */
 
 /* ── 설정: compact-row 메뉴 형태 ─────────────────────────────── */
 #screen-settings .card { padding: 8px 12px; margin-bottom: 6px; }
@@ -843,3 +839,56 @@ img { max-width: 100%; height: auto; }
 
 /* 결과/상태 요약 텍스트는 한 줄로 말줄임 처리해 세로 공간 절약 */
 #pubmgmt-score-info{ overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+
+/* ============================================================
+   r9-gui-popup-layout-fix: 인라인으로 쌓이던 상세 카드를
+   화면을 밀지 않는 중앙 고정 팝업으로 전환한다.
+   editor.js/quality-check.js가 하던 class 'active' / style.display
+   토글 방식은 그대로 두고, 위치·레이어만 오버레이로 바꾼다.
+   ============================================================ */
+
+/* 공통 팝업 배경 (app.js가 표시 여부에 맞춰 동기화) */
+#popup-overlay-backdrop{
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  z-index: 400;
+}
+
+/* 생성 중 진행 상태 — 중앙 오버레이 */
+.progress-box{
+  position: fixed;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  width: calc(100% - 56px);
+  max-width: 360px;
+  z-index: 401;
+  box-shadow: 0 14px 36px rgba(0,0,0,0.22);
+  margin: 0;
+}
+
+/* 품질점수 상세 — 중앙 고정 팝업 (내부 스크롤 없음, item 2) */
+#quality-result-card{
+  position: fixed !important;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  width: calc(100% - 48px);
+  max-width: 400px;
+  z-index: 401;
+  box-shadow: 0 14px 36px rgba(0,0,0,0.24);
+  margin: 0 !important;
+}
+
+/* r9-gui-popup-menu-fix3: 핫이슈 원문 상세 — 중앙 고정 팝업 (내부 스크롤 없음, item 5)
+   hotissue.js의 toggleRawResults()가 하던 style.display 토글은 그대로 두고 위치/레이어만 바꾼다. */
+#hotissue-raw-area{
+  position: fixed !important;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  width: calc(100% - 48px);
+  max-width: 400px;
+  z-index: 401;
+  margin: 0 !important;
+}
+#hotissue-raw-area .card{ box-shadow: 0 14px 36px rgba(0,0,0,0.24); }
