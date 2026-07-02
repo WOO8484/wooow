@@ -324,11 +324,11 @@ function handleClearRecentPosts() {
    ============================================================ */
 
 // ── 자동작성 화면 옵션 토글 ──
-// r9-gui-one-screen-fix2: 글쓰기 옵션 — 카드 펼침 대신 바텀시트로 연다.
+// r9-gui-layout-lock-fix4: 글쓰기 옵션 — 카드 펼침 대신 바텀시트로 연다.
 // input/select id는 그대로 유지하고, 시트 삽입 직후 editor.js의 바인딩/복원 함수를 재사용한다.
 function toggleWriteOptions() {
   uiOpenBottomSheet(
-    `<h3 style="margin:0 0 10px;font-size:15px;font-weight:700;color:#1c2434;">✏️ 글쓰기 옵션</h3>` +
+    `<h3 style="margin:0 0 10px;font-size:15px;font-weight:700;color:#1c2434;">글쓰기 옵션</h3>` +
     `<label style="margin-top:0;">글쓴이 느낌</label>
     <select id="setting-writer-persona">
       <option value="neutral">성별 드러내지 않음</option>
@@ -360,11 +360,11 @@ function toggleWriteOptions() {
   if (typeof bindGenerationOptionEvents === 'function') bindGenerationOptionEvents();
 }
 
-// r9-gui-one-screen-fix2: 글 재료 — 카드 펼침 대신 바텀시트로 연다.
+// r9-gui-layout-lock-fix4: 글 재료 — 카드 펼침 대신 바텀시트로 연다.
 // textarea id는 그대로 유지하고, saveMaterial()/loadMaterialIntoForm()(editor.js)을 그대로 재사용한다.
 function toggleMaterialOptions() {
   uiOpenBottomSheet(
-    `<h3 style="margin:0 0 4px;font-size:15px;font-weight:700;color:#1c2434;">🧩 글 재료 (선택)</h3>` +
+    `<h3 style="margin:0 0 4px;font-size:15px;font-weight:700;color:#1c2434;">글 재료 (선택)</h3>` +
     `<p class="hint" style="margin-top:0;">실제 경험이 있으면 적어주세요. 없으면 AI가 일반적인 내용으로 작성합니다.</p>
     <label style="margin-top:6px;">내가 겪은 상황</label>
     <textarea id="mat-situation" placeholder="실제 겪은 상황이 있다면 적어주세요"></textarea>
@@ -384,12 +384,12 @@ function toggleMaterialOptions() {
     <textarea id="mat-verified-source" style="display:none;"></textarea>
     <textarea id="mat-reader-question" style="display:none;"></textarea>
     <button class="btn btn-secondary" onclick="saveMaterial()">재료 저장하기</button>
-    <p class="hint" id="material-saved-hint" style="display:none;color:#16a34a;">저장되었습니다 ✅</p>`
+    <p class="hint" id="material-saved-hint" style="display:none;color:#16a34a;">저장되었습니다</p>`
   );
   if (typeof loadMaterialIntoForm === 'function') loadMaterialIntoForm();
 }
 
-// r9-gui-one-screen-fix2: 생성 결과 카드 내부 메타/라벨 미리보기 접기(compact 영역, 화면 내 유지)
+// r9-gui-layout-lock-fix4: 생성 결과 카드 내부 메타/라벨 미리보기 접기(compact 영역, 화면 내 유지)
 function toggleAutowriteResultMeta() {
   const body = document.getElementById('autowrite-result-meta');
   const arrow = document.getElementById('autowrite-result-meta-arrow');
@@ -407,17 +407,17 @@ function toggleManualCopy() {
          : ''))
     : '';
   uiOpenBottomSheet(
-    `<h3 style="margin:0 0 4px;font-size:15px;font-weight:700;color:#1c2434;">📋 수동 복사 (보조)</h3>` +
+    `<h3 style="margin:0 0 4px;font-size:15px;font-weight:700;color:#1c2434;">수동 복사 (보조)</h3>` +
     `<p class="hint" style="margin-top:0;">자동발행 실패 시 사용하는 보조 기능입니다.</p>` +
     `<div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;">
       <button class="btn btn-secondary" onclick="handleCopyTitle()">제목 복사</button>
       <button class="btn btn-secondary" onclick="handleCopyMeta()">메타 설명 복사</button>
       <button class="btn btn-secondary" onclick="handleCopyLabels()">라벨/태그 복사</button>
-      <button class="btn btn-primary"   onclick="handleCopyHtml()">✅ HTML 전체 복사</button>
-      <button class="btn btn-secondary" onclick="handleCopyAll()">📦 전체 패키지 복사</button>
+      <button class="btn btn-primary"   onclick="handleCopyHtml()">HTML 전체 복사</button>
+      <button class="btn btn-secondary" onclick="handleCopyAll()">전체 패키지 복사</button>
     </div>` +
     `<div style="margin-top:14px;">
-      <p class="small-sub" style="font-weight:700;margin-bottom:4px;">🖼️ AI 이미지 프롬프트</p>
+      <p class="small-sub" style="font-weight:700;margin-bottom:4px;">AI 이미지 프롬프트</p>
       <p class="small-sub" style="font-size:11px;word-break:break-all;background:#f8fafc;padding:8px;border-radius:6px;margin:4px 0;">${escapeHtml(imgPrompt || (post ? '(프롬프트 없음)' : '(생성된 글이 없습니다)'))}</p>
       <button class="btn btn-ghost" style="font-size:12px;" onclick="handleCopyImgPrompt()">프롬프트 복사</button>
       <button class="btn btn-ghost" style="font-size:12px;" onclick="handleCopyAlt()">alt 문구 복사</button>
@@ -517,7 +517,7 @@ function renderPubmgmtChecklist(post, score, connected) {
 
   el.innerHTML = items.map(it =>
     `<div style="display:flex;gap:6px;align-items:center;font-size:12px;padding:3px 0;">
-      <span>${it.ok ? '✅' : '⚪'}</span>
+      <span class="status-dot ${it.ok ? 'on' : 'off'}"></span>
       <span style="color:${it.ok ? '#374151' : '#9ca3af'};">${it.label}</span>
     </div>`
   ).join('');
@@ -617,27 +617,27 @@ function handleBloggerConnectFromPubmgmt() {
 // (pubmgmt 화면 자체는 핵심 요소만 남기고 고정, 목록은 바텀시트 내부에서만 스크롤)
 function showBloggerListSheet() {
   uiOpenBottomSheet(
-    `<h3 style="margin:0 0 10px;font-size:15px;font-weight:700;color:#1c2434;">📚 Blogger 글 목록</h3>` +
-    `<button class="btn btn-ghost" style="font-size:13px;" onclick="handleLoadBloggerList()">🔄 목록 새로 고침</button>` +
+    `<h3 style="margin:0 0 10px;font-size:15px;font-weight:700;color:#1c2434;">Blogger 글 목록</h3>` +
+    `<button class="btn btn-ghost" style="font-size:13px;" onclick="handleLoadBloggerList()">목록 새로 고침</button>` +
     `<div id="blogger-saved-list" style="margin-top:8px;max-height:55vh;overflow-y:auto;-webkit-overflow-scrolling:touch;"><p class="small-sub">목록을 불러오려면 위 버튼을 눌러주세요.</p></div>`
   );
 }
 
 function showRecentPostsSheet() {
   uiOpenBottomSheet(
-    `<h3 style="margin:0 0 10px;font-size:15px;font-weight:700;color:#1c2434;">🕑 최근 생성 글</h3>` +
+    `<h3 style="margin:0 0 10px;font-size:15px;font-weight:700;color:#1c2434;">최근 생성 글</h3>` +
     `<div id="recent-posts-list" style="max-height:55vh;overflow-y:auto;-webkit-overflow-scrolling:touch;"><p class="small-sub">저장된 글이 없습니다.</p></div>` +
     `<button class="btn btn-ghost" onclick="handleClearRecentPosts()" style="margin-top:8px;font-size:12px;color:#dc2626;">전체 삭제</button>`
   );
   if (typeof renderRecentPostsList === 'function') renderRecentPostsList();
 }
 
-// r9-gui-one-screen-fix2: 발행 전 체크리스트도 공통 바텀시트로 열림
+// r9-gui-layout-lock-fix4: 발행 전 체크리스트도 공통 바텀시트로 열림
 // (renderPubmgmtChecklist는 refreshPubmgmtScreen 안에서 null-safe하게 호출되므로,
 //  시트를 먼저 열어 #pubmgmt-checklist-list를 만든 뒤 refreshPubmgmtScreen()을 재호출해 채운다.)
 function showPubmgmtChecklistSheet() {
   uiOpenBottomSheet(
-    `<h3 style="margin:0 0 10px;font-size:15px;font-weight:700;color:#1c2434;">✅ 발행 전 체크</h3>` +
+    `<h3 style="margin:0 0 10px;font-size:15px;font-weight:700;color:#1c2434;">발행 전 체크</h3>` +
     `<div id="pubmgmt-checklist-list" style="display:flex;flex-direction:column;gap:5px;font-size:13px;max-height:60vh;overflow-y:auto;-webkit-overflow-scrolling:touch;"></div>`
   );
   if (typeof refreshPubmgmtScreen === 'function') refreshPubmgmtScreen();
@@ -684,15 +684,15 @@ function updateStatusBar(currentScreen) {
   const sbBlogger = document.getElementById('sb-blogger-ind');
   const sbNaver   = document.getElementById('sb-naver');
 
-  if (sbMode)    { sbMode.textContent = workerOk ? '🟢 W' : '🟡 M'; }
+  if (sbMode)    { sbMode.textContent = workerOk ? 'Worker' : 'Mock'; }
   if (sbScreen)  {
     const screenNames = { dashboard:'홈', hotissue:'핫이슈', autowrite:'자동작성', pubmgmt:'발행관리', settings:'설정', preview:'미리보기' };
     sbScreen.textContent = screenNames[currentScreen] || currentScreen;
   }
-  if (sbWorker)  { sbWorker.textContent  = workerOk  ? '🟢W'  : '⚪W';  sbWorker.title  = workerOk  ? 'Worker 연결됨' : 'Worker 미연결'; }
-  if (sbAi)      { sbAi.textContent      = workerOk  ? '🟢AI' : '⚪AI'; sbAi.title      = 'AI 상태'; }
-  if (sbBlogger) { sbBlogger.textContent = bloggerOk ? '🟢B'  : '⚪B';  sbBlogger.title = bloggerOk ? 'Blogger 연결됨' : 'Blogger 미연결'; }
-  if (sbNaver)   { sbNaver.textContent   = workerOk  ? '🟢N'  : '⚪N';  sbNaver.title   = 'Naver 상태'; }
+  if (sbWorker)  { sbWorker.innerHTML  = '<span class="status-dot ' + (workerOk  ? 'on' : 'off') + '"></span>W';  sbWorker.title  = workerOk  ? 'Worker 연결됨' : 'Worker 미연결'; }
+  if (sbAi)      { sbAi.innerHTML      = '<span class="status-dot ' + (workerOk  ? 'on' : 'off') + '"></span>AI'; sbAi.title      = 'AI 상태'; }
+  if (sbBlogger) { sbBlogger.innerHTML = '<span class="status-dot ' + (bloggerOk ? 'on' : 'off') + '"></span>B';  sbBlogger.title = bloggerOk ? 'Blogger 연결됨' : 'Blogger 미연결'; }
+  if (sbNaver)   { sbNaver.innerHTML   = '<span class="status-dot ' + (workerOk  ? 'on' : 'off') + '"></span>N';  sbNaver.title   = 'Naver 상태'; }
 }
 
 // ── 바텀시트 열기/닫기 ──
@@ -739,16 +739,16 @@ function showPubmgmtSaveResult(result, type) {
   if (isFail) {
     card.style.borderColor = '#fecaca';
     card.style.background  = '#fef2f2';
-    content.innerHTML = `<div style="color:#dc2626;font-weight:700;">❌ ${typeLabel} 실패</div>
+    content.innerHTML = `<div style="color:#dc2626;font-weight:700;">${typeLabel} 실패</div>
       <div class="small-sub" style="margin-top:6px;">${err}</div>`;
   } else {
     card.style.borderColor = '#bbf7d0';
     card.style.background  = '#f0fdf4';
-    content.innerHTML = `<div style="color:#16a34a;font-weight:700;">✅ ${typeLabel} 완료</div>
+    content.innerHTML = `<div style="color:#16a34a;font-weight:700;">${typeLabel} 완료</div>
       <div class="row-between small-sub" style="margin-top:6px;"><span>저장 시간</span><span>${now}</span></div>
       ${score !== null ? `<div class="row-between small-sub" style="margin-top:4px;"><span>품질점수</span><span>${score}점</span></div>` : ''}
       ${postId ? `<div class="row-between small-sub" style="margin-top:4px;"><span>postId</span><span style="font-size:10px;">${postId}</span></div>` : ''}
-      ${url ? `<div style="margin-top:8px;"><a href="${url}" target="_blank" rel="noopener noreferrer" style="font-size:12px;color:#2563eb;">📎 원문/관리 링크 ↗</a></div>` : ''}`;
+      ${url ? `<div style="margin-top:8px;"><a href="${url}" target="_blank" rel="noopener noreferrer" style="font-size:12px;color:#2563eb;">원문/관리 링크 ↗</a></div>` : ''}`;
   }
   // 상태바도 갱신
   updateStatusBar();

@@ -138,8 +138,8 @@ function showConnectionPanel() {
     : '미연결';
 
   uiOpenBottomSheet(
-    `<h3 style="margin:0 0 10px;font-size:15px;font-weight:700;color:#1c2434;">📡 연결 상태</h3>` +
-    row('Worker',       workerOk ? '연결됨 ✅' : 'Mock 모드', workerOk) +
+    `<h3 style="margin:0 0 10px;font-size:15px;font-weight:700;color:#1c2434;">연결 상태</h3>` +
+    row('Worker',       workerOk ? '연결됨' : 'Mock 모드', workerOk) +
     row('Worker 버전',  verStr,   verStr !== '—') +
     row('AI Provider',  aiProv,   aiProv !== '—' && aiProv !== '없음') +
     row('Blogger',      blogLabel, bloggerOk) +
@@ -147,9 +147,33 @@ function showConnectionPanel() {
       실제 연결 테스트는 <b>설정</b> 화면에서 진행해주세요.
     </p>` +
     `<div style="display:flex;flex-direction:column;gap:8px;">
-      <button class="btn btn-secondary" onclick="uiCloseBottomSheet();safeGoScreen('settings')">⚙️ 설정으로 이동</button>
-      <button class="btn btn-secondary" onclick="uiCloseBottomSheet();safeGoScreen('pubmgmt')">🚀 발행관리로 이동</button>
-      <button class="btn btn-ghost" onclick="uiCloseBottomSheet();typeof handleWorkerConnectionTest==='function'&&handleWorkerConnectionTest()">🔄 연결 재확인</button>
+      <button class="btn btn-secondary" onclick="uiCloseBottomSheet();safeGoScreen('settings')">설정으로 이동</button>
+      <button class="btn btn-secondary" onclick="uiCloseBottomSheet();safeGoScreen('pubmgmt')">발행관리로 이동</button>
+      <button class="btn btn-ghost" onclick="uiCloseBottomSheet();typeof reconnectAllFromStatusBar==='function'&&reconnectAllFromStatusBar()">연결 재확인</button>
+    </div>`
+  );
+}
+
+// r9-gui-layout-lock-fix1: 상태바 "연결 재확인" — 기존 Worker 연결 테스트 +
+// 기존 Blogger 연결 확인 함수를 그대로 순서대로 호출만 한다. (새 로직 작성 금지)
+async function reconnectAllFromStatusBar() {
+  if (typeof handleWorkerConnectionTest === 'function') {
+    await handleWorkerConnectionTest();
+  }
+  if (typeof handleBloggerConnect === 'function') {
+    await handleBloggerConnect();
+  }
+}
+
+// r9-gui-layout-lock-fix1: 계정/로그아웃 — 바로 로그아웃하지 않고
+// 바텀시트로 한 번 확인한 뒤, 안에서 버튼을 눌러야만 handleLogout() 실행
+function showAccountLogoutSheet() {
+  uiOpenBottomSheet(
+    `<h3 style="margin:0 0 10px;font-size:15px;font-weight:700;color:#1c2434;">계정/로그아웃</h3>` +
+    `<p style="font-size:13px;color:#6b7280;margin:0 0 16px;line-height:1.6;">로그아웃하면 다시 비밀번호를 입력해야 합니다. 로그아웃할까요?</p>` +
+    `<div style="display:flex;flex-direction:column;gap:8px;">
+      <button class="btn btn-danger" onclick="uiCloseBottomSheet();typeof handleLogout==='function'&&handleLogout();">로그아웃</button>
+      <button class="btn btn-ghost" onclick="uiCloseBottomSheet();">취소</button>
     </div>`
   );
 }
