@@ -66,18 +66,21 @@ body{
   color:var(--color-text);
   letter-spacing:-0.1px;
   width:100%; max-width:100%;
-  height:100dvh; max-height:100dvh;
+  /* r9-gui-layout-lock-fix: dvh는 iOS Safari 주소창 접힘/펼침마다 값이 바뀌어
+     화면이 위아래로 밀리는 원인이 됨. svh(가장 작은 뷰포트 기준)로 고정하여
+     주소창 상태와 무관하게 항상 동일한 높이를 유지한다. */
+  height:100svh; max-height:100svh;
   overflow:hidden;
 }
 body.login-open{
   overflow:hidden;
-  height:100dvh;
+  height:100svh;
 }
 
 #app{
   width:100%; max-width:480px;
   margin:0 auto;
-  height:100dvh; max-height:100dvh;
+  height:100svh; max-height:100svh;
   display:flex; flex-direction:column;
   background:var(--color-bg);
   overflow:hidden;
@@ -123,8 +126,8 @@ body.login-open{
 #screen-login{
   /* 일반 .screen 패딩을 덮어씌움 */
   padding:0 !important;
-  height:100dvh !important;
-  min-height:100dvh !important;
+  height:100svh !important;
+  min-height:100svh !important;
   justify-content:center !important;
   align-items:center !important;
   overflow:hidden !important;
@@ -180,7 +183,13 @@ body.login-open{
   cursor:pointer; border:none; background:none; font-weight:600;
 }
 .tab-item.active{ color:var(--color-primary); font-weight:800; }
-.tab-item .icon{ font-size:18px; display:block; margin-bottom:2px; }
+.tab-item .tab-badge{
+  display:flex; align-items:center; justify-content:center;
+  width:20px; height:20px; margin:0 auto 2px;
+  border-radius:6px; background:#eef1f5; color:#6b7280;
+  font-size:10.5px; font-weight:800;
+}
+.tab-item.active .tab-badge{ background:var(--color-primary-light); color:var(--color-primary); }
 
 
 
@@ -518,7 +527,7 @@ label { margin-top: 10px; margin-bottom: 4px; display: block; font-size: 13px; }
 input[type="text"], input[type="password"], input[type="number"],
 input[type="date"], input[type="time"],
 select, textarea {
-  font-size: 14px;
+  font-size: 16px;
   padding: 9px 11px;
   width: 100%;
   box-sizing: border-box;
@@ -567,7 +576,7 @@ select, textarea {
 }
 #screen-settings h2 { font-size: 13px; margin-bottom: 6px; }
 /* Worker URL 입력창 — 짧게 표시 */
-#setting-worker-url { font-size: 12px; }
+#setting-worker-url { font-size: 16px; }
 /* 설정 섹션 구분선 대신 카드 간격으로 */
 #screen-settings .card:last-child { margin-bottom: 0; }
 
@@ -644,7 +653,7 @@ img { max-width: 100%; height: auto; }
 /* 발행관리 카드 추가 압축 */
 #screen-pubmgmt #pubmgmt-content-area > .card { margin-bottom: 7px; }
 #screen-pubmgmt .field-row { margin: 5px 0; }
-#screen-pubmgmt .field-row input { padding: 8px 10px; font-size: 13px; }
+#screen-pubmgmt .field-row input { padding: 8px 10px; font-size: 16px; }
 #pubmgmt-save-result h2 { font-size: 13px; margin-bottom: 6px; }
 #pubmgmt-save-result-content { font-size: 12px; line-height: 1.6; }
 
@@ -785,7 +794,12 @@ img { max-width: 100%; height: auto; }
   cursor: pointer; min-height: 40px;
 }
 .settings-menu-row:last-child { border-bottom: none; }
-.settings-menu-row .smr-icon { font-size: 16px; width: 22px; text-align: center; flex-shrink: 0; }
+.settings-menu-row .smr-icon {
+  display: flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; flex-shrink: 0;
+  border-radius: 6px; background: #eef1f5; color: #475569;
+  font-size: 11px; font-weight: 800;
+}
 .settings-menu-row .smr-label { flex: 1; font-weight: 700; font-size: 13px; color: #1c2434; }
 .settings-menu-row .smr-value { font-size: 11.5px; color: #6b7280; max-width: 45%; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .settings-menu-row .smr-arrow { color: #9ca3af; font-size: 13px; flex-shrink: 0; }
@@ -793,11 +807,11 @@ img { max-width: 100%; height: auto; }
 /* 목록/상세를 여는 공통 바텀시트 안에서 쓰는 폼 요소 컴팩트화 */
 #bottom-sheet input[type="text"],
 #bottom-sheet textarea,
-#bottom-sheet input[type="number"] { font-size: 14px; padding: 9px 11px; }
+#bottom-sheet input[type="number"] { font-size: 16px; padding: 9px 11px; }
 #bottom-sheet .card { background: #f8fafc; }
 
 /* ============================================================
-   r9-gui-one-screen-fix2: 자동작성/발행관리 화면 구성 자체를 축소
+   r9-gui-layout-lock-fix1: 자동작성/발행관리 화면 구성 자체를 축소
    (스크롤 차단만으로는 부족 — 카드 수/높이를 실제로 줄임)
    ============================================================ */
 
