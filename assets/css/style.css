@@ -224,7 +224,7 @@ input[type=number], select, textarea{
   width:100%; padding:13px 14px; border-radius:var(--radius-sm); border:1.5px solid var(--color-border);
   font-size:16px; background:#fff; color:var(--color-text); font-family:inherit;
 }
-textarea{ min-height:80px; resize:vertical; font-family:inherit; }
+textarea{ min-height:48px; max-height:56px; resize:none; font-family:inherit; }
 input:focus, textarea:focus, select:focus{ outline:none; border-color:var(--color-primary); box-shadow:0 0 0 3px var(--color-primary-light); }
 
 .field-row{ display:flex; gap:8px; }
@@ -648,7 +648,7 @@ img { max-width: 100%; height: auto; }
   width: 40px; height: 4px;
   background: #e5e7eb;
   border-radius: 2px;
-  margin: 0 auto 14px;
+  margin: 0 auto 8px;
 }
 
 /* 발행관리 카드 추가 압축 */
@@ -898,3 +898,66 @@ img { max-width: 100%; height: auto; }
   margin: 0 !important;
 }
 #hotissue-raw-area .card{ box-shadow: 0 14px 36px rgba(0,0,0,0.24); }
+
+/* ============================================================
+   모바일 압축 밀도 마감
+   버튼/카드 패딩·간격/글자 크기를 실기기 기준으로 더 줄인다.
+   구조는 그대로 두고 크기 값만 최종 조정한다.
+   ============================================================ */
+
+/* 버튼: 일반 36~40px, 큰 CTA도 42px를 넘지 않게 */
+.btn {
+  min-height: 38px;
+  padding: 9px 12px;
+  font-size: 13.5px;
+  margin-top: 4px;
+}
+.btn + .btn { margin-top: 4px; }
+.btn.btn-ghost { min-height: 34px; font-size: 12.5px; }
+#manual-copy-body .btn { min-height: 34px; }
+.icon-btn, .close-x-btn { width: 36px; height: 36px; }
+
+/* 자동작성 "가져오기" — 작은 보조 버튼으로 압축 */
+.autowrite-import-btn {
+  width: auto; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center;
+  min-height: 34px; padding: 0 10px; margin-top: 0; font-size: 12px;
+}
+
+/* 카드 패딩/간격 — 화면 공통 최종 압축 (10~12px 패딩, 6px 이하 간격) */
+.card,
+#screen-dashboard .card,
+#screen-hotissue .card,
+#screen-autowrite .card,
+#screen-pubmgmt .card,
+#screen-settings .card {
+  padding: 10px 12px;
+  margin-bottom: 6px;
+}
+#screen-pubmgmt #pubmgmt-content-area > .card { margin-bottom: 6px; }
+.card h2 { font-size: 13px; margin: 0 0 5px 0; }
+
+/* 입력칸 — 1~2줄 높이로 압축 */
+input[type="text"], input[type="password"], input[type="number"],
+input[type="date"], input[type="time"], select {
+  padding: 8px 10px;
+}
+
+/* 생성 모드 선택 버튼 — 32~36px 수준 */
+.mode-option { min-height: 34px; padding: 6px 4px; }
+
+/* 설정/기타 메뉴 행 — 36~40px 수준 (기존 38px 유지, 과도한 값만 방지) */
+.settings-menu-row { min-height: 38px; padding: 7px 2px; }
+
+/* 배지/칩 — 24~28px 높이 */
+.badge { padding: 3px 9px; font-size: 10.5px; line-height: 1.6; }
+
+/* 품질검수 팝업 — quality-check.js/내부 ID는 그대로 두고 여백만 압축해
+   iPhone Safari에서 상하단이 잘리지 않게 한다. */
+#quality-result-card { padding: 8px 10px; }
+#quality-result-card h2 { font-size: 12px; }
+#quality-result-card #quality-score-msg { font-size: 11px; margin-bottom: 4px; }
+#quality-gap-list > div { padding: 4px 0 !important; font-size: 11.5px !important; }
+
+/* 미리보기 요약 카드 */
+#preview-content .card { padding: 10px 12px; }
+
