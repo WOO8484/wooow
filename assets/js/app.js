@@ -16,10 +16,10 @@ function refreshSettingsScreen(){
   refreshWorkerStatusCard();
 }
 
-// r9-gui-popup-menu-fix1: 설정 화면 본문은 메뉴 버튼만 남기고,
+// 설정 화면 본문은 메뉴 버튼만 남기고,
 // 상세 내용은 각각 바텀시트로 연다. 바텀시트 내부는 스크롤을 만들지 않고
 // 짧은 콘텐츠만 담는다. 저장/테스트 로직은 기존 함수를 그대로 재사용한다.
-// r9-gui-popup-menu-fix2: 연결 설정 첫 화면은 Worker/AI/Blogger/Naver 상태 요약 +
+// 연결 설정 첫 화면은 Worker/AI/Blogger/Naver 상태 요약 +
 // 핵심 버튼만 표시한다. Worker URL 입력은 별도 바텀시트(showWorkerUrlSheet)로 분리한다.
 function showConnectionSettingsSheet() {
   uiOpenBottomSheet(
@@ -41,7 +41,7 @@ function showConnectionSettingsSheet() {
   refreshSettingsScreenExtra();
 }
 
-// r9-gui-popup-menu-fix2: Worker URL 입력/테스트/상세 상태는 별도 단계 화면으로 분리
+// Worker URL 입력/테스트/상세 상태는 별도 단계 화면으로 분리
 function showWorkerUrlSheet() {
   uiOpenBottomSheet(
     `<h3 style="margin:0 0 10px;font-size:15px;font-weight:700;color:#1c2434;">Worker URL 설정</h3>` +
@@ -150,7 +150,7 @@ function refreshWorkerStatusCard(){
   const lastChecked = loadLocal(STORAGE_KEYS.WORKER_LAST_CHECKED, '');
   const mode = getApiMode();
 
-  // r9-gui-popup-menu-fix2: 아래 요소들은 연결 설정 바텀시트가 열려 있을 때만 DOM에 존재한다.
+  // 아래 요소들은 연결 설정 바텀시트가 열려 있을 때만 DOM에 존재한다.
   // 설정 화면 진입 시(바텀시트 미오픈)에도 오류 없이 동작하도록 전부 null guard 처리한다.
   const urlEl = document.getElementById('worker-status-url');
   if (urlEl) urlEl.textContent = getWorkerUrl() || '(아직 입력되지 않음)';
@@ -177,7 +177,7 @@ function refreshWorkerStatusCard(){
   const modeEl = document.getElementById('worker-status-mode');
   if (modeEl) modeEl.textContent = mode === API_MODE.WORKER ? 'Worker 모드' : 'Mock 모드';
 
-  // r9-gui-one-screen-fix1: compact-row 요약 텍스트
+  // compact-row 요약 텍스트
   const summaryEl = document.getElementById('settings-connection-summary');
   if(summaryEl){
     summaryEl.textContent = status === 'success' ? '연결됨' : (status === 'fail' ? '연결 실패' : '미확인');
@@ -224,9 +224,20 @@ window.addEventListener('DOMContentLoaded', () => {
   checkLoginOnLoad();
   loadMaterialIntoForm();
   bindLoginEvents();
-  // r9-gui-popup-menu-fix4: 핫이슈 결과/원문 영역을 한 화면 요약형으로 축소
+  // 핫이슈 결과/원문 영역을 한 화면 요약형으로 축소
   // (hotissue.js는 수정하지 않고, 렌더링 이후 결과 DOM만 후처리한다)
   initHotissueResultCompactor();
+  // r9-gui-mobile-layout-reset: 홈 화면 "최근 생성 글" 카드도 긴 목록 대신
+  // 최근 1건 + 요약 문구만 남긴다. (blogger.js의 refreshDashboard()는 수정하지 않고
+  // 렌더링 이후 DOM만 후처리한다)
+  initDashboardRecentListCompactor();
+  // r9-gui-mobile-layout-reset-fix2: AI 생성 실패 안내는 본문 카드로 노출하지 않고
+  // 바텀시트로 표시한다. (editor.js는 수정하지 않고, 카드 표시 여부만 후처리로 가로챈다)
+  initAutowriteAiFailWatcher();
+  // r9-gui-mobile-base-hardening-fix3: 품질검수 상세 문제 목록 요약 문구 +
+  // 미리보기 본문 요약형 표시 후처리 (quality-check.js/editor.js 미수정)
+  initQualityGapListAnnotator();
+  initPreviewContentCompactor();
 });
 
 /* ============================================================
@@ -285,7 +296,7 @@ function renderRecentPostsList() {
   const listEl = document.getElementById('recent-posts-list');
   if (!listEl) return;
 
-  // r9-gui-popup-menu-fix3: 저장 데이터가 5개를 넘어도 화면에는 실제로 5개까지만 표시
+  // 저장 데이터가 5개를 넘어도 화면에는 실제로 5개까지만 표시
   const posts = (typeof getRecentPosts === 'function' ? getRecentPosts() : []).slice(0, 5);
   if (!posts.length) {
     listEl.innerHTML = '<p class="small-sub">저장된 글이 없습니다.</p>';
@@ -444,7 +455,7 @@ function toggleWriteOptions() {
   if (typeof bindGenerationOptionEvents === 'function') bindGenerationOptionEvents();
 }
 
-// r9-gui-popup-menu-fix1: 글 재료 — textarea 5개를 한 번에 쌓지 않고 탭으로 나눈다.
+// 글 재료 — textarea 5개를 한 번에 쌓지 않고 탭으로 나눈다.
 // textarea id는 그대로 유지하고, saveMaterial()/loadMaterialIntoForm()(editor.js)을 그대로 재사용한다.
 const MATERIAL_TABS = [
   { key: 'situation', label: '상황', id: 'mat-situation',  ph: '실제 겪은 상황이 있다면 적어주세요' },
@@ -490,7 +501,7 @@ function switchMaterialTab(key) {
   });
 }
 
-// r9-gui-popup-menu-fix1: 생성된 글 상세(메타 설명/라벨) — 바텀시트에서 CURRENT_POST를 직접 읽어 표시
+// 생성된 글 상세(메타 설명/라벨) — 바텀시트에서 CURRENT_POST를 직접 읽어 표시
 function showAutowriteDetailSheet() {
   const post = typeof loadLocal === 'function' ? loadLocal(STORAGE_KEYS.CURRENT_POST, null) : null;
   const esc = typeof escapeHtml === 'function' ? escapeHtml : (s => String(s == null ? '' : s));
@@ -645,7 +656,7 @@ function renderPubmgmtChecklist(post, score, connected) {
     schedFuture = st.getTime() > Date.now();
   }
 
-  // r9-gui-popup-menu-fix4: 첫 화면에는 핵심 5개만 표시하고, 나머지는 요약 문구로 압축한다.
+  // 첫 화면에는 핵심 5개만 표시하고, 나머지는 요약 문구로 압축한다.
   const coreItems = [
     { label: 'Blogger 연결됨', ok: connected },
     { label: '글 생성 완료',   ok: !!(post && post.title && post.html) },
@@ -697,16 +708,36 @@ function refreshPubmgmtScreen() {
     }
   }
 
-  const post        = loadLocal(STORAGE_KEYS.CURRENT_POST, null);
-  const emptyCard   = document.getElementById('pubmgmt-empty-card');
-  const contentArea = document.getElementById('pubmgmt-content-area');
+  const post         = loadLocal(STORAGE_KEYS.CURRENT_POST, null);
+  const contentArea  = document.getElementById('pubmgmt-content-area');
+  const actionFull   = document.getElementById('pubmgmt-action-full');
+  const actionEmpty  = document.getElementById('pubmgmt-action-empty');
+  const menuFull     = document.getElementById('pubmgmt-menu-full');
+  const menuEmpty    = document.getElementById('pubmgmt-menu-empty');
+  // r9-gui-mobile-layout-reset-fix2: 글이 없어도 같은 3카드 구조를 유지하되,
+  // 별도의 4번째 안내 카드를 추가하지 않고 카드2/카드3 내부만 empty 상태로 전환한다.
+  if (contentArea) contentArea.style.display = 'block';
   if (!post) {
-    if (emptyCard)   emptyCard.style.display   = 'block';
-    if (contentArea) contentArea.style.display = 'none';
+    if (actionFull)  actionFull.style.display  = 'none';
+    if (actionEmpty) actionEmpty.style.display = 'block';
+    if (menuFull)    menuFull.style.display    = 'none';
+    if (menuEmpty)   menuEmpty.style.display   = 'block';
+    const titleEl = document.getElementById('pubmgmt-title');
+    if (titleEl) titleEl.textContent = '생성된 글 없음';
+    const scoreEl = document.getElementById('pubmgmt-score');
+    if (scoreEl) scoreEl.textContent = '—';
+    const infoEl = document.getElementById('pubmgmt-score-info');
+    if (infoEl) infoEl.textContent = '자동작성 탭에서 글을 먼저 만들어주세요.';
+    const draftBtn = document.getElementById('btn-draft-save');
+    const schedBtn = document.getElementById('btn-schedule-save');
+    if (draftBtn) draftBtn.className = 'btn btn-disabled';
+    if (schedBtn) schedBtn.className = 'btn btn-disabled';
     return;
   }
-  if (emptyCard)   emptyCard.style.display   = 'none';
-  if (contentArea) contentArea.style.display = 'block';
+  if (actionFull)  actionFull.style.display  = 'block';
+  if (actionEmpty) actionEmpty.style.display = 'none';
+  if (menuFull)    menuFull.style.display    = 'block';
+  if (menuEmpty)   menuEmpty.style.display   = 'none';
 
   const titleEl = document.getElementById('pubmgmt-title');
   if (titleEl) titleEl.textContent = post.title || '(제목 없음)';
@@ -759,7 +790,7 @@ function handleBloggerConnectFromPubmgmt() {
   }
 }
 
-// r9-gui-popup-layout-fix: 발행관리 화면에서 Blogger 연결 카드를 제거한 대신,
+// 발행관리 화면에서 Blogger 연결 카드를 제거한 대신,
 // 임시저장/예약발행 클릭 시 미연결이면 안내 팝업만 띄운다.
 // 실제 저장/예약 로직은 기존 handleSaveDraft()/handleSchedule()(blogger.js) 그대로 호출한다.
 function isBloggerConnectedForPubmgmt() {
@@ -781,7 +812,7 @@ function handlePubmgmtDraftClick() {
   if (!isBloggerConnectedForPubmgmt()) { showBloggerConnectGuideSheet(); return; }
   if (typeof handleSaveDraft === 'function') handleSaveDraft();
 }
-// r9-gui-popup-menu-fix1: 예약발행은 버튼 클릭 후 바텀시트에서 날짜/시간을 선택한다.
+// 예약발행은 버튼 클릭 후 바텀시트에서 날짜/시간을 선택한다.
 function handlePubmgmtScheduleTrigger() {
   if (!isBloggerConnectedForPubmgmt()) { showBloggerConnectGuideSheet(); return; }
   showPubmgmtScheduleSheet();
@@ -805,13 +836,13 @@ async function confirmPubmgmtSchedule() {
   uiCloseBottomSheet();
 }
 
-// r9-gui-popup-layout-fix: 품질점수 상세 팝업 닫기
+// 품질점수 상세 팝업 닫기
 function closeQualityResultCard() {
   const el = document.getElementById('quality-result-card');
   if (el) el.style.display = 'none';
 }
 
-// r9-gui-one-screen-fix1: Blogger 글 목록 / 최근 생성 글은 공통 바텀시트로 열림
+// Blogger 글 목록 / 최근 생성 글은 공통 바텀시트로 열림
 // (pubmgmt 화면 자체는 핵심 요소만 남기고 고정, 목록은 바텀시트 내부에서만 스크롤)
 function showBloggerListSheet() {
   uiOpenBottomSheet(
@@ -822,7 +853,7 @@ function showBloggerListSheet() {
     `<button class="btn btn-ghost" style="margin-top:8px;" onclick="uiCloseBottomSheet();">닫기</button>`
   );
 }
-// r9-gui-popup-menu-fix1: blogger.js의 handleLoadBloggerList()는 그대로 재사용하되,
+// blogger.js의 handleLoadBloggerList()는 그대로 재사용하되,
 // 바텀시트 내부 스크롤을 만들지 않기 위해 렌더링된 목록을 최근 5건으로만 자른다.
 function handleLoadBloggerListLimited() {
   if (typeof handleLoadBloggerList !== 'function') return;
@@ -888,7 +919,7 @@ function refreshSettingsScreenExtra() {
   if (aiEl) aiEl.textContent = aiText;
   if (aiInlineEl) aiInlineEl.textContent = aiText;
 
-  // r9-gui-popup-layout-fix: 연결 설정 안에 Blogger/Naver 상태도 함께 표시
+  // 연결 설정 안에 Blogger/Naver 상태도 함께 표시
   const mode      = typeof getApiMode === 'function' ? getApiMode() : '';
   const workerOk  = mode === API_MODE.WORKER;
   const connected = loadLocal(STORAGE_KEYS.BLOGGER_CONNECTED, false);
@@ -904,7 +935,7 @@ function refreshSettingsScreenExtra() {
   if (nvEl) { nvEl.textContent = workerOk ? '연결됨' : '미확인'; nvEl.className = workerOk ? 'badge success' : 'badge'; }
 }
 
-// r9-gui-popup-layout-fix: 설정 화면에서 Blogger 연결 확인 (기존 handleBloggerConnect 재사용)
+// 설정 화면에서 Blogger 연결 확인 (기존 handleBloggerConnect 재사용)
 function handleBloggerConnectFromSettings() {
   if (typeof handleBloggerConnect === 'function') {
     handleBloggerConnect().then(() => refreshSettingsScreenExtra()).catch(() => refreshSettingsScreenExtra());
@@ -1029,7 +1060,7 @@ function showPubmgmtSaveResult(result, type) {
 // refreshDashboard 오버라이드: 상태바 갱신 추가
 const _origRefreshDashboard = typeof refreshDashboard === 'function' ? refreshDashboard : null;
 
-// r9-gui-popup-layout-fix: 생성 진행 오버레이 / 품질점수 상세 / 메타·라벨 팝업이
+// 생성 진행 오버레이 / 품질점수 상세 / 메타·라벨 팝업이
 // 보일 때만 공통 배경(#popup-overlay-backdrop)을 함께 보여준다.
 // editor.js/quality-check.js가 각 요소의 class/style을 그대로 토글하는 방식을 유지하고,
 // 여기서는 그 변화를 관찰만 해서 배경 표시 여부만 동기화한다(내부 로직은 건드리지 않음).
@@ -1050,7 +1081,7 @@ const _origRefreshDashboard = typeof refreshDashboard === 'function' ? refreshDa
   sync();
 })();
 
-// r9-gui-popup-menu-fix4: 핫이슈 결과/원문 영역 한 화면 요약형 후처리
+// 핫이슈 결과/원문 영역 한 화면 요약형 후처리
 // (hotissue.js의 renderHotissueResult()/renderRawItems() 출력 결과를 건드리지 않고
 //  렌더링 완료 후 DOM만 다듬는다: 이모지 중심 표시 제거 + 블로그/웹문서 각 2건으로 축소)
 const HOTISSUE_EMOJI_RE = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2190}-\u{21FF}\u{FE0F}]/gu;
@@ -1080,7 +1111,7 @@ function compactHotissueRawList(container, max) {
   children.forEach((el, idx) => { if (idx >= max) el.style.display = 'none'; });
   const old = container.querySelector('.hi-more-note');
   if (old) old.remove();
-  // r9-gui-popup-menu-fix5: "더보기"로 전체를 펼치지 않고, 짧은 요약 문구만 남긴다.
+  // "더보기"로 전체를 펼치지 않고, 짧은 요약 문구만 남긴다.
   const note = document.createElement('p');
   note.className = 'small-sub hi-more-note';
   note.style.cssText = 'font-size:11px;margin:4px 0 0;color:#9ca3af;';
@@ -1177,16 +1208,201 @@ function compactHotissueResultDom() {
   if (resultArea) { stripEmojiTextIn(resultArea); compactHotissueMainResult(resultArea); }
 }
 
+// r9-gui-mobile-layout-reset-fix1: 확장 검색 키워드(10개) 카드를 본문에 길게 펼치지 않는다.
+// hotissue.js가 매 검색마다 #hotissue-expand-list.innerHTML을 다시 채우므로,
+// 그 요소 자체는 삭제/치환하지 않고 화면에서만 숨긴 뒤, 요약 줄 + "보기" 버튼을 추가한다.
+function compactHotissueExpandCard() {
+  const card = document.getElementById('hotissue-expand-card');
+  const list = document.getElementById('hotissue-expand-list');
+  if (!card || !list || !list.innerHTML.trim()) return;
+
+  const h2 = card.querySelector('h2');
+  if (h2 && h2.style.display !== 'none') h2.style.display = 'none';
+  if (list.style.display !== 'none') list.style.display = 'none';
+
+  const count = list.querySelectorAll('span').length;
+  let summary = card.querySelector('.hi-expand-summary-row');
+  if (!summary) {
+    summary = document.createElement('div');
+    summary.className = 'row-between hi-expand-summary-row';
+    summary.style.cssText = 'align-items:center;';
+    summary.innerHTML = `<span class="small-sub" style="font-weight:700;">확장 검색 키워드</span>
+      <button class="btn btn-ghost" style="font-size:12px;min-height:28px;padding:0 10px;margin:0;" onclick="showHotissueExpandSheet()"></button>`;
+    card.insertBefore(summary, card.firstChild);
+  }
+  const btn = summary.querySelector('button');
+  if (btn) btn.textContent = `${count}개 보기`;
+}
+
+function showHotissueExpandSheet() {
+  const list = document.getElementById('hotissue-expand-list');
+  if (!list || !list.innerHTML.trim()) return;
+  const spans = Array.from(list.querySelectorAll('span'));
+  const shown = spans.slice(0, 5).map(s => s.outerHTML).join('');
+  const note = spans.length > 5
+    ? `<p class="small-sub" style="font-size:11px;margin:6px 0 0;color:#9ca3af;">총 ${spans.length}개 중 5개 표시</p>`
+    : '';
+  uiOpenBottomSheet(
+    `<h3 style="margin:0 0 10px;font-size:15px;font-weight:700;color:#1c2434;">확장 검색 키워드</h3>` +
+    `<div style="line-height:2;">${shown}</div>` +
+    note +
+    `<button class="btn btn-ghost" style="margin-top:12px;" onclick="uiCloseBottomSheet();">닫기</button>`
+  );
+}
+
 function initHotissueResultCompactor() {
   const resultArea = document.getElementById('hotissue-result-area');
   const rawArea     = document.getElementById('hotissue-raw-area');
-  if (!resultArea && !rawArea) return;
+  const expandList  = document.getElementById('hotissue-expand-list');
+  if (!resultArea && !rawArea && !expandList) return;
   let scheduled = false;
   const run = () => {
     if (scheduled) return;
     scheduled = true;
-    setTimeout(() => { scheduled = false; compactHotissueResultDom(); }, 0);
+    setTimeout(() => { scheduled = false; compactHotissueResultDom(); compactHotissueExpandCard(); }, 0);
   };
   if (resultArea) new MutationObserver(run).observe(resultArea, { childList: true, subtree: true });
   if (rawArea)    new MutationObserver(run).observe(rawArea, { childList: true, subtree: true });
+  if (expandList) new MutationObserver(run).observe(expandList, { childList: true });
+}
+
+// r9-gui-mobile-layout-reset: 홈 화면 "최근 생성 글" 카드는 최근 1건 + 요약 문구만 남긴다.
+// blogger.js의 refreshDashboard()가 만드는 목록(.list-item)을 건드리지 않고,
+// 렌더링 이후 DOM만 후처리한다.
+function compactDashboardRecentList(listEl) {
+  if (!listEl) return;
+  const items = Array.from(listEl.children).filter(el => el.classList && el.classList.contains('list-item'));
+  const sig = items.length + '|' + (items[0]?.textContent.slice(0, 20) || '');
+  if (listEl.dataset.dashSig === sig) return;
+  listEl.dataset.dashSig = sig;
+  if (items.length <= 1) return;
+  items.forEach((el, idx) => { if (idx >= 1) el.style.display = 'none'; });
+  const old = listEl.querySelector('.dash-more-note');
+  if (old) old.remove();
+  const note = document.createElement('p');
+  note.className = 'small-sub dash-more-note';
+  note.style.cssText = 'font-size:11px;margin:4px 0 0;color:#9ca3af;';
+  note.textContent = `외 ${items.length - 1}건 더 · 발행관리 탭에서 확인`;
+  listEl.appendChild(note);
+}
+
+function initDashboardRecentListCompactor() {
+  const listEl = document.getElementById('dash-recent-list');
+  if (!listEl) return;
+  let scheduled = false;
+  const run = () => {
+    if (scheduled) return;
+    scheduled = true;
+    setTimeout(() => { scheduled = false; compactDashboardRecentList(listEl); }, 0);
+  };
+  new MutationObserver(run).observe(listEl, { childList: true });
+}
+
+// r9-gui-mobile-layout-reset-fix2: editor.js의 showAiGenerationFailure()가
+// #autowrite-ai-fail-card를 display:block으로 바꾸는 순간을 가로채서,
+// 본문 카드로 남기지 않고 즉시 숨긴 뒤 같은 메시지를 바텀시트로 보여준다.
+// editor.js의 실패 판단/메시지 생성 로직은 전혀 건드리지 않는다.
+function initAutowriteAiFailWatcher() {
+  const card = document.getElementById('autowrite-ai-fail-card');
+  if (!card) return;
+  new MutationObserver(() => {
+    if (card.style.display === 'block') {
+      const reasonEl = document.getElementById('autowrite-ai-fail-reason');
+      const msg = reasonEl ? reasonEl.textContent : '';
+      const esc = typeof escapeHtml === 'function' ? escapeHtml : (s => String(s == null ? '' : s));
+      card.style.display = 'none';
+      uiOpenBottomSheet(
+        `<h3 style="margin:0 0 8px;font-size:15px;font-weight:700;color:#991b1b;">AI 생성 실패 / Worker 설정 필요</h3>` +
+        `<p class="small-sub" style="color:#7f1d1d;margin:0 0 12px;">${esc(msg)}</p>` +
+        `<div style="display:flex;flex-direction:column;gap:8px;">
+          <button class="btn btn-secondary" onclick="uiCloseBottomSheet();safeGoScreen('settings')">설정으로 이동</button>
+          <button class="btn btn-ghost" onclick="uiCloseBottomSheet();">닫기</button>
+        </div>`
+      );
+    }
+  }).observe(card, { attributes: true, attributeFilter: ['style'] });
+}
+
+// r9-gui-mobile-base-hardening-fix3: 품질검수 상세 문제 목록은 CSS(#quality-gap-list
+// > div:nth-child(n+4))가 이미 4번째부터 숨긴다. 여기서는 숨겨진 개수만큼
+// "외 N개 항목" 요약 문구를 붙인다. quality-check.js는 수정하지 않는다.
+function annotateQualityGapList(gapEl) {
+  if (!gapEl) return;
+  const items = Array.from(gapEl.children).filter(el => el.tagName === 'DIV');
+  const sig = items.length + '|' + (items[0]?.textContent.slice(0, 20) || '');
+  if (gapEl.dataset.qcSig === sig) return;
+  gapEl.dataset.qcSig = sig;
+  const old = gapEl.querySelector('.qc-more-note');
+  if (old) old.remove();
+  if (items.length > 3) {
+    const note = document.createElement('p');
+    note.className = 'small-sub qc-more-note';
+    note.style.cssText = 'font-size:11px;margin:4px 0 0;color:#9ca3af;';
+    note.textContent = `외 ${items.length - 3}개 항목`;
+    gapEl.appendChild(note);
+  }
+}
+
+function initQualityGapListAnnotator() {
+  const gapEl = document.getElementById('quality-gap-list');
+  if (!gapEl) return;
+  let scheduled = false;
+  const run = () => {
+    if (scheduled) return;
+    scheduled = true;
+    setTimeout(() => { scheduled = false; annotateQualityGapList(gapEl); }, 0);
+  };
+  new MutationObserver(run).observe(gapEl, { childList: true });
+}
+
+// r9-gui-mobile-base-hardening-fix3: 미리보기 화면은 editor.js가 post.html(전체 본문)을
+// #preview-content에 그대로 채운다. 여기서는 editor.js를 수정하지 않고, 채워진 뒤
+// 제목/요약/점수 중심의 짧은 카드로 바꾸고, 전체 본문은 "본문 요약 보기" 바텀시트에서
+// 텍스트만 축약해 보여준다.
+function compactPreviewContent(contentEl) {
+  if (!contentEl || contentEl.style.display === 'none' || !contentEl.innerHTML.trim()) return;
+  if (contentEl.querySelector('.hi-preview-compacted')) return; // 이미 처리됨(재처리 방지)
+  const fullHtml = contentEl.innerHTML;
+
+  const esc = typeof escapeHtml === 'function' ? escapeHtml : (s => String(s == null ? '' : s));
+  const post  = typeof loadLocal === 'function' ? loadLocal(STORAGE_KEYS.CURRENT_POST, null) : null;
+  const score = typeof loadLocal === 'function' ? loadLocal(STORAGE_KEYS.QUALITY_SCORE, null) : null;
+  const title = post?.title || '(제목 없음)';
+  const summaryText = post?.metaDescription || post?.summary || (contentEl.textContent || '').trim().slice(0, 150);
+
+  contentEl.dataset.hiPreviewFullHtml = encodeURIComponent(fullHtml);
+  contentEl.innerHTML =
+    `<div class="hi-preview-compacted card" style="padding:10px 12px;margin:0;">
+      <p style="font-weight:700;font-size:14px;line-height:1.4;margin:0 0 6px;">${esc(title)}</p>
+      <p class="small-sub" style="margin:0 0 8px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;">${esc(summaryText)}</p>
+      <div class="row-between small-sub"><span>품질점수</span><b>${score !== null ? score + '점' : '검수 전'}</b></div>
+      <button class="btn btn-ghost" style="margin-top:8px;font-size:12px;" onclick="showPreviewBodySummarySheet()">본문 요약 보기</button>
+    </div>`;
+}
+
+function showPreviewBodySummarySheet() {
+  const contentEl = document.getElementById('preview-content');
+  const stored = contentEl && contentEl.dataset.hiPreviewFullHtml;
+  if (!stored) return;
+  const esc = typeof escapeHtml === 'function' ? escapeHtml : (s => String(s == null ? '' : s));
+  const tmp = document.createElement('div');
+  tmp.innerHTML = decodeURIComponent(stored);
+  const text = (tmp.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 600);
+  uiOpenBottomSheet(
+    `<h3 style="margin:0 0 8px;font-size:15px;font-weight:700;color:#1c2434;">본문 요약</h3>` +
+    `<p class="small-sub" style="line-height:1.6;">${esc(text)}${text.length >= 600 ? '…' : ''}</p>` +
+    `<button class="btn btn-ghost" style="margin-top:12px;" onclick="uiCloseBottomSheet();">닫기</button>`
+  );
+}
+
+function initPreviewContentCompactor() {
+  const contentEl = document.getElementById('preview-content');
+  if (!contentEl) return;
+  let scheduled = false;
+  const run = () => {
+    if (scheduled) return;
+    scheduled = true;
+    setTimeout(() => { scheduled = false; compactPreviewContent(contentEl); }, 0);
+  };
+  new MutationObserver(run).observe(contentEl, { childList: true, attributes: true, attributeFilter: ['style'] });
 }

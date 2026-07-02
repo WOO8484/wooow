@@ -4,7 +4,7 @@
 
 // 앱 버전
 const APP_VERSION = "v0.1.1";
-const APP_DISPLAY_VERSION = "v0.1.1-r9-gui-final-safari-stability-fix";
+const APP_DISPLAY_VERSION = "v0.1.1-r9-gui-mobile-base-hardening-fix3";
 
 // 기본 Worker URL
 const DEFAULT_WORKER_URL = "https://wooow.qudrnr84.workers.dev";
