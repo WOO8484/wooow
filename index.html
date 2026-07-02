@@ -46,6 +46,23 @@
     <span class="badge mock" id="dash-mode-badge">Mock 모드</span>
   </div>
 
+  <!-- 카드 1: 글쓰기 -->
+  <div class="card">
+    <h2>글쓰기</h2>
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <button class="btn btn-primary dash-flow-btn" onclick="safeGoScreen('hotissue')" style="text-align:center;">
+        <b>1단계: 핫이슈 찾기</b>
+      </button>
+      <button class="btn btn-secondary dash-flow-btn" onclick="safeGoScreen('autowrite')" style="text-align:center;">
+        <b>2단계: 글 자동 생성</b>
+      </button>
+      <button class="btn btn-secondary dash-flow-btn" onclick="safeGoScreen('pubmgmt')" style="text-align:center;">
+        <b>3단계: Blogger 발행</b>
+      </button>
+    </div>
+  </div>
+
+  <!-- 카드 2: 현재 상태 + 최근 생성 글 (병합) -->
   <div class="card" style="padding:8px 12px;margin-top:0;">
     <h2 style="margin-bottom:0;">현재 상태</h2>
     <div class="compact-row" style="padding:5px 0;">
@@ -68,6 +85,10 @@
       <span class="cr-label">오늘 저장/예약</span>
       <span class="cr-value" id="dash-today-count">0건 / 3건</span>
     </div>
+    <div class="row-between small-sub" style="margin-top:4px;padding-top:6px;border-top:1px solid #f1f5f9;">
+      <span style="font-weight:700;">최근 생성 글</span>
+    </div>
+    <div id="dash-recent-list" class="compact-list compact-list-sm" style="margin-top:4px;"><p class="small-sub">아직 저장된 글이 없습니다.</p></div>
   </div>
 
   <!-- Worker/네이버/AI 상세 연결 상태는 상단 상태바 탭 → 연결 상태 바텀시트에서 확인 (중복 표시 방지 위해 숨김, id 유지) -->
@@ -75,26 +96,6 @@
     <div class="status-mini-card"><span class="mini-label">Worker</span><span class="mini-value" id="dash-status-worker"><span class="status-dot off"></span>미확인</span></div>
     <div class="status-mini-card"><span class="mini-label">네이버</span><span class="mini-value" id="dash-status-naver"><span class="status-dot off"></span>대기</span></div>
     <div class="status-mini-card"><span class="mini-label">AI</span><span class="mini-value" id="dash-status-ai"><span class="status-dot off"></span>대기</span></div>
-  </div>
-
-  <div class="card">
-    <h2>다음 행동</h2>
-    <div style="display:flex;flex-direction:column;gap:6px;">
-      <button class="btn btn-primary" onclick="safeGoScreen('hotissue')" style="text-align:left;">
-        <b>1단계: 핫이슈 찾기</b>
-      </button>
-      <button class="btn btn-secondary" onclick="safeGoScreen('autowrite')" style="text-align:left;">
-        <b>2단계: 글 자동 생성</b>
-      </button>
-      <button class="btn btn-secondary" onclick="safeGoScreen('pubmgmt')" style="text-align:left;">
-        <b>3단계: Blogger 발행</b>
-      </button>
-    </div>
-  </div>
-
-  <div class="card">
-    <h2>최근 생성 글</h2>
-    <div id="dash-recent-list" class="compact-list compact-list-sm"><p class="small-sub">아직 저장된 글이 없습니다.</p></div>
   </div>
 </div>
 
