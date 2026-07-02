@@ -8,8 +8,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>BPW — BlogSpot 자동화 (v0.1.1-r9-gui-final-safari-stability-fix)</title>
-<link rel="stylesheet" href="./assets/css/style.css?v=r9-gui-final-safari-stability-fix">
+<title>BPW — BlogSpot 자동화 (v0.1.1-r9-gui-mobile-base-hardening-fix3)</title>
+<link rel="stylesheet" href="./assets/css/style.css?v=r9-gui-mobile-base-hardening-fix3">
 </head>
 <body>
 <div id="app">
@@ -42,7 +42,7 @@
      ========================================= -->
 <div class="screen" id="screen-dashboard">
   <div class="topbar" style="margin:-10px -12px 8px -12px;">
-    <h1>BPW <small style="font-size:12px;font-weight:500;color:#6b7280;">v0.1.1-r9-gui-final-safari-stability-fix</small></h1>
+    <h1>BPW <small style="font-size:12px;font-weight:500;color:#6b7280;">v0.1.1-r9-gui-mobile-base-hardening-fix3</small></h1>
     <span class="badge mock" id="dash-mode-badge">Mock 모드</span>
   </div>
 
@@ -142,18 +142,15 @@
 <div class="screen" id="screen-autowrite">
   <div class="topbar" style="margin:-10px -12px 8px -12px;"><h1>자동작성</h1></div>
 
-  <!-- 키워드 -->
+  <!-- 카드 1: 키워드 입력 + 가져오기 상태 + 글 길이 선택 + 생성 시작 -->
   <div class="card" style="padding:8px 12px;">
     <div style="display:flex;gap:8px;align-items:center;">
       <input type="text" id="autowrite-keyword" placeholder="키워드 입력 또는 핫이슈 탭에서 가져오기" style="flex:1;">
       <button class="btn btn-ghost" style="white-space:nowrap;font-size:12px;flex-shrink:0;margin-top:0;" onclick="syncAutowriteKeyword()">가져오기</button>
     </div>
     <p id="autowrite-import-status" class="hint" style="margin:6px 0 0;">가져온 키워드 없음</p>
-  </div>
 
-  <!-- 생성 모드 -->
-  <div class="card" style="padding:8px 12px;">
-    <div class="mode-select-group" id="mode-select-group">
+    <div class="mode-select-group" id="mode-select-group" style="margin-top:8px;">
       <label class="mode-option" data-mode="fast">
         <input type="radio" name="generation-mode" value="fast">
         <div><div class="mode-title">빠른</div><div class="mode-desc">800~1000자</div></div>
@@ -167,25 +164,25 @@
         <div><div class="mode-title">고급</div><div class="mode-desc">2000자+</div></div>
       </label>
     </div>
+
+    <button class="btn btn-primary" id="btn-generate-post" onclick="handleGeneratePostFromAutowrite()" style="font-size:14.5px;padding:11px;margin-top:8px;">글 자동 생성 시작</button>
+    <p class="hint" id="editor-worker-mode-hint" style="display:none;color:#d97706;">Worker 연결 테스트를 먼저 해주세요. Mock 모드로 진행됩니다.</p>
   </div>
 
-  <!-- 글쓰기 옵션 / 글 재료 — compact row, 바텀시트로 열림 -->
+  <!-- 카드 2: 글쓰기 옵션 / 글 재료 / 메타·라벨 — compact row, 전부 바텀시트로 열림 -->
   <div class="card" style="padding:2px 12px;">
     <div class="settings-menu-row" onclick="toggleWriteOptions()">
       <span class="smr-icon">옵</span><span class="smr-label">글쓰기 옵션</span><span class="smr-arrow">›</span>
     </div>
-    <div class="settings-menu-row" style="border-bottom:none;" onclick="toggleMaterialOptions()">
+    <div class="settings-menu-row" onclick="toggleMaterialOptions()">
       <span class="smr-icon">재</span><span class="smr-label">글 재료 (선택)</span><span class="smr-arrow">›</span>
+    </div>
+    <div class="settings-menu-row" style="border-bottom:none;" onclick="showAutowriteDetailSheet()">
+      <span class="smr-icon">메</span><span class="smr-label">메타·라벨</span><span class="smr-arrow">›</span>
     </div>
   </div>
 
-  <!-- 생성 실행 -->
-  <div class="card" style="padding:8px 12px;">
-    <button class="btn btn-primary" id="btn-generate-post" onclick="handleGeneratePostFromAutowrite()" style="font-size:14.5px;padding:11px;">글 자동 생성 시작</button>
-    <p class="hint" id="editor-worker-mode-hint" style="display:none;color:#d97706;">Worker 연결 테스트를 먼저 해주세요. Mock 모드로 진행됩니다.</p>
-  </div>
-
-  <!-- r9-gui-popup-layout-fix: 생성 중 진행 상태 — 화면을 밀지 않는 중앙 오버레이로 표시 (position:fixed는 style.css) -->
+  <!-- 생성 중 진행 상태 — 화면을 밀지 않는 중앙 오버레이로 표시 (position:fixed는 style.css) -->
   <div class="progress-box" id="generate-progress-box">
     <div class="progress-text" id="generate-progress-text">준비 중...</div>
     <div class="progress-sub">완료까지 20~60초 정도 걸릴 수 있습니다.</div>
@@ -203,7 +200,7 @@
     </div>
   </div>
 
-  <!-- 생성 결과 compact summary -->
+  <!-- 카드 3: 생성된 글 요약 — 생성된 글이 없으면 숨김 -->
   <div class="card" id="editor-result-card" style="display:none;padding:8px 12px;">
     <div class="row-between" style="margin-bottom:4px;">
       <h2 style="margin:0;font-size:12.5px;">생성된 글</h2>
@@ -211,11 +208,6 @@
     </div>
     <p id="editor-title-preview" style="font-weight:700;font-size:13px;line-height:1.4;margin:0 0 2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></p>
     <p class="hint" id="editor-fallback-notice" style="display:none;color:#dc2626;margin-bottom:4px;font-size:11px;"></p>
-
-    <div class="settings-menu-row" style="border-bottom:none;padding:3px 0;min-height:auto;" onclick="showAutowriteDetailSheet()">
-      <span class="smr-label" style="font-size:11.5px;color:#6b7280;font-weight:600;">생성된 글 상세 (메타/라벨)</span>
-      <span class="smr-arrow">›</span>
-    </div>
 
     <div style="display:flex;gap:6px;">
       <button class="btn btn-secondary" style="flex:1;min-height:36px;font-size:11.5px;margin-top:0;" onclick="goScreen('preview')">미리보기</button>
@@ -250,16 +242,12 @@
 <div class="screen" id="screen-pubmgmt">
   <div class="topbar" style="margin:-10px -12px 8px -12px;"><h1>발행관리</h1></div>
 
-  <!-- 글 없음 안내 -->
-  <div class="card" id="pubmgmt-empty-card" style="padding:8px 12px;">
-    <p class="small-sub">생성된 글이 없습니다. 자동작성 탭에서 먼저 글을 만들어주세요.</p>
-    <button class="btn btn-secondary" style="margin-top:6px;" onclick="safeGoScreen('autowrite')">자동작성으로 이동</button>
-  </div>
+  <!-- 글 없음 안내 배너 — 본문 카드 구조(현재 글/발행 버튼/기타 메뉴)는 그대로 두고
+       위에 짧은 안내만 추가로 보여준다. 버튼 하나만 있는 빈 화면을 만들지 않는다. -->
+  <!-- 발행관리 본문 — 글 유무와 상관없이 항상 같은 3카드 구조를 유지한다 -->
+  <div id="pubmgmt-content-area">
 
-  <!-- 글 있을 때 -->
-  <div id="pubmgmt-content-area" style="display:none;">
-
-    <!-- 현재 글 요약 -->
+    <!-- 카드 1: 현재 상태 -->
     <div class="card" style="padding:8px 12px;">
       <div class="row-between" style="margin-bottom:4px;">
         <h2 style="margin:0;font-size:12.5px;">현재 글</h2>
@@ -282,20 +270,31 @@
       </div>
     </div>
 
-    <!-- Blogger 발행 -->
+    <!-- 카드 2: Blogger 발행 (글 있음) / 다음 행동 (글 없음) -->
     <div class="card" style="padding:8px 12px;">
-      <h2 style="font-size:12.5px;">Blogger 발행</h2>
-      <button class="btn btn-disabled" id="btn-draft-save" onclick="handlePubmgmtDraftClick()" style="margin-bottom:5px;margin-top:0;min-height:40px;font-size:13px;">임시저장 (50점 이상)</button>
-      <button class="btn btn-disabled" id="btn-schedule-save" onclick="handlePubmgmtScheduleTrigger()" style="min-height:40px;font-size:13px;">예약발행 (70점 이상)</button>
+      <div id="pubmgmt-action-full">
+        <h2 style="font-size:12.5px;">Blogger 발행</h2>
+        <button class="btn btn-disabled" id="btn-draft-save" onclick="handlePubmgmtDraftClick()" style="margin-bottom:5px;margin-top:0;min-height:40px;font-size:13px;">임시저장 (50점 이상)</button>
+        <button class="btn btn-disabled" id="btn-schedule-save" onclick="handlePubmgmtScheduleTrigger()" style="min-height:40px;font-size:13px;">예약발행 (70점 이상)</button>
+      </div>
+      <div id="pubmgmt-action-empty" style="display:none;">
+        <h2 style="font-size:12.5px;">다음 행동</h2>
+        <button class="btn btn-primary" style="min-height:40px;font-size:13px;" onclick="safeGoScreen('autowrite')">자동작성으로 이동</button>
+      </div>
     </div>
 
-    <!-- 발행 전 체크 / 기타 메뉴(수동 복사·Blogger 글 목록·최근 생성 글은 기타 메뉴 바텀시트 안에서 연다) -->
+    <!-- 카드 3: 발행 전 체크/기타 메뉴 (글 있음) / 안내 (글 없음) -->
     <div class="card" style="padding:2px 12px;">
-      <div class="settings-menu-row" onclick="showPubmgmtChecklistSheet()">
-        <span class="smr-icon">체</span><span class="smr-label">발행 전 체크 보기</span><span class="smr-arrow">›</span>
+      <div id="pubmgmt-menu-full">
+        <div class="settings-menu-row" onclick="showPubmgmtChecklistSheet()">
+          <span class="smr-icon">체</span><span class="smr-label">발행 전 체크 보기</span><span class="smr-arrow">›</span>
+        </div>
+        <div class="settings-menu-row" style="border-bottom:none;" onclick="showPubmgmtMoreMenuSheet()">
+          <span class="smr-icon">메</span><span class="smr-label">기타 메뉴</span><span class="smr-arrow">›</span>
+        </div>
       </div>
-      <div class="settings-menu-row" style="border-bottom:none;" onclick="showPubmgmtMoreMenuSheet()">
-        <span class="smr-icon">메</span><span class="smr-label">기타 메뉴</span><span class="smr-arrow">›</span>
+      <div id="pubmgmt-menu-empty" style="display:none;padding:8px 0;">
+        <p class="small-sub">글 생성 후 임시저장/예약발행이 가능합니다.</p>
       </div>
     </div>
   </div><!-- /pubmgmt-content-area -->
@@ -394,7 +393,7 @@
 </div>
 
 <div class="toast" id="toast"></div>
-<!-- r9-gui-popup-layout-fix: 생성 진행/품질점수 상세/메타·라벨 팝업 공통 배경 -->
+<!-- 생성 진행/품질점수 상세/메타·라벨 팝업 공통 배경 -->
 <div id="popup-overlay-backdrop"></div>
 <!-- r8: 바텀시트 공통 (dismiss 가능) -->
 <div id="bottom-sheet-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:300;" onclick="uiCloseBottomSheet()"></div>
@@ -404,16 +403,16 @@
 </div>
 </div><!-- /app -->
 
-<script src="./assets/js/config.js?v=r9-gui-final-safari-stability-fix"></script>
-<script src="./assets/js/storage.js?v=r9-gui-final-safari-stability-fix"></script>
-<script src="./assets/js/ui.js?v=r9-gui-final-safari-stability-fix"></script>
-<script src="./assets/js/auth.js?v=r9-gui-final-safari-stability-fix"></script>
-<script src="./assets/js/editor.js?v=r9-gui-final-safari-stability-fix"></script>
-<script src="./assets/js/quality-check.js?v=r9-gui-final-safari-stability-fix"></script>
-<script src="./assets/js/hero-image.js?v=r9-gui-final-safari-stability-fix"></script>
-<script src="./assets/js/hotissue.js?v=r9-gui-final-safari-stability-fix"></script>
-<script src="./assets/js/blogger.js?v=r9-gui-final-safari-stability-fix"></script>
-<script src="./assets/js/api.js?v=r9-gui-final-safari-stability-fix"></script>
-<script src="./assets/js/app.js?v=r9-gui-final-safari-stability-fix"></script>
+<script src="./assets/js/config.js?v=r9-gui-mobile-base-hardening-fix3"></script>
+<script src="./assets/js/storage.js?v=r9-gui-mobile-base-hardening-fix3"></script>
+<script src="./assets/js/ui.js?v=r9-gui-mobile-base-hardening-fix3"></script>
+<script src="./assets/js/auth.js?v=r9-gui-mobile-base-hardening-fix3"></script>
+<script src="./assets/js/editor.js?v=r9-gui-mobile-base-hardening-fix3"></script>
+<script src="./assets/js/quality-check.js?v=r9-gui-mobile-base-hardening-fix3"></script>
+<script src="./assets/js/hero-image.js?v=r9-gui-mobile-base-hardening-fix3"></script>
+<script src="./assets/js/hotissue.js?v=r9-gui-mobile-base-hardening-fix3"></script>
+<script src="./assets/js/blogger.js?v=r9-gui-mobile-base-hardening-fix3"></script>
+<script src="./assets/js/api.js?v=r9-gui-mobile-base-hardening-fix3"></script>
+<script src="./assets/js/app.js?v=r9-gui-mobile-base-hardening-fix3"></script>
 </body>
 </html>
